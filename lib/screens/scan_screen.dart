@@ -127,7 +127,7 @@ class _ScanScreenState extends State<ScanScreen> {
             onOpen: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => DeviceScreen(device: d),
-                settings: RouteSettings(name: '/DeviceScreen'),
+                settings: const RouteSettings(name: '/DeviceScreen'),
               ),
             ),
             onConnect: () => onConnectPressed(d),

@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -21,54 +24,96 @@ class DeviceScreen extends StatefulWidget {
 class _DeviceScreenState extends State<DeviceScreen> {
   int? _rssi;
   int? _mtuSize;
-  BluetoothConnectionState _connectionState = BluetoothConnectionState.disconnected;
+  BluetoothConnectionState _connectionState =
+      BluetoothConnectionState.disconnected;
   List<BluetoothService> _services = [];
   bool _isDiscoveringServices = false;
   bool _isConnecting = false;
   bool _isDisconnecting = false;
 
-  late StreamSubscription<BluetoothConnectionState> _connectionStateSubscription;
+  late StreamSubscription<BluetoothConnectionState>
+      _connectionStateSubscription;
   late StreamSubscription<bool> _isConnectingSubscription;
   late StreamSubscription<bool> _isDisconnectingSubscription;
   late StreamSubscription<int> _mtuSubscription;
+  late BluetoothDevice device;
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _textController = TextEditingController();
+  StreamSubscription<List<int>>? stream_sub;
+  String valueChar = "empty";
+  late BluetoothCharacteristic lastCharacterist;
 
   @override
   void initState() {
     super.initState();
+    device = widget.device;
+    log("DEVICE : $device");
+    testGetValue(device);
 
-    _connectionStateSubscription = widget.device.connectionState.listen((state) async {
+    _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (state == BluetoothConnectionState.connected) {
         _services = []; // must rediscover services
       }
       if (state == BluetoothConnectionState.connected && _rssi == null) {
-        _rssi = await widget.device.readRssi();
+        _rssi = await device.readRssi();
       }
       if (mounted) {
         setState(() {});
       }
     });
 
-    _mtuSubscription = widget.device.mtu.listen((value) {
+    _mtuSubscription = device.mtu.listen((value) {
       _mtuSize = value;
       if (mounted) {
         setState(() {});
       }
     });
 
-    _isConnectingSubscription = widget.device.isConnecting.listen((value) {
+    _isConnectingSubscription = device.isConnecting.listen((value) {
       _isConnecting = value;
       if (mounted) {
         setState(() {});
       }
     });
 
-    _isDisconnectingSubscription = widget.device.isDisconnecting.listen((value) {
+    _isDisconnectingSubscription = device.isDisconnecting.listen((value) {
       _isDisconnecting = value;
       if (mounted) {
         setState(() {});
       }
     });
+  }
+
+  testGetValue(BluetoothDevice device) async {
+    List<BluetoothService> services = await device.discoverServices();
+    if (services.isEmpty) {
+      log("No services found!");
+      return;
+    }
+
+    BluetoothService lastservice = services.last;
+    if (lastservice.characteristics.isEmpty) {
+      log("No characteristics found in the last service!");
+      return;
+    }
+
+    lastCharacterist = lastservice.characteristics.last;
+    log("masok kesini ga si asw");
+    // await lastCharacterist.setNotifyValue(true);
+
+    stream_sub = lastCharacterist.onValueReceived.listen((value) async {
+      log("value : ${value}");
+      if (value.isNotEmpty) {
+        log("data : ${value}");
+        valueChar = String.fromCharCodes(value);
+        setState(() {});
+      } else {
+        log("masok sini ??");
+      }
+    });
+
+    log("end : $valueChar");
   }
 
   @override
@@ -86,13 +131,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   Future onConnectPressed() async {
     try {
-      await widget.device.connectAndUpdateStream();
+      await device.connectAndUpdateStream();
       Snackbar.show(ABC.c, "Connect: Success", success: true);
     } catch (e) {
-      if (e is FlutterBluePlusException && e.code == FbpErrorCode.connectionCanceled.index) {
+      if (e is FlutterBluePlusException &&
+          e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(ABC.c, prettyException("Connect Error:", e), success: false);
+        Snackbar.show(ABC.c, prettyException("Connect Error:", e),
+            success: false);
         print(e);
       }
     }
@@ -100,7 +147,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   Future onCancelPressed() async {
     try {
-      await widget.device.disconnectAndUpdateStream(queue: false);
+      await device.disconnectAndUpdateStream(queue: false);
       Snackbar.show(ABC.c, "Cancel: Success", success: true);
     } catch (e) {
       Snackbar.show(ABC.c, prettyException("Cancel Error:", e), success: false);
@@ -110,10 +157,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   Future onDisconnectPressed() async {
     try {
-      await widget.device.disconnectAndUpdateStream();
+      await device.disconnectAndUpdateStream();
       Snackbar.show(ABC.c, "Disconnect: Success", success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Disconnect Error:", e), success: false);
+      Snackbar.show(ABC.c, prettyException("Disconnect Error:", e),
+          success: false);
       print(e);
     }
   }
@@ -125,10 +173,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
       });
     }
     try {
-      _services = await widget.device.discoverServices();
+      _services = await device.discoverServices();
       Snackbar.show(ABC.c, "Discover Services: Success", success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Discover Services Error:", e), success: false);
+      Snackbar.show(ABC.c, prettyException("Discover Services Error:", e),
+          success: false);
       print(e);
     }
     if (mounted) {
@@ -140,10 +189,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   Future onRequestMtuPressed() async {
     try {
-      await widget.device.requestMtu(223, predelay: 0);
+      await device.requestMtu(223, predelay: 0);
       Snackbar.show(ABC.c, "Request Mtu: Success", success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Change Mtu Error:", e), success: false);
+      Snackbar.show(ABC.c, prettyException("Change Mtu Error:", e),
+          success: false);
       print(e);
     }
   }
@@ -153,7 +203,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
         .map(
           (s) => ServiceTile(
             service: s,
-            characteristicTiles: s.characteristics.map((c) => _buildCharacteristicTile(c)).toList(),
+            characteristicTiles: s.characteristics
+                .map((c) => _buildCharacteristicTile(c))
+                .toList(),
           ),
         )
         .toList();
@@ -162,7 +214,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
   CharacteristicTile _buildCharacteristicTile(BluetoothCharacteristic c) {
     return CharacteristicTile(
       characteristic: c,
-      descriptorTiles: c.descriptors.map((d) => DescriptorTile(descriptor: d)).toList(),
+      descriptorTiles:
+          c.descriptors.map((d) => DescriptorTile(descriptor: d)).toList(),
     );
   }
 
@@ -182,7 +235,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Widget buildRemoteId(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Text('${widget.device.remoteId}'),
+      child: Text('${device.remoteId}'),
     );
   }
 
@@ -190,8 +243,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        isConnected ? const Icon(Icons.bluetooth_connected) : const Icon(Icons.bluetooth_disabled),
-        Text(((isConnected && _rssi != null) ? '${_rssi!} dBm' : ''), style: Theme.of(context).textTheme.bodySmall)
+        isConnected
+            ? const Icon(Icons.bluetooth_connected)
+            : const Icon(Icons.bluetooth_disabled),
+        Text(((isConnected && _rssi != null) ? '${_rssi!} dBm' : ''),
+            style: Theme.of(context).textTheme.bodySmall)
       ],
     );
   }
@@ -232,12 +288,87 @@ class _DeviceScreenState extends State<DeviceScreen> {
     return Row(children: [
       if (_isConnecting || _isDisconnecting) buildSpinner(context),
       TextButton(
-          onPressed: _isConnecting ? onCancelPressed : (isConnected ? onDisconnectPressed : onConnectPressed),
+          onPressed: _isConnecting
+              ? onCancelPressed
+              : (isConnected ? onDisconnectPressed : onConnectPressed),
           child: Text(
             _isConnecting ? "CANCEL" : (isConnected ? "DISCONNECT" : "CONNECT"),
-            style: Theme.of(context).primaryTextTheme.labelLarge?.copyWith(color: Colors.white),
+            style: Theme.of(context)
+                .primaryTextTheme
+                .labelLarge
+                ?.copyWith(color: Colors.white),
           ))
     ]);
+  }
+
+  void showPopupForm(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter Data to Send"),
+          content: Form(
+            key: _formKey,
+            child: TextFormField(
+              controller: _textController,
+              decoration: InputDecoration(
+                labelText: "Enter text",
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Field cannot be empty";
+                }
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close popup
+              },
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  String textToSend = _textController.text;
+
+                  // Write to BLE characteristic if available
+                  try {
+                    List<BluetoothService> services =
+                        await device.discoverServices();
+                    BluetoothService lastService = services.last;
+                    BluetoothCharacteristic lastCharacteristic =
+                        lastService.characteristics.last;
+
+                    List<int> list = utf8.encode(textToSend);
+                    Uint8List bytes = Uint8List.fromList(list);
+                    setState(() {});
+                    await lastCharacteristic.setNotifyValue(true);
+                    await lastCharacteristic.write(bytes);
+
+                    testGetValue(device);
+
+                    // Optionally show a success message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Data sent successfully!")),
+                    );
+                  } catch (e) {
+                    print("Error sending data: $e");
+                  }
+
+                  // Close popup after sending
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Send"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -246,7 +377,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       key: Snackbar.snackBarKeyC,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.device.platformName),
+          title: Text(device.platformName),
           actions: [buildConnectButton(context)],
         ),
         body: SingleChildScrollView(
@@ -255,14 +386,40 @@ class _DeviceScreenState extends State<DeviceScreen> {
               buildRemoteId(context),
               ListTile(
                 leading: buildRssiTile(context),
-                title: Text('Device is ${_connectionState.toString().split('.')[1]}.'),
+                title: Text(
+                    'Device is ${_connectionState.toString().split('.')[1]}.'),
                 trailing: buildGetServices(context),
               ),
               buildMtuTile(context),
               ..._buildServiceTiles(context, widget.device),
+              Text("Value : $valueChar"),
+              IconButton(
+                onPressed: () => showPopupForm(context),
+                icon: Icon(Icons.upload),
+              ),
+              // StreamBuilder(
+              //   stream: lastCharacterist.onValueReceived,
+              //   builder: (context, snapshot) {
+              //     if (snapshot.connectionState == ConnectionState.waiting) {
+              //       return CircularProgressIndicator();
+              //     } else if (snapshot.connectionState == ConnectionState.done) {
+              //       if (snapshot.hasData) {
+              //         return Text(snapshot.data.toString());
+              //       }else{
+              //         return Text("tidak ada data mungkin");
+              //       }
+              //     } else {
+              //       return Text("Error mungnkin");
+              //     }
+              //   },
+              // )
             ],
           ),
         ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed:,
+        //   child: const Icon(Icons.upload),
+        // ),
       ),
     );
   }
