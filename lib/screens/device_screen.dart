@@ -48,7 +48,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
     super.initState();
     device = widget.device;
     log("DEVICE : $device");
-    testGetValue(device);
 
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
@@ -83,6 +82,22 @@ class _DeviceScreenState extends State<DeviceScreen> {
         setState(() {});
       }
     });
+    // setValuenya(device);
+  }
+
+  setValuenya(BluetoothDevice device) async {
+    List<BluetoothService> services = await device.discoverServices();
+    if (services.isEmpty) {
+      log("No services found!");
+      return;
+    }
+
+    BluetoothService lastservice = services.last;
+    if (lastservice.characteristics.isEmpty) {
+      log("No characteristics found in the last service!");
+      return;
+    }
+    lastCharacterist = lastservice.characteristics.last;
   }
 
   testGetValue(BluetoothDevice device) async {
@@ -113,7 +128,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       }
     });
 
-    log("end : $valueChar");
+    log("end : $valueChar, ${stream_sub}");
   }
 
   @override
@@ -397,22 +412,27 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 onPressed: () => showPopupForm(context),
                 icon: Icon(Icons.upload),
               ),
-              // StreamBuilder(
-              //   stream: lastCharacterist.onValueReceived,
-              //   builder: (context, snapshot) {
-              //     if (snapshot.connectionState == ConnectionState.waiting) {
-              //       return CircularProgressIndicator();
-              //     } else if (snapshot.connectionState == ConnectionState.done) {
-              //       if (snapshot.hasData) {
-              //         return Text(snapshot.data.toString());
-              //       }else{
-              //         return Text("tidak ada data mungkin");
-              //       }
-              //     } else {
-              //       return Text("Error mungnkin");
-              //     }
-              //   },
-              // )
+              stream_sub == null
+                  ? Text("TEST")
+                  : FutureBuilder(
+                      future: lastCharacterist.read(),
+                      builder: (context, snapshot) {
+                        log("snapshot : $snapshot");
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        } else if (snapshot.connectionState ==
+                            ConnectionState.done) {
+                          if (snapshot.hasData) {
+                            return Text(snapshot.data.toString());
+                          } else {
+                            return Text("tidak ada data mungkin");
+                          }
+                        } else {
+                          return Text("Error mungnkin");
+                        }
+                      },
+                    )
             ],
           ),
         ),
