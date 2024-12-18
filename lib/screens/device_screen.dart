@@ -37,7 +37,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
   late StreamSubscription<bool> _isDisconnectingSubscription;
   late StreamSubscription<int> _mtuSubscription;
   late BluetoothDevice device;
-  final _formKey = GlobalKey<FormState>();
   final TextEditingController _textController = TextEditingController();
   StreamSubscription<List<int>>? stream_sub;
   String valueChar = "empty";
@@ -82,7 +81,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
         setState(() {});
       }
     });
-    // setValuenya(device);
+    // listenToDeviceTest(widget.device);
   }
 
   setValuenya(BluetoothDevice device) async {
@@ -98,37 +97,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
       return;
     }
     lastCharacterist = lastservice.characteristics.last;
-  }
-
-  testGetValue(BluetoothDevice device) async {
-    List<BluetoothService> services = await device.discoverServices();
-    if (services.isEmpty) {
-      log("No services found!");
-      return;
-    }
-
-    BluetoothService lastservice = services.last;
-    if (lastservice.characteristics.isEmpty) {
-      log("No characteristics found in the last service!");
-      return;
-    }
-
-    lastCharacterist = lastservice.characteristics.last;
-    log("masok kesini ga si asw");
-    // await lastCharacterist.setNotifyValue(true);
-
-    stream_sub = lastCharacterist.onValueReceived.listen((value) async {
-      log("value : ${value}");
-      if (value.isNotEmpty) {
-        log("data : ${value}");
-        valueChar = String.fromCharCodes(value);
-        setState(() {});
-      } else {
-        log("masok sini ??");
-      }
-    });
-
-    log("end : $valueChar, ${stream_sub}");
   }
 
   @override
@@ -147,6 +115,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future onConnectPressed() async {
     try {
       await device.connectAndUpdateStream();
+      // listenToDeviceTest(device);
       Snackbar.show(ABC.c, "Connect: Success", success: true);
     } catch (e) {
       if (e is FlutterBluePlusException &&
@@ -155,7 +124,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       } else {
         Snackbar.show(ABC.c, prettyException("Connect Error:", e),
             success: false);
-        print(e);
+        log(e.toString());
       }
     }
   }
@@ -166,7 +135,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       Snackbar.show(ABC.c, "Cancel: Success", success: true);
     } catch (e) {
       Snackbar.show(ABC.c, prettyException("Cancel Error:", e), success: false);
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -177,7 +146,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     } catch (e) {
       Snackbar.show(ABC.c, prettyException("Disconnect Error:", e),
           success: false);
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -193,7 +162,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     } catch (e) {
       Snackbar.show(ABC.c, prettyException("Discover Services Error:", e),
           success: false);
-      print(e);
+      log(e.toString());
     }
     if (mounted) {
       setState(() {
@@ -204,12 +173,12 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   Future onRequestMtuPressed() async {
     try {
-      await device.requestMtu(223, predelay: 0);
+      await device.requestMtu(512, predelay: 0);
       Snackbar.show(ABC.c, "Request Mtu: Success", success: true);
     } catch (e) {
       Snackbar.show(ABC.c, prettyException("Change Mtu Error:", e),
           success: false);
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -235,8 +204,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Widget buildSpinner(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(14.0),
+    return const Padding(
+      padding: EdgeInsets.all(14.0),
       child: AspectRatio(
         aspectRatio: 1.0,
         child: CircularProgressIndicator(
@@ -272,16 +241,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
       index: (_isDiscoveringServices) ? 1 : 0,
       children: <Widget>[
         TextButton(
-          child: const Text("Get Services"),
           onPressed: onDiscoverServicesPressed,
+          child: const Text("Get Services"),
         ),
         const IconButton(
           icon: SizedBox(
+            width: 18.0,
+            height: 18.0,
             child: CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation(Colors.grey),
             ),
-            width: 18.0,
-            height: 18.0,
           ),
           onPressed: null,
         )
@@ -291,12 +260,30 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   Widget buildMtuTile(BuildContext context) {
     return ListTile(
-        title: const Text('MTU Size'),
-        subtitle: Text('$_mtuSize bytes'),
-        trailing: IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: onRequestMtuPressed,
-        ));
+      title: const Text('MTU Size'),
+      subtitle: Text('$_mtuSize bytes'),
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints.tightFor(width: 200.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            const Expanded(
+              flex: 2,
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: const Text("Edit MTU to 512 bytes")),
+            ),
+            Expanded(
+              flex: 1,
+              child: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: onRequestMtuPressed,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget buildConnectButton(BuildContext context) {
@@ -316,75 +303,138 @@ class _DeviceScreenState extends State<DeviceScreen> {
     ]);
   }
 
-  void showPopupForm(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter Data to Send"),
-          content: Form(
-            key: _formKey,
-            child: TextFormField(
-              controller: _textController,
-              decoration: InputDecoration(
-                labelText: "Enter text",
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Field cannot be empty";
-                }
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close popup
-              },
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  String textToSend = _textController.text;
+  // void listenToDeviceTest(BluetoothDevice device) async {
+  //   await device.connect();
+  //   log("device is COnnected : ${!device.isConnected}");
+  //   if (!device.isConnected) {
+  //     log("DEVICE IS NOT CONNECTED");
+  //   } else {
+  //     List<BluetoothService> services = await device.discoverServices();
 
-                  // Write to BLE characteristic if available
-                  try {
-                    List<BluetoothService> services =
-                        await device.discoverServices();
-                    BluetoothService lastService = services.last;
-                    BluetoothCharacteristic lastCharacteristic =
-                        lastService.characteristics.last;
+  //     for (BluetoothService service in services) {
+  //       for (BluetoothCharacteristic characteristic
+  //           in service.characteristics) {
+  //         // Check if characteristic supports Notify (TX stream)
+  //         if (characteristic.properties.notify) {
+  //           log("Found TX characteristic: ${characteristic.uuid}");
+  //           setState(() {
+  //             // txCharacteristic = characteristic;
+  //           });
+  //           startTXStream(characteristic);
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
-                    List<int> list = utf8.encode(textToSend);
-                    Uint8List bytes = Uint8List.fromList(list);
-                    setState(() {});
-                    await lastCharacteristic.setNotifyValue(true);
-                    await lastCharacteristic.write(bytes);
+  // void startTXStream(BluetoothCharacteristic characteristic) async {
+  //   await characteristic.setNotifyValue(true);
+  //   log("TX Stream enabled, listening for data...");
 
-                    testGetValue(device);
+  //   characteristic.lastValueStream.listen((data) {
+  //     if (data.isNotEmpty) {
+  //       // Convert received data (List<int>) to a readable string
+  //       log("DATA : ${data}");
+  //       String charCode = String.fromCharCodes(data);
+  //       String receivedString = utf8.decode(data, allowMalformed: true);
+  //       log("Received TX Data: $receivedString, $charCode");
+  //       valueChar = receivedString;
+  //       // setState(() {});
+  //     } else {
+  //       log("No data received.");
+  //     }
+  //   });
+  // }
 
-                    // Optionally show a success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Data sent successfully!")),
-                    );
-                  } catch (e) {
-                    print("Error sending data: $e");
-                  }
+  // void showPopupForm(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text("Enter Data to Send"),
+  //         content: Form(
+  //           key: _formKey,
+  //           child: TextFormField(
+  //             controller: _textController,
+  //             decoration: const InputDecoration(
+  //               labelText: "Enter text",
+  //               border: OutlineInputBorder(),
+  //             ),
+  //             validator: (value) {
+  //               if (value == null || value.isEmpty) {
+  //                 return "Field cannot be empty";
+  //               }
+  //               return null;
+  //             },
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop(); // Close popup
+  //             },
+  //             child: const Text("Cancel"),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () async {
+  //               if (_formKey.currentState!.validate()) {
+  //                 String textToSend = _textController.text;
 
-                  // Close popup after sending
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text("Send"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //                 // Write to BLE characteristic if available
+  //                 try {
+  //                   List<BluetoothService> services =
+  //                       await device.discoverServices();
+  //                   BluetoothService lastService = services.last;
+  //                   BluetoothCharacteristic lastCharacteristic =
+  //                       lastService.characteristics.last;
+
+  //                   List<int> list = utf8.encode(textToSend);
+  //                   Uint8List bytes = Uint8List.fromList(list);
+  //                   setState(() {});
+  //                   await lastCharacteristic.setNotifyValue(true);
+  //                   await lastCharacteristic.write(bytes);
+
+  //                   // Aktifkan Notify/Indicate untuk menerima data balasan
+  //                   if (lastCharacteristic.properties.notify) {
+  //                     await lastCharacteristic.setNotifyValue(true);
+  //                     log("Listening for response...");
+
+  //                     lastCharacteristic.lastValueStream.listen((value) {
+  //                       // Pastikan data balasan bukan echo
+  //                       if (value.isNotEmpty &&
+  //                           value.toString() != textToSend.toString()) {
+  //                         String responseString =
+  //                             utf8.decode(value, allowMalformed: true);
+  //                         log("Received response: $responseString");
+  //                       } else {
+  //                         log("Received echoed data, waiting for proper response...");
+  //                       }
+  //                     });
+  //                   } else {
+  //                     log("This characteristic does not support Notify/Indicate");
+  //                   }
+
+  //                   log("pesan terkirim : $bytes");
+  //                   log("Data sent successfully!");
+  //                 } catch (e) {
+  //                   log("Error sending data: $e");
+  //                   _textController.clear();
+  //                 }
+
+  //                 _textController.clear();
+
+  //                 // Close popup after sending
+  //                 Navigator.of(context).pop();
+  //               }
+  //             },
+  //             child: const Text("Send"),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -407,39 +457,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
               ),
               buildMtuTile(context),
               ..._buildServiceTiles(context, widget.device),
-              Text("Value : $valueChar"),
-              IconButton(
-                onPressed: () => showPopupForm(context),
-                icon: Icon(Icons.upload),
-              ),
-              stream_sub == null
-                  ? Text("TEST")
-                  : FutureBuilder(
-                      future: lastCharacterist.read(),
-                      builder: (context, snapshot) {
-                        log("snapshot : $snapshot");
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return CircularProgressIndicator();
-                        } else if (snapshot.connectionState ==
-                            ConnectionState.done) {
-                          if (snapshot.hasData) {
-                            return Text(snapshot.data.toString());
-                          } else {
-                            return Text("tidak ada data mungkin");
-                          }
-                        } else {
-                          return Text("Error mungnkin");
-                        }
-                      },
-                    )
+              // Text("Value : $valueChar"),
+              // IconButton(
+              //   onPressed: () => showPopupForm(context),
+              //   icon: const Icon(Icons.upload),
+              // ),
             ],
           ),
         ),
-        // floatingActionButton: FloatingActionButton(
-        //   onPressed:,
-        //   child: const Icon(Icons.upload),
-        // ),
       ),
     );
   }

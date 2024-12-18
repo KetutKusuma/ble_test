@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'utils.dart';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -34,6 +36,8 @@ extension Extra on BluetoothDevice {
     _cstream.add(true);
     try {
       await connect(mtu: null);
+    } catch (e) {
+      log("ERROR CATCH CONNECT AND UPDATE STREAM: $e");
     } finally {
       _cstream.add(false);
     }

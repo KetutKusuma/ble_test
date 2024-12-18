@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'device_screen.dart';
@@ -23,6 +24,7 @@ class _ScanScreenState extends State<ScanScreen> {
   bool _isScanning = false;
   late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
   late StreamSubscription<bool> _isScanningSubscription;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -43,6 +45,7 @@ class _ScanScreenState extends State<ScanScreen> {
         setState(() {});
       }
     });
+    _searchController.addListener(_onTextChanged);
   }
 
   @override
@@ -57,17 +60,30 @@ class _ScanScreenState extends State<ScanScreen> {
       // `withServices` is required on iOS for privacy purposes, ignored on android.
       var withServices = [Guid("180f")]; // Battery Level Service
       _systemDevices = await FlutterBluePlus.systemDevices(withServices);
-      log("system devices resultnya : ${_systemDevices}, ${_systemDevices.length}, ${_systemDevices[0].advName}");
+      log("system devices resultnya : $_systemDevices, ${_systemDevices.length}, ${_systemDevices[0].advName}");
     } catch (e) {
-      Snackbar.show(ABC.b, prettyException("System Devices Error:", e),
-          success: false);
+      if (e.toString() ==
+          "RangeError (index): Invalid value: Valid value range is empty: 0") {
+        Snackbar.show(ABC.b, "System Devices is Not Found", success: false);
+      } else {
+        Snackbar.show(
+          ABC.b,
+          prettyException("System Devices Error:", e),
+          success: false,
+        );
+      }
       print(e);
     }
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
     } catch (e) {
-      Snackbar.show(ABC.b, prettyException("Start Scan Error:", e),
-          success: false);
+      if (e.toString() ==
+          "RangeError (index): Invalid value: Valid value range is empty: 0") {
+        Snackbar.show(ABC.b, "Start Scan Result is Not Found", success: false);
+      } else {
+        Snackbar.show(ABC.b, prettyException("Start Scan Error:", e),
+            success: false);
+      }
       print(e);
     }
     if (mounted) {
@@ -92,7 +108,7 @@ class _ScanScreenState extends State<ScanScreen> {
     });
     MaterialPageRoute route = MaterialPageRoute(
         builder: (context) => DeviceScreen(device: device),
-        settings: RouteSettings(name: '/DeviceScreen'));
+        settings: const RouteSettings(name: '/DeviceScreen'));
     Navigator.of(context).push(route);
   }
 
@@ -109,13 +125,17 @@ class _ScanScreenState extends State<ScanScreen> {
   Widget buildScanButton(BuildContext context) {
     if (FlutterBluePlus.isScanningNow) {
       return FloatingActionButton(
-        child: const Icon(Icons.stop),
         onPressed: onStopPressed,
         backgroundColor: Colors.red,
+        child: const Icon(Icons.stop),
       );
     } else {
       return FloatingActionButton(
-          child: const Text("SCAN"), onPressed: onScanPressed);
+        onPressed: onScanPressed,
+        child: const Text(
+          "SCAN",
+        ),
+      );
     }
   }
 
@@ -137,15 +157,75 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   List<Widget> _buildScanResultTiles(BuildContext context) {
-    log("resultnya : ${_scanResults}");
-    return _scanResults
-        .map(
-          (r) => ScanResultTile(
-            result: r,
-            onTap: () => onConnectPressed(r.device),
-          ),
-        )
-        .toList();
+    // log("resultnya : $_scanResults");
+    return _scanResults.map((r) {
+      // if (r.advertisementData.serviceData.isEmpty) {
+      //   return const SizedBox();
+      // } else {
+      //   return ScanResultTile(
+      //     result: r,
+      //     onTap: () => onConnectPressed(r.device),
+      //   );
+      // }
+      return ScanResultTile(
+        result: r,
+        onTap: () => onConnectPressed(r.device),
+      );
+    }).toList();
+  }
+
+  void _onTextChanged() {
+    String text =
+        _searchController.text.replaceAll(":", ""); // Remove existing colons
+    String formattedText = "";
+
+    // Add colon after every 2 characters
+    for (int i = 0; i < text.length; i++) {
+      formattedText += text[i];
+      if ((i + 1) % 2 == 0 && i != text.length - 1) {
+        formattedText += ":";
+      }
+    }
+
+    // Prevent unnecessary updates (cursor position fixes)
+    if (formattedText != _searchController.text) {
+      final cursorPosition = _searchController.selection.baseOffset;
+      _searchController.value = _searchController.value.copyWith(
+        text: formattedText,
+        selection: TextSelection.collapsed(
+            offset: cursorPosition +
+                (formattedText.length - _searchController.text.length)),
+      );
+    }
+  }
+
+  void scanForDevices(String targetMacAddress) {
+    log("Scanning for devices...");
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
+    bool isFound = false;
+
+    _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
+      log("LISTENNNING");
+      for (ScanResult result in results) {
+        // log("device remote id : ${result.device} == ${targetMacAddress.toUpperCase()}");
+        // Match device ID with the target MAC address
+        if (result.device.remoteId.toString().toUpperCase() ==
+            targetMacAddress.toUpperCase()) {
+          log("Target Device Found: ${result.device}");
+
+          isFound = true;
+          FlutterBluePlus.stopScan(); // Stop scanning
+          onConnectPressed(result.device);
+          _scanResultsSubscription.cancel();
+          break;
+        }
+      }
+    });
+
+    log("isFound : $isFound");
+    if (isFound == false) {
+      Snackbar.show(ABC.c, "Target Device Not Found", success: false);
+    }
   }
 
   @override
@@ -155,13 +235,74 @@ class _ScanScreenState extends State<ScanScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Find Devices'),
+          actions: [
+            IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("Search"),
+                      content: Form(
+                        child: TextFormField(
+                          controller: _searchController,
+                          decoration: const InputDecoration(
+                            labelText: "Enter MAC Addresses",
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(20)
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _searchController.clear();
+                          },
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            if (_searchController.text.isNotEmpty &&
+                                _searchController.text.length > 16) {
+                              log("search text : ${_searchController.text}");
+                              scanForDevices(_searchController.text);
+
+                              Navigator.pop(context);
+                              _searchController.clear();
+                            } else {
+                              Snackbar.show(
+                                  ABC.b, "Please enter a valid MAC address",
+                                  success: false);
+                            }
+                          },
+                          child: const Text("Search"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              icon: const Icon(
+                Icons.search,
+              ),
+            ),
+          ],
         ),
         body: RefreshIndicator(
           onRefresh: onRefresh,
           child: ListView(
             children: <Widget>[
               ..._buildSystemDeviceTiles(context),
-              // ..._buildScanResultTiles(context),
+              ..._buildScanResultTiles(context),
             ],
           ),
         ),

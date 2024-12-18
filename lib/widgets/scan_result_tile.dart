@@ -78,7 +78,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            widget.result.device.remoteId.str,
+            "remote ID : " + widget.result.device.remoteId.str,
             style: Theme.of(context).textTheme.bodySmall,
           )
         ],
@@ -127,12 +127,12 @@ class _ScanResultTileState extends State<ScanResultTile> {
 
   @override
   Widget build(BuildContext context) {
-    log("resultnya : ${widget.result}");
+    // log("resultnya : ${widget.result}");
     var adv = widget.result.advertisementData;
-    log("advnya : $adv");
+    // log("advnya : $adv");
     return ExpansionTile(
       title: _buildTitle(context),
-      leading: Text(widget.result.rssi.toString()),
+      leading: Text("RSSI: " + widget.result.rssi.toString()),
       trailing: _buildConnectButton(context),
       children: <Widget>[
         if (adv.advName.isNotEmpty) _buildAdvRow(context, 'Name', adv.advName),
