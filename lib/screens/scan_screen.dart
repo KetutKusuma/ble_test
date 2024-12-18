@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:ble_test/screens/login_handshake_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -107,8 +108,9 @@ class _ScanScreenState extends State<ScanScreen> {
           success: false);
     });
     MaterialPageRoute route = MaterialPageRoute(
-        builder: (context) => DeviceScreen(device: device),
-        settings: const RouteSettings(name: '/DeviceScreen'));
+        // builder: (context) => DeviceScreen(device: device),
+        builder: (context) => LoginHandshakeScreen(device: device),
+        settings: const RouteSettings(name: '/LoginShakeScreen'));
     Navigator.of(context).push(route);
   }
 

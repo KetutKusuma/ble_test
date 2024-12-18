@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:developer' as developerDart;
 import 'dart:typed_data';
 
+import 'package:ble_test/utils/bytes_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -260,6 +261,16 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
               return Text("UUID : $uuid", style: const TextStyle(fontSize: 13));
             }(context),
             (BuildContext context) {
+              developerDart.log(
+                "VALUE : $_value, ${widget.characteristic.properties.notify}, ${_value.isNotEmpty}",
+              );
+
+              if (widget.characteristic.properties.notify &&
+                  _value.isNotEmpty) {
+                developerDart.log("MASOK GA SINI");
+                int int16s = BytesConvert.bytesToInt32(_value);
+                developerDart.log("INT32S : $int16s");
+              }
               String data = utf8.decode(_value).toString();
               // String data = _value.toString();
 

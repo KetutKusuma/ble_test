@@ -443,12 +443,32 @@ class _DeviceScreenState extends State<DeviceScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(device.platformName),
-          actions: [buildConnectButton(context)],
+          actions: [
+            Row(children: [
+              if (_isConnecting || _isDisconnecting) buildSpinner(context),
+              TextButton(
+                  onPressed: _isConnecting
+                      ? onCancelPressed
+                      : (isConnected ? onDisconnectPressed : onConnectPressed),
+                  child: Text(
+                    _isConnecting
+                        ? "CANCEL"
+                        : (isConnected ? "DISCONNECT" : "CONNECT"),
+                    style: Theme.of(context)
+                        .primaryTextTheme
+                        .labelLarge
+                        ?.copyWith(color: Colors.white),
+                  ))
+            ])
+          ],
         ),
         body: SingleChildScrollView(
           child: Column(
             children: <Widget>[
-              buildRemoteId(context),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('${device.remoteId}'),
+              ),
               ListTile(
                 leading: buildRssiTile(context),
                 title: Text(
@@ -456,7 +476,21 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 trailing: buildGetServices(context),
               ),
               buildMtuTile(context),
-              ..._buildServiceTiles(context, widget.device),
+              ..._services
+                  .map(
+                    (s) => ServiceTile(
+                      service: s,
+                      characteristicTiles: s.characteristics
+                          .map((c) => CharacteristicTile(
+                                characteristic: c,
+                                descriptorTiles: c.descriptors
+                                    .map((d) => DescriptorTile(descriptor: d))
+                                    .toList(),
+                              ))
+                          .toList(),
+                    ),
+                  )
+                  .toList(),
               // Text("Value : $valueChar"),
               // IconButton(
               //   onPressed: () => showPopupForm(context),
