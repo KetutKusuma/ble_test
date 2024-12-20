@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:developer' as developerDart;
 import 'dart:typed_data';
 
-import 'package:ble_test/utils/bytes_convert.dart';
+import 'package:ble_test/utils/converter/bytes_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -37,6 +37,7 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
     super.initState();
     _lastValueSubscription =
         widget.characteristic.lastValueStream.listen((value) {
+      developerDart.log("message : $value");
       _value = value;
       if (mounted) {
         setState(() {});

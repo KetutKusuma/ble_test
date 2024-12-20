@@ -1,4 +1,4 @@
-import 'bytes_convert.dart';
+import 'package:ble_test/utils/converter/bytes_convert.dart';
 
 enum Translation {
   string,

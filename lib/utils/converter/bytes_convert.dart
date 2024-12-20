@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -38,6 +39,11 @@ class BytesConvert {
     // Read as int32 (little-endian)
     int result = byteData.getInt32(0, Endian.little);
     return result;
+  }
+
+  static bool bytesToBool(List<int> bytes) {
+    bool value = bytes.isNotEmpty && bytes[0] == 1;
+    return value;
   }
 }
 
