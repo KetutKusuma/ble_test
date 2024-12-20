@@ -1,23 +1,19 @@
 import 'package:ble_test/utils/converter/bytes_convert.dart';
-
-enum Translation {
-  string,
-  int8,
-  int16,
-  int32,
-}
+import 'package:ble_test/utils/feature/enum_feature.dart';
 
 class TranslationCustom {
-  static dynamic getTranslation(Translation type, List<int> bytes) {
+  static dynamic getTranslation(ReturnType type, List<int> bytes) {
     switch (type) {
-      case Translation.string:
+      case ReturnType.string:
         return BytesConvert.bytesToString(bytes);
-      case Translation.int8:
+      case ReturnType.int8:
         return BytesConvert.bytesToInt8(bytes);
-      case Translation.int16:
+      case ReturnType.int16:
         return BytesConvert.bytesToInt16(bytes);
-      case Translation.int32:
+      case ReturnType.int32:
         return BytesConvert.bytesToInt32(bytes);
+      case ReturnType.bool:
+        return BytesConvert.bytesToBool(bytes);
     }
   }
 }
