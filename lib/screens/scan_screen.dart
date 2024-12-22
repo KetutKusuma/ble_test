@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:ble_test/screens/login_handshake_screen.dart';
+import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -37,7 +37,8 @@ class _ScanScreenState extends State<ScanScreen> {
         setState(() {});
       }
     }, onError: (e) {
-      Snackbar.show(ABC.b, prettyException("Scan Error:", e), success: false);
+      Snackbar.show(ScreenSnackbar.scan, prettyException("Scan Error:", e),
+          success: false);
     });
 
     _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
@@ -65,10 +66,11 @@ class _ScanScreenState extends State<ScanScreen> {
     } catch (e) {
       if (e.toString() ==
           "RangeError (index): Invalid value: Valid value range is empty: 0") {
-        Snackbar.show(ABC.b, "System Devices is Not Found", success: false);
+        Snackbar.show(ScreenSnackbar.scan, "System Devices is Not Found",
+            success: false);
       } else {
         Snackbar.show(
-          ABC.b,
+          ScreenSnackbar.scan,
           prettyException("System Devices Error:", e),
           success: false,
         );
@@ -80,9 +82,11 @@ class _ScanScreenState extends State<ScanScreen> {
     } catch (e) {
       if (e.toString() ==
           "RangeError (index): Invalid value: Valid value range is empty: 0") {
-        Snackbar.show(ABC.b, "Start Scan Result is Not Found", success: false);
+        Snackbar.show(ScreenSnackbar.scan, "Start Scan Result is Not Found",
+            success: false);
       } else {
-        Snackbar.show(ABC.b, prettyException("Start Scan Error:", e),
+        Snackbar.show(
+            ScreenSnackbar.scan, prettyException("Start Scan Error:", e),
             success: false);
       }
       print(e);
@@ -96,7 +100,7 @@ class _ScanScreenState extends State<ScanScreen> {
     try {
       FlutterBluePlus.stopScan();
     } catch (e) {
-      Snackbar.show(ABC.b, prettyException("Stop Scan Error:", e),
+      Snackbar.show(ScreenSnackbar.scan, prettyException("Stop Scan Error:", e),
           success: false);
       print(e);
     }
@@ -104,7 +108,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void onConnectPressed(BluetoothDevice device) {
     device.connectAndUpdateStream().catchError((e) {
-      Snackbar.show(ABC.c, prettyException("Connect Error:", e),
+      Snackbar.show(ScreenSnackbar.scan, prettyException("Connect Error:", e),
           success: false);
     });
     MaterialPageRoute route = MaterialPageRoute(
@@ -226,14 +230,15 @@ class _ScanScreenState extends State<ScanScreen> {
 
     log("isFound : $isFound");
     if (isFound == false) {
-      Snackbar.show(ABC.c, "Target Device Not Found", success: false);
+      Snackbar.show(ScreenSnackbar.scan, "Target Device Not Found",
+          success: false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyB,
+      key: Snackbar.snackBarKeyScan,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Find Devices'),
@@ -281,8 +286,8 @@ class _ScanScreenState extends State<ScanScreen> {
                               Navigator.pop(context);
                               _searchController.clear();
                             } else {
-                              Snackbar.show(
-                                  ABC.b, "Please enter a valid MAC address",
+                              Snackbar.show(ScreenSnackbar.scan,
+                                  "Please enter a valid MAC address",
                                   success: false);
                             }
                           },

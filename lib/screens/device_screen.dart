@@ -116,13 +116,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
     try {
       await device.connectAndUpdateStream();
       // listenToDeviceTest(device);
-      Snackbar.show(ABC.c, "Connect: Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "Connect: Success", success: true);
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(ABC.c, prettyException("Connect Error:", e),
+        Snackbar.show(
+            ScreenSnackbar.device, prettyException("Connect Error:", e),
             success: false);
         log(e.toString());
       }
@@ -132,9 +133,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ABC.c, "Cancel: Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "Cancel: Success", success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Cancel Error:", e), success: false);
+      Snackbar.show(ScreenSnackbar.device, prettyException("Cancel Error:", e),
+          success: false);
       log(e.toString());
     }
   }
@@ -142,9 +144,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ABC.c, "Disconnect: Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "Disconnect: Success",
+          success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Disconnect Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.device, prettyException("Disconnect Error:", e),
           success: false);
       log(e.toString());
     }
@@ -158,9 +162,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
     try {
       _services = await device.discoverServices();
-      Snackbar.show(ABC.c, "Discover Services: Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "Discover Services: Success",
+          success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Discover Services Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.device, prettyException("Discover Services Error:", e),
           success: false);
       log(e.toString());
     }
@@ -174,9 +180,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future onRequestMtuPressed() async {
     try {
       await device.requestMtu(512, predelay: 0);
-      Snackbar.show(ABC.c, "Request Mtu: Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "Request Mtu: Success",
+          success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Change Mtu Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.device, prettyException("Change Mtu Error:", e),
           success: false);
       log(e.toString());
     }
@@ -439,7 +447,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyC,
+      key: Snackbar.snackBarKeyDevice,
       child: Scaffold(
         appBar: AppBar(
           title: Text(device.platformName),

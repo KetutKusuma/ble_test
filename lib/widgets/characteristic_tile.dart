@@ -66,9 +66,10 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
   Future onReadPressed() async {
     try {
       await c.read();
-      Snackbar.show(ABC.c, "Read: Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "Read: Success", success: true);
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Read Error:", e), success: false);
+      Snackbar.show(ScreenSnackbar.device, prettyException("Read Error:", e),
+          success: false);
       print(e);
     }
   }
@@ -110,7 +111,8 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
                     Uint8List bytes = Uint8List.fromList(list);
                     await c.write(bytes,
                         withoutResponse: c.properties.writeWithoutResponse);
-                    Snackbar.show(ABC.c, "Write: Success", success: true);
+                    Snackbar.show(ScreenSnackbar.device, "Write: Success",
+                        success: true);
                     if (c.properties.read) {
                       await c.read();
                     }
@@ -126,7 +128,8 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
         },
       );
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Write Error:", e), success: false);
+      Snackbar.show(ScreenSnackbar.device, prettyException("Write Error:", e),
+          success: false);
       print(e);
     }
   }
@@ -135,7 +138,7 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
     try {
       String op = c.isNotifying == false ? "Subscribe" : "Unubscribe";
       await c.setNotifyValue(c.isNotifying == false);
-      Snackbar.show(ABC.c, "$op : Success", success: true);
+      Snackbar.show(ScreenSnackbar.device, "$op : Success", success: true);
       if (c.properties.read) {
         await c.read();
       }
@@ -143,7 +146,8 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
         setState(() {});
       }
     } catch (e) {
-      Snackbar.show(ABC.c, prettyException("Subscribe Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.device, prettyException("Subscribe Error:", e),
           success: false);
       print(e);
     }
@@ -269,8 +273,8 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
               if (widget.characteristic.properties.notify &&
                   _value.isNotEmpty) {
                 developerDart.log("MASOK GA SINI");
-                int int16s = BytesConvert.bytesToInt32(_value);
-                developerDart.log("INT32S : $int16s");
+                // int int16s = BytesConvert.bytesToInt32(_value);
+                // developerDart.log("INT32S : $int16s");
               }
               String data = utf8.decode(_value).toString();
               // String data = _value.toString();

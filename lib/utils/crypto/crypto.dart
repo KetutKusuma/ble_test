@@ -59,7 +59,7 @@ class CryptoAES256 {
     List<int> bytes = [];
     for (int i = 0; i < resMD5.length; i += 2) {
       // Parse each pair of hex characters into a byte
-      print("$i ${resMD5.substring(i, i + 2)}");
+      // print("$i ${resMD5.substring(i, i + 2)}");
       bytes.add(int.parse(resMD5.substring(i, i + 2), radix: 16));
     }
 
