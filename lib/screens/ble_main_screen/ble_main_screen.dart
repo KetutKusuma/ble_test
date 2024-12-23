@@ -5,7 +5,9 @@ import 'dart:typed_data';
 
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
 import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
+import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +53,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
         setState(() {});
       }
     });
+    initDiscoverServices();
   }
 
   @override
@@ -61,6 +64,64 @@ class _BleMainScreenState extends State<BleMainScreen> {
     // _lastValueSubscription.cancel();
     onLogout();
     isLogout = false;
+  }
+
+  Future initDiscoverServices() async {
+    await Future.delayed(const Duration(seconds: 2));
+    try {
+      _services = await device.discoverServices();
+      initSubscription();
+      // initLastValueSubscription(_device);
+    } catch (e) {
+      Snackbar.show(
+          ScreenSnackbar.login, prettyException("Discover Services Error:", e),
+          success: false);
+      log(e.toString());
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  // init subscription
+  void initSubscription() {
+    for (var service in _services) {
+      // log("characteristic : ${service.characteristics}");
+      for (var characteristic in service.characteristics) {
+        // log("ini true kah : ${characteristic.properties.notify}");
+        if (characteristic.properties.notify) {
+          // await characteristic
+          onSubscribePressed(characteristic);
+          if (mounted) {
+            setState(() {});
+          }
+        }
+      }
+    }
+  }
+
+  Future onSubscribePressed(BluetoothCharacteristic c) async {
+    log("masuk sini tak ?");
+    try {
+      String op = c.isNotifying == false ? "Subscribe" : "Unubscribe";
+      await c.setNotifyValue(true);
+      // if (c.isNotifying) {
+      //   initLastValueSubscription(_device);
+      // }
+      Snackbar.show(ScreenSnackbar.login, "$op : Success", success: true);
+      if (c.properties.read) {
+        await c.read();
+      }
+      log("set value notify success");
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      Snackbar.show(
+          ScreenSnackbar.login, prettyException("Subscribe Error:", e),
+          success: false);
+      log("notify set error : $e");
+    }
   }
 
   // GET
@@ -211,6 +272,40 @@ class _BleMainScreenState extends State<BleMainScreen> {
               hasScrollBody: false,
               child: Column(
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                              Colors.amber.shade800,
+                            ),
+                          ),
+                          onPressed: () {
+                            List<int> list = utf8.encode("reset!");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(bytes, "Reset success", device);
+                          },
+                          child: const Text("Reset"),
+                        ),
+                        ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                              Colors.red.shade800,
+                            ),
+                          ),
+                          onPressed: () {
+                            List<int> list = utf8.encode("reset!");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(bytes, "Reset success", device);
+                          },
+                          child: const Text("Logout"),
+                        )
+                      ],
+                    ),
+                  ),
                   FeatureWidget(
                     title: "Admin Settings",
                     icon: const Icon(Icons.admin_panel_settings_outlined),
@@ -227,7 +322,16 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   FeatureWidget(
                     title: "Capture Settings",
                     icon: const Icon(Icons.camera_alt_outlined),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CaptureSettingsScreen(
+                            device: device,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   FeatureWidget(
                     title: "Receive Settings",

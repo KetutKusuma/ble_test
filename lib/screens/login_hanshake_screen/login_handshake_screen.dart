@@ -108,7 +108,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
     _mtuSubscription.cancel();
     _isConnectingSubscription.cancel();
     _isDisconnectingSubscription.cancel();
-    _lastValueSubscription.cancel();
+    // _lastValueSubscription.cancel();
     isWriteHandshake = false;
     isLogin = false;
   }
@@ -173,7 +173,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 2));
     try {
       _services = await _device.discoverServices();
       initLastValueSubscription(_device);
@@ -306,29 +306,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                                 log("BYTES : $bytes");
 
                                 log("Device : $_device");
-                                // log("services : $_services");
-
-                                /// get characteristic write
                                 funcWrite(bytes, "Handshake commmand success");
-                                // for (var service in _services) {
-                                //   for (var element in service.characteristics) {
-                                //     // log("characteristic : ${element.characteristicUuid}, ${element.uuid},  write is true : ${element.properties.write}");
-                                //     // log("TRUE KAH : ${element.properties.write}");
-                                //     if (element.properties.write) {
-                                //       // _value.clear();
-                                //       isWriteHandshake = true;
-                                //       await element.write(bytes);
-                                //       log("selesai kirim");
-                                //       await _lastValueSubscription.cancel();
-                                //       // initLastValueSubscription(_device);
-                                //       Snackbar.show(ScreenSnackbar.login, "Handsake Success",
-                                //           success: true);
-                                //       break;
-                                //     }
-                                //   }
-                                // }
-                                // setState(() {});
-                                // log("berhasil kirim data");
                               }
                             } catch (e) {
                               Snackbar.show(
@@ -401,10 +379,18 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                                       log("VALUE SEBELUM + : $_value");
                                       log("SALT1 SEBELUM + : $SALT1");
 
-                                      List<int> forIV = _value + SALT1;
+                                      String hexString = _value
+                                          .map((num) => num.toRadixString(16)
+                                              .padLeft(2, '0'))
+                                          .join();
+                                      log("hex : $hexString");
+                                      List<int> val = utf8.encode(hexString);
+                                      // List<int> _value =
+
+                                      List<int> forIV = val + SALT1;
                                       log("for iv : $forIV");
-                                      List<int> forKey1 = _value + SALT2;
-                                      List<int> forKey2 = _value + SALT3;
+                                      List<int> forKey1 = val + SALT2;
+                                      List<int> forKey2 = val + SALT3;
 
                                       log("process iv");
                                       String iv = md5.convert(forIV).toString();

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -113,7 +114,8 @@ class _ScanScreenState extends State<ScanScreen> {
     });
     MaterialPageRoute route = MaterialPageRoute(
         // builder: (context) => DeviceScreen(device: device),
-        builder: (context) => LoginHandshakeScreen(device: device),
+        // builder: (context) => LoginHandshakeScreen(device: device),
+        builder: (context) => BleMainScreen(device: device),
         settings: const RouteSettings(name: '/LoginShakeScreen'));
     Navigator.of(context).push(route);
   }

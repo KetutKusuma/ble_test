@@ -17,6 +17,7 @@ class Snackbar {
   static final snackBarKeyLogin = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyBleMain = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyAdminSettings = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeyCaptureSettings = GlobalKey<ScaffoldMessengerState>();
   static final snackBluetoothOff = GlobalKey<ScaffoldMessengerState>();
 
   static GlobalKey<ScaffoldMessengerState> getSnackbar(ScreenSnackbar ss) {

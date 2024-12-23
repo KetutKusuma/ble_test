@@ -55,7 +55,7 @@ class BytesConvert {
 
       // Read the float from the ByteData (little-endian)
       double value = byteData.getFloat32(0, Endian.little);
-      return value;
+      return (value * 100).truncateToDouble() / 100;
     } catch (e) {
       log("error When convert bytes to float : $e");
       return 0.0;

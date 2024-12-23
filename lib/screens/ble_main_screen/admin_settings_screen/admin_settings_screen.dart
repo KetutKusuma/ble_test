@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
-import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
+import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/admin_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -35,16 +33,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       _connectionStateSubscription;
   late StreamSubscription<List<int>> _lastValueSubscription;
 
+  // ignore: unused_field
   List<BluetoothService> _services = [];
   List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   String statusTxt = '-',
       idTxt = '-',
-      enableTxt = '-',
       voltCoef1Txt = '-',
       voltCoef2Txt = '-',
-      camTxt = '-',
+      brightnessText = '-',
+      contrastText = '-',
+      saturationText = '-',
+      specialEffectText = '-',
+      hMirrorText = '-',
+      vFlipText = '-',
       roleTxt = '-';
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
@@ -56,6 +59,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     {"title": "Regular", "value": 1},
     {"title": "Gateway", "value": 2},
   ];
+  List<int> bits = [];
 
   @override
   void initState() {
@@ -73,6 +77,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         setState(() {});
       }
     });
+
     idTxtController.addListener(() {
       _onTextChanged(idTxtController);
     });
@@ -151,7 +156,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       if (isConnected) {
         List<int> list = utf8.encode("raw_admin?");
         Uint8List bytes = Uint8List.fromList(list);
-        funcWrite(bytes, "Success Get Raw Admin");
+        BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
@@ -196,20 +201,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     setState(() {
                       statusTxt = result[0].toString();
                       idTxt = result[1].toString();
-                      enableTxt = result[2].toString();
-                      voltCoef1Txt = result[3].toString();
-                      voltCoef2Txt = result[4].toString();
-                      camTxt = result[5].toString();
-                      roleTxt = result[6].toString();
+                      voltCoef1Txt = result[2].toString();
+                      voltCoef2Txt = result[3].toString();
+                      brightnessText = (result[4]).toString();
+                      contrastText = (result[5]).toString();
+                      saturationText = (result[6]).toString();
+                      specialEffectText = result[7].toString();
+                      hMirrorText = result[8].toString();
+                      vFlipText = result[9].toString();
+                      roleTxt = result[10].toString();
                     });
                   }
                 }
                 // this is for set
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "enable") {
-                      enableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "id") {
+                    if (_setSettings.setSettings == "id") {
                       idTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "voltcoef1") {
                       voltCoef1Txt = _setSettings.value;
@@ -243,22 +250,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           ScreenSnackbar.login, prettyException("Last Value Error:", e),
           success: false);
       log(e.toString());
-    }
-  }
-
-  Future<void> funcWrite(Uint8List bytes, String msg) async {
-    for (var service in device.servicesList) {
-      for (var element in service.characteristics) {
-        // log("characteristic : $element");
-        if (element.properties.write && device.isConnected) {
-          await element.write(bytes);
-          log("message : $msg");
-          // if (mounted) {
-          //   Snackbar.show(ScreenSnackbar.login, msg, success: true);
-          // }
-          break;
-        }
-      }
     }
   }
 
@@ -522,7 +513,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       onTap: () {
                         // List<int> list = utf8.encode("?");
                         // Uint8List bytes = Uint8List.fromList(list);
-                        // funcWrite(bytes, "Success Get Raw Admin");
+                        // BLEUtils.funcWrite(bytes, "Success Get Raw Admin");
                       },
                     ),
                     SettingsContainer(
@@ -537,24 +528,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings =
                               SetSettingsModel(setSettings: "id", value: input);
-                          funcWrite(bytes, "Success Set ID");
-                        }
-                      },
-                    ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.check_circle_outline_outlined),
-                      title: "Enable",
-                      data: enableTxt,
-                      onTap: () async {
-                        bool? isResult = await _showTrueFalseDialog(
-                            context, "Select true or false Enable");
-                        if (isResult != null) {
-                          List<int> list = utf8.encode("enable=$isResult");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "enable",
-                              value: isResult.toString());
-                          funcWrite(bytes, "Success Set Enable");
+                          BLEUtils.funcWrite(bytes, "Success Set ID", device);
                         }
                       },
                     ),
@@ -570,7 +544,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "voltcoef1", value: input);
-                          funcWrite(bytes, "Success Set Volt Coef 1");
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Volt Coef 1", device);
                         }
                       },
                     ),
@@ -581,20 +556,50 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       onTap: () async {
                         String? input = await _showInputDialogVoltage(
                             voltageCoefTxtController);
-                        log("input v 2 : $input");
                         if (input != null) {
                           List<int> list = utf8.encode("voltage2_coef=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "voltcoef2", value: input);
-                          funcWrite(bytes, "Success Set Volt Coef 2");
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Volt Coef 2", device);
                         }
                       },
                     ),
                     SettingsContainer(
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      title: "Camera",
-                      data: (camTxt.length > 1) ? "true" : "false",
+                      icon: const Icon(Icons.brightness_5),
+                      title: "Camera Brightness",
+                      data: brightnessText,
+                      onTap: () {},
+                    ),
+                    SettingsContainer(
+                      icon: const Icon(Icons.brightness_6),
+                      title: "Camera Contrast",
+                      data: contrastText,
+                      onTap: () {},
+                    ),
+                    SettingsContainer(
+                      icon: const Icon(Icons.brightness_1_rounded),
+                      title: "Camera Saturation",
+                      data: saturationText,
+                      onTap: () {},
+                    ),
+                    SettingsContainer(
+                      icon: const Icon(CupertinoIcons.wand_stars_inverse),
+                      title: "Camera Special effect",
+                      data: specialEffectText,
+                      onTap: () {},
+                    ),
+                    SettingsContainer(
+                      icon: const Icon(Icons.flip_to_front),
+                      title: "Camera H Mirror",
+                      data: hMirrorText,
+                      onTap: () {},
+                    ),
+                    SettingsContainer(
+                      icon: const Icon(Icons.flip),
+                      title: "Camera V Flip",
+                      data: vFlipText,
                       onTap: () {},
                     ),
                     SettingsContainer(
@@ -610,7 +615,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           _setSettings = SetSettingsModel(
                               setSettings: "role",
                               value: result["value"].toString());
-                          funcWrite(bytes, "Success Set Role");
+                          BLEUtils.funcWrite(bytes, "Success Set Role", device);
                         }
                       },
                     ),
