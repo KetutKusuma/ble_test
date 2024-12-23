@@ -6,11 +6,16 @@ import 'dart:typed_data';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/meta_data_settings_screen/meta_data_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/receive_settings_screen/receive_data_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/transmit_settings_screen/transmit_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
+import 'package:ble_test/screens/capture_screen/capture_screen.dart';
 import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -258,6 +263,19 @@ class _BleMainScreenState extends State<BleMainScreen> {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyBleMain,
       child: Scaffold(
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: FloatingActionButton(
+            child: const Icon(CupertinoIcons.camera),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CaptureScreen(
+                    device: device,
+                  ),
+                ),
+              );
+            }),
         appBar: AppBar(
           title: const Text('Menu Settings'),
           elevation: 0,
@@ -353,12 +371,28 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   FeatureWidget(
                     title: "Receive Settings",
                     icon: const Icon(Icons.download_outlined),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ReceiveDataSettingsScreen(device: device),
+                        ),
+                      );
+                    },
                   ),
                   FeatureWidget(
                     title: "Transmit Settings",
                     icon: const Icon(Icons.wifi),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TransmitSettingsScreen(device: device),
+                        ),
+                      );
+                    },
                   ),
                   FeatureWidget(
                     title: "Upload Settings",
@@ -376,7 +410,15 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   FeatureWidget(
                     title: "Meta Data Settings",
                     icon: const Icon(Icons.code),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MetaDataSettingsScreen(device: device),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

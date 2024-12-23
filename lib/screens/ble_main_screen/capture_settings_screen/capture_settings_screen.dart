@@ -55,6 +55,19 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _connectionStateSubscription = device.connectionState.listen(
+      (state) async {
+        _connectionState = state;
+        if (_connectionState == BluetoothConnectionState.disconnected) {
+          Navigator.pop(
+            context,
+          );
+        }
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
     initGetRawCapture();
     initDiscoverServices();
   }
@@ -84,7 +97,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
       if (isConnected) {
         List<int> list = utf8.encode("raw_capture?");
         Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
+        BLEUtils.funcWrite(bytes, "Success Get Raw Capture", device);
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",

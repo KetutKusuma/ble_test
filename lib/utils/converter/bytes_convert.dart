@@ -23,12 +23,12 @@ class BytesConvert {
     return result;
   }
 
-  static int bytesToInt16(List<int> bytes) {
+  static int bytesToInt16(List<int> bytes, {bool isBigEndian = false}) {
     // Create a ByteData from the list
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
     // Read as int16 (little-endian)
-    int result = byteData.getInt16(0, Endian.big);
+    int result = byteData.getInt16(0, isBigEndian ? Endian.big : Endian.little);
     return result;
   }
 

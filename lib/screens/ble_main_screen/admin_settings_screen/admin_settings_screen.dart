@@ -48,6 +48,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       specialEffectText = '-',
       hMirrorText = '-',
       vFlipText = '-',
+      cameraJpgQualityTxt = '-',
       roleTxt = '-';
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
@@ -66,17 +67,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _connectionStateSubscription = device.connectionState.listen((state) async {
-      _connectionState = state;
-      if (_connectionState == BluetoothConnectionState.disconnected) {
-        Navigator.pop(
-          context,
-        );
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    });
+    _connectionStateSubscription = device.connectionState.listen(
+      (state) async {
+        _connectionState = state;
+        if (_connectionState == BluetoothConnectionState.disconnected) {
+          Navigator.pop(
+            context,
+          );
+        }
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
 
     idTxtController.addListener(() {
       _onTextChanged(idTxtController);
@@ -215,7 +218,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       specialEffectText = result[7].toString();
                       hMirrorText = result[8].toString();
                       vFlipText = result[9].toString();
-                      roleTxt = result[10] == 0
+                      cameraJpgQualityTxt = result[10].toString();
+                      roleTxt = result[11] == 0
                           ? "Undifined"
                           : result[10] == 1
                               ? "Regular"
@@ -623,6 +627,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                       title: "Camera V Flip",
                       data: vFlipText,
+                      onTap: () {},
+                    ),
+                    SettingsContainer(
+                      icon: const Icon(
+                        Icons.high_quality_outlined,
+                      ),
+                      title: "Camera Jpg Quality",
+                      data: cameraJpgQualityTxt,
                       onTap: () {},
                     ),
                     SettingsContainer(

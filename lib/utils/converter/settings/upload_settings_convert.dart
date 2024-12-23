@@ -9,7 +9,7 @@ class UploadSettingsConverter {
     }
 
     bool statusBool = bytes[0] == 1;
-    String upload = BytesConvert.bytesToString(bytes.sublist(1, 49));
+    String server = BytesConvert.bytesToString(bytes.sublist(1, 49));
     int port = BytesConvert.bytesToInt16(bytes.sublist(49, 51));
     bool uploadEnableBool = bytes[51] == 1;
     int uploadScheduleInt = BytesConvert.bytesToInt16(bytes.sublist(52, 62));
@@ -19,7 +19,7 @@ class UploadSettingsConverter {
     String wifiPassword = BytesConvert.bytesToString(bytes.sublist(81, 97));
     String modemApn = BytesConvert.bytesToString(bytes.sublist(97, 113));
 
-    log("upload : $upload");
+    log("server : '$server'");
     log("port : $port");
     log("upload enable : $uploadEnableBool");
     log("upload schedule : $uploadScheduleInt");
@@ -29,9 +29,25 @@ class UploadSettingsConverter {
     log("wifi password : $wifiPassword");
     log("modem apn : $modemApn");
 
+    if (bytes.sublist(1, 49).every((element) => element == 0)) {
+      server = '-';
+    }
+
+    if (bytes.sublist(65, 81).every((element) => element == 0)) {
+      wifiSsid = '-';
+    }
+
+    if (bytes.sublist(81, 97).every((element) => element == 0)) {
+      wifiPassword = '-';
+    }
+
+    if (bytes.sublist(97, 113).every((element) => element == 0)) {
+      modemApn = '-';
+    }
+
     return [
       statusBool,
-      upload,
+      server,
       port,
       uploadEnableBool,
       uploadScheduleInt,
@@ -41,5 +57,13 @@ class UploadSettingsConverter {
       wifiPassword,
       modemApn
     ];
+  }
+
+  static String checkString(String ss) {
+    String result = '' * 48;
+    log("${ss.length == result}");
+    if (ss.length == result) {}
+
+    return ss;
   }
 }

@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
+import 'package:ble_test/utils/converter/settings/meta_data_settings_convert.dart';
 import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/cupertino.dart';
@@ -14,15 +15,15 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
-class UploadSettingsScreen extends StatefulWidget {
+class MetaDataSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
-  const UploadSettingsScreen({super.key, required this.device});
+  const MetaDataSettingsScreen({super.key, required this.device});
 
   @override
-  State<UploadSettingsScreen> createState() => _UploadSettingsScreenState();
+  State<MetaDataSettingsScreen> createState() => _MetaDataSettingsScreenState();
 }
 
-class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
+class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
@@ -39,15 +40,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       RefreshController(initialRefresh: false);
 
   String statusTxt = '-',
-      serverTxt = '-',
-      portTxt = '-',
-      uploadEnableTxt = '-',
-      uploadScheduleTxt = '-',
-      uploadUsingTxt = '-',
-      uploadInitialDelayTxt = '-',
-      wifiSsidTxt = '-',
-      wifiPasswordTxt = '-',
-      modemApnTxt = '-';
+      modelMeterTxt = '-',
+      meterSnTxt = '-',
+      meterSealTxt = '-',
+      timeUTCTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
 
@@ -67,7 +63,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       },
     );
-    initGetRawUpload();
+    initGetRawMetaData();
     initDiscoverServices();
   }
 
@@ -81,7 +77,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawUpload();
+      initGetRawMetaData();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -89,12 +85,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     }
   }
 
-  initGetRawUpload() async {
+  initGetRawMetaData() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_upload?");
+        List<int> list = utf8.encode("raw_meta_data?");
         Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Upload", device);
+        BLEUtils.funcWrite(bytes, "Success Get Raw Meta data", device);
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
@@ -109,7 +105,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         _services = await device.discoverServices();
         initLastValueSubscription(device);
       } catch (e) {
-        Snackbar.show(ScreenSnackbar.uploadsettings,
+        Snackbar.show(ScreenSnackbar.metadatasettings,
             prettyException("Discover Services Error:", e),
             success: false);
         log(e.toString());
@@ -135,47 +131,30 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 log("VALUE : $_value, ${_value.length}");
 
                 // this is for get raw admin
-                if (_value.length > 100) {
+                if (_value.length > 45) {
                   List<dynamic> result =
-                      UploadSettingsConverter.convertUploadSettings(_value);
+                      MetaDataSettingsConvert.convertMetaDataSettings(_value);
                   if (mounted) {
-                    log("result[1]: '${result[1]}', ${result[1].trim().length} ${result[1].isEmpty}");
                     setState(() {
                       statusTxt = result[0].toString();
-                      serverTxt = "${result[1]}";
-                      portTxt = result[2].toString();
-                      uploadEnableTxt = result[3].toString();
-                      uploadScheduleTxt = result[4].toString();
-                      uploadUsingTxt = result[5].toString();
-                      uploadInitialDelayTxt = result[6].toString();
-                      wifiSsidTxt = result[7].toString();
-                      wifiPasswordTxt = result[8].toString();
-                      modemApnTxt = result[9].toString();
+                      modelMeterTxt = result[1].toString();
+                      meterSnTxt = result[2].toString();
+                      meterSealTxt = result[3].toString();
+                      timeUTCTxt = result[4].toString();
                     });
                   }
                 }
                 // this is for set
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "server") {
-                      serverTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "port") {
-                      portTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_enable") {
-                      uploadEnableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_schedule") {
-                      uploadScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_using") {
-                      uploadUsingTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "upload_initial_delay") {
-                      uploadInitialDelayTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_ssid") {
-                      wifiSsidTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_password") {
-                      wifiPasswordTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "modem_apn") {
-                      modemApnTxt = _setSettings.value;
+                    if (_setSettings.setSettings == "model_meter") {
+                      _setSettings.value = modelMeterTxt;
+                    } else if (_setSettings.setSettings == "meter_sn") {
+                      _setSettings.value = meterSnTxt;
+                    } else if (_setSettings.setSettings == "meter_seal") {
+                      _setSettings.value = meterSealTxt;
+                    } else if (_setSettings.setSettings == "time_utc") {
+                      _setSettings.value = timeUTCTxt;
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
                         "Success set ${_setSettings.setSettings}",
@@ -198,7 +177,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
+      Snackbar.show(ScreenSnackbar.metadatasettings,
           prettyException("Last Value Error:", e),
           success: false);
       log(e.toString());
@@ -208,10 +187,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyUploadSettings,
+      key: Snackbar.snackBarKeyMetadataSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Upload Settings'),
+          title: const Text('Meta Data Settings'),
           elevation: 0,
           actions: [
             Row(
@@ -254,67 +233,35 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Server",
-                      data: serverTxt,
+                      title: "Model Meter",
+                      data: modelMeterTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.compass_calibration_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Port",
-                      data: portTxt,
+                      title: "Meter SN",
+                      data: meterSnTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.podcasts_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Enable",
-                      data: uploadEnableTxt,
+                      title: "Meter Seal",
+                      data: meterSealTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.upload_file,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Using",
-                      data: uploadUsingTxt,
+                      title: "Time UTC",
+                      data: timeUTCTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.upload_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Upload Initial Delay",
-                      data: uploadInitialDelayTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.vertical_align_top_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Wifi SSID",
-                      data: wifiSsidTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.wifi_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Wifi Password",
-                      data: wifiPasswordTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.wifi_password_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Modem Wifi APN",
-                      data: modemApnTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.wifi_tethering_error,
                       ),
                     ),
                   ],
@@ -346,15 +293,15 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Connect: Success",
+      Snackbar.show(ScreenSnackbar.metadatasettings, "Connect: Success",
           success: true);
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(
-            ScreenSnackbar.uploadsettings, prettyException("Connect Error:", e),
+        Snackbar.show(ScreenSnackbar.metadatasettings,
+            prettyException("Connect Error:", e),
             success: false);
         log(e.toString());
       }
@@ -364,11 +311,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Cancel: Success",
+      Snackbar.show(ScreenSnackbar.metadatasettings, "Cancel: Success",
           success: true);
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.uploadsettings, prettyException("Cancel Error:", e),
+          ScreenSnackbar.metadatasettings, prettyException("Cancel Error:", e),
           success: false);
       log(e.toString());
     }
@@ -377,10 +324,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Disconnect: Success",
+      Snackbar.show(ScreenSnackbar.metadatasettings, "Disconnect: Success",
           success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
+      Snackbar.show(ScreenSnackbar.metadatasettings,
           prettyException("Disconnect Error:", e),
           success: false);
       log(e.toString());

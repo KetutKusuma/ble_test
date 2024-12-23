@@ -8,7 +8,7 @@ class CaptureSettingsConverter {
 
     int captureScheduleInt = BytesConvert.bytesToInt16(bytes.sublist(1, 3));
     int captureIntervalInt = BytesConvert.bytesToInt16(bytes.sublist(3, 5));
-    int captureCountInt = BytesConvert.bytesToInt8(bytes.sublist(5, 6));
+    int captureCountInt = BytesConvert.bytesToInt8([bytes[5]]);
     int captureRecentLimitInt = BytesConvert.bytesToInt16(bytes.sublist(6, 8));
     List<int> spCaptureDateInt = bytesToBits(bytes.sublist(8, 12));
     int spCaptureScheduleInt = BytesConvert.bytesToInt16(bytes.sublist(12, 14));

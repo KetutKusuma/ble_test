@@ -40,7 +40,8 @@ class AdminSettingsConverter {
     bool hmirrorBool = bytes[18] == 1;
     bool vflipBool = bytes[19] == 1;
 
-    int intRole = BytesConvert.bytesToInt8([bytes[20]]);
+    int cameraJpgQuality = BytesConvert.bytesToInt8([bytes[20]]);
+    int intRole = BytesConvert.bytesToInt8([bytes[21]]);
 
     // Print results
     log("boolStatus: $boolStatus");
@@ -53,6 +54,7 @@ class AdminSettingsConverter {
     log("specialEffectInt: $specialEffectInt");
     log("hmirrorBool: $hmirrorBool");
     log("vflipBool: $vflipBool");
+    log("cameraJpgQuality: $cameraJpgQuality");
     log("intRole: $intRole");
 
     return [
@@ -66,6 +68,7 @@ class AdminSettingsConverter {
       specialEffectInt,
       hmirrorBool,
       vflipBool,
+      cameraJpgQuality,
       intRole
     ];
   }

@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
+import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,15 +13,16 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
-class UploadSettingsScreen extends StatefulWidget {
+class ReceiveDataSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
-  const UploadSettingsScreen({super.key, required this.device});
+  const ReceiveDataSettingsScreen({super.key, required this.device});
 
   @override
-  State<UploadSettingsScreen> createState() => _UploadSettingsScreenState();
+  State<ReceiveDataSettingsScreen> createState() =>
+      _ReceiveDataSettingsScreenState();
 }
 
-class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
+class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
@@ -39,15 +39,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       RefreshController(initialRefresh: false);
 
   String statusTxt = '-',
-      serverTxt = '-',
-      portTxt = '-',
-      uploadEnableTxt = '-',
-      uploadScheduleTxt = '-',
-      uploadUsingTxt = '-',
-      uploadInitialDelayTxt = '-',
-      wifiSsidTxt = '-',
-      wifiPasswordTxt = '-',
-      modemApnTxt = '-';
+      receiveEnableTxt = '-',
+      receiveScheduleTxt = '-',
+      receiveIntervalTxt = '-',
+      receiveCountTxt = '-',
+      receiveTimeAdjust = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
 
@@ -67,7 +63,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       },
     );
-    initGetRawUpload();
+    initGetRawReceive();
     initDiscoverServices();
   }
 
@@ -81,7 +77,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawUpload();
+      initGetRawReceive();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -89,12 +85,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     }
   }
 
-  initGetRawUpload() async {
+  initGetRawReceive() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_upload?");
+        List<int> list = utf8.encode("raw_receive?");
         Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Upload", device);
+        BLEUtils.funcWrite(bytes, "Success Get Raw Receive", device);
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
@@ -109,7 +105,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         _services = await device.discoverServices();
         initLastValueSubscription(device);
       } catch (e) {
-        Snackbar.show(ScreenSnackbar.uploadsettings,
+        Snackbar.show(ScreenSnackbar.receivesettings,
             prettyException("Discover Services Error:", e),
             success: false);
         log(e.toString());
@@ -135,47 +131,34 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 log("VALUE : $_value, ${_value.length}");
 
                 // this is for get raw admin
-                if (_value.length > 100) {
+                if (_value.length > 7) {
                   List<dynamic> result =
-                      UploadSettingsConverter.convertUploadSettings(_value);
+                      ReceiveSettingsConvert.convertReceiveSettings(_value);
                   if (mounted) {
-                    log("result[1]: '${result[1]}', ${result[1].trim().length} ${result[1].isEmpty}");
                     setState(() {
                       statusTxt = result[0].toString();
-                      serverTxt = "${result[1]}";
-                      portTxt = result[2].toString();
-                      uploadEnableTxt = result[3].toString();
-                      uploadScheduleTxt = result[4].toString();
-                      uploadUsingTxt = result[5].toString();
-                      uploadInitialDelayTxt = result[6].toString();
-                      wifiSsidTxt = result[7].toString();
-                      wifiPasswordTxt = result[8].toString();
-                      modemApnTxt = result[9].toString();
+                      receiveEnableTxt = result[1].toString();
+                      receiveScheduleTxt = result[2].toString();
+                      receiveIntervalTxt = result[3].toString();
+                      receiveCountTxt = result[4].toString();
+                      receiveTimeAdjust = result[5].toString();
                     });
                   }
                 }
                 // this is for set
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "server") {
-                      serverTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "port") {
-                      portTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_enable") {
-                      uploadEnableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_schedule") {
-                      uploadScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_using") {
-                      uploadUsingTxt = _setSettings.value;
+                    if (_setSettings.setSettings == "receive_enable") {
+                      receiveEnableTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings == "receive_schedule") {
+                      receiveScheduleTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings == "receive_interval") {
+                      receiveIntervalTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings == "receive_count") {
+                      receiveCountTxt = _setSettings.value;
                     } else if (_setSettings.setSettings ==
-                        "upload_initial_delay") {
-                      uploadInitialDelayTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_ssid") {
-                      wifiSsidTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_password") {
-                      wifiPasswordTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "modem_apn") {
-                      modemApnTxt = _setSettings.value;
+                        "receive_time_adjust") {
+                      receiveTimeAdjust = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
                         "Success set ${_setSettings.setSettings}",
@@ -198,7 +181,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
+      Snackbar.show(ScreenSnackbar.receivesettings,
           prettyException("Last Value Error:", e),
           success: false);
       log(e.toString());
@@ -208,10 +191,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyUploadSettings,
+      key: Snackbar.snackBarKeyReceiveSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Upload Settings'),
+          title: const Text('Receive Settings'),
           elevation: 0,
           actions: [
             Row(
@@ -254,67 +237,43 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Server",
-                      data: serverTxt,
+                      title: "Receive Enable",
+                      data: receiveEnableTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.compass_calibration_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Port",
-                      data: portTxt,
+                      title: "Receive Schedule",
+                      data: receiveScheduleTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.podcasts_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Enable",
-                      data: uploadEnableTxt,
+                      title: "Receive Interval",
+                      data: receiveIntervalTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.upload_file,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Using",
-                      data: uploadUsingTxt,
+                      title: "Receive Count",
+                      data: receiveCountTxt,
                       onTap: () {},
                       icon: const Icon(
                         Icons.upload_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Initial Delay",
-                      data: uploadInitialDelayTxt,
+                      title: "Receive Time Adjust",
+                      data: receiveTimeAdjust,
                       onTap: () {},
                       icon: const Icon(
                         Icons.vertical_align_top_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Wifi SSID",
-                      data: wifiSsidTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.wifi_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Wifi Password",
-                      data: wifiPasswordTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.wifi_password_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Modem Wifi APN",
-                      data: modemApnTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.wifi_tethering_error,
                       ),
                     ),
                   ],
@@ -346,15 +305,15 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Connect: Success",
+      Snackbar.show(ScreenSnackbar.receivesettings, "Connect: Success",
           success: true);
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(
-            ScreenSnackbar.uploadsettings, prettyException("Connect Error:", e),
+        Snackbar.show(ScreenSnackbar.receivesettings,
+            prettyException("Connect Error:", e),
             success: false);
         log(e.toString());
       }
@@ -364,11 +323,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Cancel: Success",
+      Snackbar.show(ScreenSnackbar.receivesettings, "Cancel: Success",
           success: true);
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.uploadsettings, prettyException("Cancel Error:", e),
+          ScreenSnackbar.receivesettings, prettyException("Cancel Error:", e),
           success: false);
       log(e.toString());
     }
@@ -377,10 +336,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Disconnect: Success",
+      Snackbar.show(ScreenSnackbar.receivesettings, "Disconnect: Success",
           success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
+      Snackbar.show(ScreenSnackbar.receivesettings,
           prettyException("Disconnect Error:", e),
           success: false);
       log(e.toString());

@@ -7,9 +7,13 @@ enum ScreenSnackbar {
   scan,
   login,
   blemain,
-  adminsettings,
   bluetoothoff,
-  capturesettings
+  adminsettings,
+  capturesettings,
+  metadatasettings,
+  receivesettings,
+  transmitsettings,
+  uploadsettings,
 }
 
 class Snackbar {
@@ -20,6 +24,13 @@ class Snackbar {
   static final snackBarKeyAdminSettings = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyCaptureSettings = GlobalKey<ScaffoldMessengerState>();
   static final snackBluetoothOff = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeyMetadataSettings =
+      GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeyReceiveSettings = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeyTransmitSettings =
+      GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeyUploadSettings = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarCapture = GlobalKey<ScaffoldMessengerState>();
 
   static GlobalKey<ScaffoldMessengerState> getSnackbar(ScreenSnackbar ss) {
     switch (ss) {
@@ -37,6 +48,14 @@ class Snackbar {
         return snackBluetoothOff;
       case ScreenSnackbar.capturesettings:
         return snackBarKeyCaptureSettings;
+      case ScreenSnackbar.metadatasettings:
+        return snackBarKeyMetadataSettings;
+      case ScreenSnackbar.receivesettings:
+        return snackBarKeyReceiveSettings;
+      case ScreenSnackbar.transmitsettings:
+        return snackBarKeyTransmitSettings;
+      case ScreenSnackbar.uploadsettings:
+        return snackBarKeyUploadSettings;
     }
   }
 
