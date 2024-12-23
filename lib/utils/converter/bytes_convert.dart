@@ -28,7 +28,7 @@ class BytesConvert {
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
     // Read as int16 (little-endian)
-    int result = byteData.getInt16(0, Endian.little);
+    int result = byteData.getInt16(0, Endian.big);
     return result;
   }
 

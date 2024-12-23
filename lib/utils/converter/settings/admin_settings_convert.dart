@@ -8,9 +8,9 @@ class AdminSettingsConverter {
       throw Exception("Invalid bytes convert");
     }
 
-    for (int i = 0; i < bytes.length; i++) {
-      log("mama [$i] = ${bytes[i]}");
-    }
+    // for (int i = 0; i < bytes.length; i++) {
+    //   log("mama [$i] = ${bytes[i]}");
+    // }
 
     // 0:1 -> byte to bool
     bool boolStatus = bytes[0] != 0;
@@ -33,14 +33,14 @@ class AdminSettingsConverter {
     double floatVoltageCoef2 =
         BytesConvert.bytesToFloatorDouble(bytes.sublist(10, 14));
 
-    int brightnessInt = BytesConvert.bytesToInt8([bytes[13]]);
-    int contrastInt = BytesConvert.bytesToInt8([bytes[14]]);
-    int saturationInt = BytesConvert.bytesToInt8([bytes[15]]);
-    int specialEffectInt = BytesConvert.bytesToInt8([bytes[16]]);
-    bool hmirrorBool = bytes[17] == 1;
-    bool vflipBool = bytes[18] == 1;
+    int brightnessInt = BytesConvert.bytesToInt8([bytes[14]]);
+    int contrastInt = BytesConvert.bytesToInt8([bytes[15]]);
+    int saturationInt = BytesConvert.bytesToInt8([bytes[16]]);
+    int specialEffectInt = BytesConvert.bytesToInt8([bytes[17]]);
+    bool hmirrorBool = bytes[18] == 1;
+    bool vflipBool = bytes[19] == 1;
 
-    int intRole = BytesConvert.bytesToInt8([bytes[19]]);
+    int intRole = BytesConvert.bytesToInt8([bytes[20]]);
 
     // Print results
     log("boolStatus: $boolStatus");

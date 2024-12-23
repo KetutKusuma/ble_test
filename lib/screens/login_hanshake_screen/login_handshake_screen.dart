@@ -40,7 +40,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
   late StreamSubscription<bool> _isConnectingSubscription;
   late StreamSubscription<bool> _isDisconnectingSubscription;
   late StreamSubscription<int> _mtuSubscription;
-  late StreamSubscription<List<int>> _lastValueSubscription;
+  late StreamSubscription<List<int>>? _lastValueSubscription;
   late BluetoothDevice _device;
   final TextEditingController _userRoleTxtController = TextEditingController();
   final TextEditingController _passwordTxtController = TextEditingController();
@@ -108,7 +108,9 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
     _mtuSubscription.cancel();
     _isConnectingSubscription.cancel();
     _isDisconnectingSubscription.cancel();
-    // _lastValueSubscription.cancel();
+    if (_lastValueSubscription != null) {
+      _lastValueSubscription!.cancel();
+    }
     isWriteHandshake = false;
     isLogin = false;
   }

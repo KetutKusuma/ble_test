@@ -8,7 +8,8 @@ enum ScreenSnackbar {
   login,
   blemain,
   adminsettings,
-  bluetoothoff
+  bluetoothoff,
+  capturesettings
 }
 
 class Snackbar {
@@ -34,6 +35,8 @@ class Snackbar {
         return snackBarKeyAdminSettings;
       case ScreenSnackbar.bluetoothoff:
         return snackBluetoothOff;
+      case ScreenSnackbar.capturesettings:
+        return snackBarKeyCaptureSettings;
     }
   }
 

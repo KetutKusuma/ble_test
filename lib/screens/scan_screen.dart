@@ -244,6 +244,7 @@ class _ScanScreenState extends State<ScanScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Find Devices'),
+          elevation: 0,
           actions: [
             IconButton(
               onPressed: () {

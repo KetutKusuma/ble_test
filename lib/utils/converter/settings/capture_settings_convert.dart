@@ -13,7 +13,7 @@ class CaptureSettingsConverter {
     List<int> spCaptureDateInt = bytesToBits(bytes.sublist(8, 12));
     int spCaptureScheduleInt = BytesConvert.bytesToInt16(bytes.sublist(12, 14));
     int spCaptureIntervalInt = BytesConvert.bytesToInt16(bytes.sublist(14, 16));
-    int spCaptureCountInt = BytesConvert.bytesToInt8([bytes[17]]);
+    int spCaptureCountInt = BytesConvert.bytesToInt8([bytes[16]]);
 
     log("capture schedule : $captureScheduleInt");
     log("capture interval : $captureIntervalInt");

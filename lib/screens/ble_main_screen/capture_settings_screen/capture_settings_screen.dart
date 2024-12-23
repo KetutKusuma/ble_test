@@ -32,7 +32,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  late StreamSubscription<List<int>> _lastValueSubscription;
+  StreamSubscription<List<int>>? _lastValueSubscription;
 
   List<BluetoothService> _services = [];
   List<int> _value = [];
@@ -49,22 +49,30 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  bool isCaptureSettings = true;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    initGetRawCapture();
+    initDiscoverServices();
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
+    isCaptureSettings = false;
+    if (_lastValueSubscription != null) {
+      _lastValueSubscription!.cancel();
+    }
   }
 
   onRefresh() async {
     try {
       initGetRawCapture();
+      await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
       log("Error on refresh : $e");
@@ -91,7 +99,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         _services = await device.discoverServices();
         initLastValueSubscription(device);
       } catch (e) {
-        Snackbar.show(ScreenSnackbar.login,
+        Snackbar.show(ScreenSnackbar.capturesettings,
             prettyException("Discover Services Error:", e),
             success: false);
         log(e.toString());
@@ -108,9 +116,12 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              log("is notifying ga nih : ${characters.isNotifying}");
-              if (characters.properties.notify) {
+              if (characters.properties.notify && isCaptureSettings) {
+                log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
+                if (mounted) {
+                  setState(() {});
+                }
                 log("VALUE : $_value, ${_value.length}");
 
                 // this is for get raw admin
@@ -165,8 +176,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         }
       }
     } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Last Value Error:", e),
+      Snackbar.show(ScreenSnackbar.capturesettings,
+          prettyException("Last Value Error:", e),
           success: false);
       log(e.toString());
     }
@@ -253,6 +264,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
+                    Text("VALUE : $_value"),
                     SettingsContainer(
                       title: "Status",
                       data: statusTxt,
@@ -302,7 +314,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.calendar_month_outlined,
+                        Icons.trending_up_sharp,
                       ),
                     ),
                     SettingsContainer(
@@ -311,20 +323,20 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       onTap: () async {
                         if (isConnected) {
                           String? input = await _showInputDialog(
-                              controller, "Capture Interval");
+                              controller, "Capture Count");
                           if (input != null) {
-                            _setSettings.setSettings = "capture_interval";
+                            _setSettings.setSettings = "capture_count";
                             _setSettings.value = input;
                             List<int> list =
-                                utf8.encode("capture_interval=$input");
+                                utf8.encode("capture_count=$input");
                             Uint8List bytes = Uint8List.fromList(list);
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Capture Interval", device);
+                                bytes, "Success Set Capture Count", device);
                           }
                         }
                       },
                       icon: const Icon(
-                        Icons.calendar_month_outlined,
+                        Icons.looks_3_outlined,
                       ),
                     ),
                     SettingsContainer(
@@ -333,20 +345,20 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       onTap: () async {
                         if (isConnected) {
                           String? input = await _showInputDialog(
-                              controller, "Capture Interval");
+                              controller, "Capture Recent Limit");
                           if (input != null) {
-                            _setSettings.setSettings = "capture_interval";
+                            _setSettings.setSettings = "capture_recent_limit";
                             _setSettings.value = input;
                             List<int> list =
-                                utf8.encode("capture_interval=$input");
+                                utf8.encode("capture_recent_limit=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Capture Interval", device);
+                            BLEUtils.funcWrite(bytes,
+                                "Success Set Capture Recent Limit", device);
                           }
                         }
                       },
                       icon: const Icon(
-                        Icons.calendar_month_outlined,
+                        Icons.switch_camera_outlined,
                       ),
                     ),
                   ],
@@ -378,14 +390,15 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.login, "Connect: Success", success: true);
+      Snackbar.show(ScreenSnackbar.capturesettings, "Connect: Success",
+          success: true);
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(
-            ScreenSnackbar.login, prettyException("Connect Error:", e),
+        Snackbar.show(ScreenSnackbar.capturesettings,
+            prettyException("Connect Error:", e),
             success: false);
         log(e.toString());
       }
@@ -395,9 +408,11 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.login, "Cancel: Success", success: true);
+      Snackbar.show(ScreenSnackbar.capturesettings, "Cancel: Success",
+          success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.login, prettyException("Cancel Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.capturesettings, prettyException("Cancel Error:", e),
           success: false);
       log(e.toString());
     }
@@ -406,10 +421,11 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.login, "Disconnect: Success", success: true);
+      Snackbar.show(ScreenSnackbar.capturesettings, "Disconnect: Success",
+          success: true);
     } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Disconnect Error:", e),
+      Snackbar.show(ScreenSnackbar.capturesettings,
+          prettyException("Disconnect Error:", e),
           success: false);
       log(e.toString());
     }

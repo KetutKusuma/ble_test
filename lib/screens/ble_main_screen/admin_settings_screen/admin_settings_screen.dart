@@ -31,7 +31,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  late StreamSubscription<List<int>> _lastValueSubscription;
+  StreamSubscription<List<int>>? _lastValueSubscription;
 
   // ignore: unused_field
   List<BluetoothService> _services = [];
@@ -60,6 +60,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     {"title": "Gateway", "value": 2},
   ];
   List<int> bits = [];
+  bool isAdminSettings = true;
 
   @override
   void initState() {
@@ -68,7 +69,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
-        _lastValueSubscription.cancel();
         Navigator.pop(
           context,
         );
@@ -114,7 +114,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     // TODO: implement dispose
     super.dispose();
     _connectionStateSubscription.cancel();
-    // _lastValueSubscription.cancel();
+    if (_lastValueSubscription != null) {
+      _lastValueSubscription!.cancel();
+    }
+    isAdminSettings = false;
   }
 
   void _onTextChanged(TextEditingController textEditingController) {
@@ -145,6 +148,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   onRefresh() async {
     try {
       initGetRawAdmin();
+      await Future.delayed(
+        const Duration(seconds: 1),
+      );
       _refreshController.refreshCompleted();
     } catch (e) {
       log("Error on refresh : $e");
@@ -189,7 +195,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
               log("is notifying ga nih : ${characters.isNotifying}");
-              if (characters.properties.notify) {
+              if (characters.properties.notify && isAdminSettings) {
                 _value = value;
                 log("VALUE : $_value, ${_value.length}");
 
@@ -209,7 +215,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       specialEffectText = result[7].toString();
                       hMirrorText = result[8].toString();
                       vFlipText = result[9].toString();
-                      roleTxt = result[10].toString();
+                      roleTxt = result[10] == 0
+                          ? "Undifined"
+                          : result[10] == 1
+                              ? "Regular"
+                              : result[10] == 2
+                                  ? "Gateway"
+                                  : "Error";
                     });
                   }
                 }
@@ -223,7 +235,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     } else if (_setSettings.setSettings == "voltcoef2") {
                       voltCoef2Txt = _setSettings.value;
                     } else if (_setSettings.setSettings == "role") {
-                      roleTxt = _setSettings.value;
+                      roleTxt = _setSettings.value == "0"
+                          ? "Undifined"
+                          : _setSettings.value == "1"
+                              ? "Regular"
+                              : _setSettings.value == "2"
+                                  ? "Gateway"
+                                  : "Error";
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
                         "Success set ${_setSettings.setSettings}",
@@ -411,7 +429,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
               decoration: const InputDecoration(
-                labelText: 'Enter a value between 0.5 and 1.5',
+                labelText: 'Value between 0.5 and 1.5',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -591,13 +609,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       onTap: () {},
                     ),
                     SettingsContainer(
-                      icon: const Icon(Icons.flip_to_front),
+                      icon: const Icon(Icons.flip),
                       title: "Camera H Mirror",
                       data: hMirrorText,
                       onTap: () {},
                     ),
                     SettingsContainer(
-                      icon: const Icon(Icons.flip),
+                      icon: Transform.rotate(
+                        angle: 3.14 / 2,
+                        child: const Icon(
+                          Icons.flip,
+                        ),
+                      ),
                       title: "Camera V Flip",
                       data: vFlipText,
                       onTap: () {},
@@ -618,6 +641,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           BLEUtils.funcWrite(bytes, "Success Set Role", device);
                         }
                       },
+                    ),
+                    const SizedBox(
+                      height: 20,
                     ),
                   ],
                 ),

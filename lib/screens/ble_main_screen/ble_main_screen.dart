@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
 import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/extra.dart';
@@ -32,7 +33,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
   bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  late StreamSubscription<List<int>> _lastValueSubscription;
+  StreamSubscription<List<int>>? _lastValueSubscription;
 
   List<BluetoothService> _services = [];
   List<int> _value = [];
@@ -42,7 +43,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    initMtuRequest();
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
@@ -61,7 +62,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
     // TODO: implement dispose
     super.dispose();
     _connectionStateSubscription.cancel();
-    // _lastValueSubscription.cancel();
+    if (_lastValueSubscription != null) {
+      _lastValueSubscription!.cancel();
+    }
     onLogout();
     isLogout = false;
   }
@@ -97,6 +100,19 @@ class _BleMainScreenState extends State<BleMainScreen> {
           }
         }
       }
+    }
+  }
+
+  Future initMtuRequest() async {
+    try {
+      await device.requestMtu(512, predelay: 1);
+      Snackbar.show(ScreenSnackbar.login, "Request Mtu: Success",
+          success: true);
+    } catch (e) {
+      Snackbar.show(
+          ScreenSnackbar.login, prettyException("Change Mtu Error:", e),
+          success: false);
+      log(e.toString());
     }
   }
 
@@ -244,6 +260,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Menu Settings'),
+          elevation: 0,
           actions: [
             Row(
               children: [
@@ -346,7 +363,15 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   FeatureWidget(
                     title: "Upload Settings",
                     icon: const Icon(Icons.upload_outlined),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UploadSettingsScreen(device: device),
+                        ),
+                      );
+                    },
                   ),
                   FeatureWidget(
                     title: "Meta Data Settings",
