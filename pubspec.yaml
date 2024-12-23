@@ -40,6 +40,8 @@ dependencies:
   chat_bubbles: ^1.5.0
   encrypt: ^5.0.1
   crypto: ^3.0.3
+  pull_to_refresh: ^2.0.0
+  google_fonts: ^4.0.4
 
 dev_dependencies:
   flutter_test:

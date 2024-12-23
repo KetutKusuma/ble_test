@@ -11,6 +11,8 @@ import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../../utils/converter/bytes_convert.dart';
+
 class BleMainScreen extends StatefulWidget {
   final BluetoothDevice device;
 
@@ -28,8 +30,11 @@ class _BleMainScreenState extends State<BleMainScreen> {
   bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
+  late StreamSubscription<List<int>> _lastValueSubscription;
 
   List<BluetoothService> _services = [];
+  List<int> _value = [];
+  bool isLogout = false;
 
   @override
   void initState() {
@@ -39,14 +44,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
-        // Navigator.pop(context);
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LoginHandshakeScreen(
-                device: widget.device,
-              ),
-            ));
+        Navigator.pop(context);
+        // Navigator.popUntil(context, (route) => route.isCurrent);
       }
       if (mounted) {
         setState(() {});
@@ -59,6 +58,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
     // TODO: implement dispose
     super.dispose();
     _connectionStateSubscription.cancel();
+    // _lastValueSubscription.cancel();
+    onLogout();
+    isLogout = false;
   }
 
   // GET
@@ -70,11 +72,18 @@ class _BleMainScreenState extends State<BleMainScreen> {
     return _connectionState == BluetoothConnectionState.connected;
   }
 
+  onLogout() {
+    List<int> list = utf8.encode("logout!");
+    Uint8List bytes = Uint8List.fromList(list);
+    funcWrite(bytes, "Success Logout");
+    isLogout = true;
+  }
+
   Future<void> funcWrite(Uint8List bytes, String msg) async {
     for (var service in device.servicesList) {
       for (var element in service.characteristics) {
         // log("characteristic : $element");
-        if (element.properties.write) {
+        if (element.properties.write && isConnected) {
           await element.write(bytes);
           log("message : $msg");
           // if (mounted) {
@@ -174,30 +183,6 @@ class _BleMainScreenState extends State<BleMainScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Menu Settings'),
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-              splashColor: Colors.transparent,
-              onPressed: () {
-                try {
-                  List<int> list = utf8.encode("logout!");
-                  Uint8List bytes = Uint8List.fromList(list);
-                  funcWrite(bytes, "Success Logout");
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              LoginHandshakeScreen(device: device)));
-                } catch (e) {
-                  Snackbar.show(
-                    ScreenSnackbar.blemain,
-                    "Error logout : $e",
-                    success: false,
-                  );
-                }
-              },
-              icon: const Icon(
-                Icons.arrow_back,
-              )),
           actions: [
             Row(
               children: [

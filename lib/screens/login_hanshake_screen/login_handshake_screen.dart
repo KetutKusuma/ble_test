@@ -45,6 +45,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
   final TextEditingController _userRoleTxtController = TextEditingController();
   final TextEditingController _passwordTxtController = TextEditingController();
   List<int> _value = [];
+  bool isLogin = false;
 
   /// ===== for notify =====
   bool isNotifying = false;
@@ -63,6 +64,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    log("MASUK LOGIN HANDSHAKE SCREEN");
     _device = widget.device;
 
     _connectionStateSubscription =
@@ -100,13 +102,15 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
   @override
   void dispose() {
     // TODO: implement dispose
+
     super.dispose();
     _connectionStateSubscription.cancel();
     _mtuSubscription.cancel();
     _isConnectingSubscription.cancel();
     _isDisconnectingSubscription.cancel();
-    // _lastValueSubscription.cancel();
+    _lastValueSubscription.cancel();
     isWriteHandshake = false;
+    isLogin = false;
   }
 
   initLastValueSubscription(BluetoothDevice device) {
@@ -128,10 +132,14 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                 }
 
                 /// this is for login
-                if (_value.length == 1) {
+                if (_value.length == 1 && isLogin) {
                   bool loginRes = BytesConvert.bytesToBool(value);
                   if (loginRes) {
                     if (mounted) {
+                      isLogin = false;
+                      if (mounted) {
+                        setState(() {});
+                      }
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -421,9 +429,10 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                                       List<int> list = utf8.encode(commLogin);
                                       Uint8List bytes =
                                           Uint8List.fromList(list);
+                                      isLogin = true;
 
-                                      funcWrite(bytes, "Command login success");
-
+                                      await funcWrite(
+                                          bytes, "Command login success");
                                       // /// get characteristic write
                                       // for (var service
                                       //     in _device.servicesList) {
