@@ -228,7 +228,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
             ],
             decoration: InputDecoration(
               labelText: "Enter Valid $field",
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
           ),
         ),

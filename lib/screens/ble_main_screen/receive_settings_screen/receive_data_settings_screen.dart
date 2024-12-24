@@ -221,109 +221,51 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     return selectedValue;
   }
 
-  Future<String?> _showInputDialogUint8(
-    TextEditingController controller, String field) async {
-  String? input = await showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("Enter Value $field"),
-        content: Form(
-          child: TextFormField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: false),
-            inputFormatters: [
-               FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
-            ],
-            decoration: const InputDecoration(
-              labelText: 'Value between 0 and 255',
-              border: OutlineInputBorder(),
+ Future<String?> _showInputDialogInteger(
+      TextEditingController controller, String field, String time) async {
+    String? input = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter Value $field" ),
+          content: Form(
+            child: TextFormField(
+              controller: controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(signed: false, decimal: false),
+              inputFormatters: [
+                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+              ],
+              decoration:  InputDecoration(
+                labelText: 'Value in $time',
+                border: const OutlineInputBorder(),
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.clear();
-              Navigator.of(context).pop();
-            },
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              int? value = int.tryParse(controller.text);
-              if (value != null && value >= 0 && value <= 255) {
-                Navigator.pop(context, controller.text);
+          actions: [
+            TextButton(
+              onPressed: () {
                 controller.clear();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Value must be between 0 and 255!"),
-                  ),
-                );
-              }
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      );
-    },
-  );
-
-  return input;
-}
-
-Future<String?> _showInputDialogUint16(
-    TextEditingController controller, String field) async {
-  String? input = await showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("Enter Value $field"),
-        content: Form(
-          child: TextFormField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: false),
-            inputFormatters: [
-               FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
-            ],
-            decoration: const InputDecoration(
-              labelText: 'Value between 0 and 65535',
-              border: OutlineInputBorder(),
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.clear();
-              Navigator.of(context).pop();
-            },
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              int? value = int.tryParse(controller.text);
-              if (value != null && value >= 0 && value <= 65535) {
-                Navigator.pop(context, controller.text);
-                controller.clear();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Value must be between 0 and 65535!"),
-                  ),
-                );
-              }
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      );
-    },
-  );
+            TextButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                } else {}
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
 
-  return input;
-}
+    return input;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -403,8 +345,8 @@ Future<String?> _showInputDialogUint16(
                       title: "Receive Schedule (minute)",
                       data: receiveScheduleTxt,
                       onTap: () async {
-                        String? input = await  _showInputDialogUint16(
-                            receiveScheduleTxtController, "Receive Schedule");
+                        String? input = await _showInputDialogInteger(
+                            receiveScheduleTxtController, "Receive Schedule", "minute");
                         if (input != null) {
                           List<int> list = utf8.encode("receive_schedule=$input");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -422,8 +364,8 @@ Future<String?> _showInputDialogUint16(
                       title: "Receive Interval (minute)",
                       data: receiveIntervalTxt,
                       onTap: () async {
-                        String? input = await  _showInputDialogUint16(
-                            receiveIntervalTxtController, "Receive Interval");
+                        String? input = await _showInputDialogInteger(
+                            receiveIntervalTxtController, "Receive Interval", "minute");
                         if (input != null) {
                           List<int> list = utf8.encode("receive_interval=$input");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -441,8 +383,8 @@ Future<String?> _showInputDialogUint16(
                       title: "Receive Count",
                       data: receiveCountTxt,
                       onTap: () async {
-                        String? input = await  _showInputDialogUint8(
-                            receiveCountTxtController, "Receive Count");
+                        String? input = await  _showInputDialogInteger(
+                            receiveCountTxtController, "Receive Count","number");
                         if (input != null) {
                           List<int> list = utf8.encode("receive_count=$input");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -460,8 +402,8 @@ Future<String?> _showInputDialogUint16(
                       title: "Receive Time Adjust (seconds)",
                       data: receiveTimeAdjust,
                       onTap: () async {
-                        String? input = await  _showInputDialogUint16(
-                            receiveTimeAdjustTxtController, "Receive Time Adjust");
+                        String? input = await   _showInputDialogInteger(
+                            receiveTimeAdjustTxtController, "Receive Time Adjust","seconds");
                         if (input != null) {
                           List<int> list = utf8.encode("receive_time_adjust=$input");
                           Uint8List bytes = Uint8List.fromList(list);
