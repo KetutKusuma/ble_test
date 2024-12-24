@@ -52,6 +52,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   TextEditingController receiveIntervalTxtController = TextEditingController();
   TextEditingController receiveCountTxtController = TextEditingController();
   TextEditingController  receiveTimeAdjustTxtController = TextEditingController();
+  bool isReceiveDataSettings = true;
 
   @override
   void initState() {
@@ -75,10 +76,11 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
+    isReceiveDataSettings = false;
+    super.dispose();
   }
 
   onRefresh() async {
@@ -128,7 +130,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              if (characters.properties.notify) {
+              if (characters.properties.notify && isReceiveDataSettings) {
                 log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
                 if (mounted) {

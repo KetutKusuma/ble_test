@@ -75,11 +75,11 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   @override
   void dispose() {
     // TODO: implement dispose
-    super.dispose();
     isCaptureSettings = false;
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
+    super.dispose();
   }
 
   onRefresh() async {

@@ -110,7 +110,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
   Future initMtuRequest() async {
     try {
-      await device.requestMtu(512, predelay: 1);
+      await device.requestMtu(512, predelay: 0);
       Snackbar.show(ScreenSnackbar.login, "Request Mtu: Success",
           success: true);
     } catch (e) {

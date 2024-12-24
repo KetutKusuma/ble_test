@@ -45,6 +45,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
       transmitScheduleTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  bool isTransmitSettings = true;
 
   @override
   void initState() {
@@ -68,10 +69,11 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
+    isTransmitSettings = false;
+    super.dispose();
   }
 
   onRefresh() async {
@@ -121,7 +123,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              if (characters.properties.notify) {
+              if (characters.properties.notify && isTransmitSettings) {
                 log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
                 if (mounted) {

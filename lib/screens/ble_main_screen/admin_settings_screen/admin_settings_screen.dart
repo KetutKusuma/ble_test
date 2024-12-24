@@ -115,12 +115,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   void dispose() {
     // TODO: implement dispose
-    super.dispose();
     _connectionStateSubscription.cancel();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
     isAdminSettings = false;
+    super.dispose();
   }
 
   void _onTextChanged(TextEditingController textEditingController) {
@@ -264,7 +264,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             },
             cancelOnError: true,
           );
-          // _lastValueSubscription.cancel();
         }
       }
     } catch (e) {
@@ -468,7 +467,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Select an Option'),
+          title: const Text('Select an Option'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: dataMap.map((item) {
