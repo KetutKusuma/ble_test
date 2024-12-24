@@ -358,18 +358,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Model Meter",
                       data: modelMeterTxt,
-                     onTap: () async {
-                        String? input = await  _showInputDialog(
-                            modelMeterTxtController, "Model Meter");
-                        if (input != null && input.isNotEmpty) {
-                          List<int> list = utf8.encode("meter_model=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meter_model", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Model Meter", device);
-                        }
-                      },
+                      onTap: () async {
+                          String? input = await  _showInputDialog(
+                              modelMeterTxtController, "Model Meter");
+                          if (input != null && input.isNotEmpty) {
+                            List<int> list = utf8.encode("meter_model=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "meter_model", value: input);
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Model Meter", device);
+                          }
+                        },
                       icon: const Icon(
                         Icons.compass_calibration_rounded,
                       ),
