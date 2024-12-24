@@ -46,6 +46,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       timeUTCTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  bool isMetaDataSettings = true;
 
   @override
   void initState() {
@@ -69,10 +70,11 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
+    isMetaDataSettings = false;
+    super.dispose();
   }
 
   onRefresh() async {
@@ -122,7 +124,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              if (characters.properties.notify) {
+              if (characters.properties.notify && isMetaDataSettings) {
                 log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
                 if (mounted) {

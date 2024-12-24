@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ffi';
 
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
@@ -41,6 +42,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
       transmitScheduleTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+
+  // this is for nttx
+  bool isCaptureScreen = true;
 
   // this is for the image
   bool isCaptureTransmit = false;
@@ -99,7 +103,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              if (characters.properties.notify) {
+              if (characters.properties.notify && isCaptureScreen) {
                 log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
 
@@ -115,7 +119,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
             },
             cancelOnError: true,
           );
-          // _lastValueSubscription.cancel();
         }
       }
     } catch (e) {
@@ -208,10 +211,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        String? result = await _showInputDialog(
-                            controller, "Byte Per Chunk");
-                        if (result != null && result != '') {
-                          List<int> list = utf8.encode("capture!$result");
+                        String? input =
+                            await _showInputDialog(controller, "Capturenya");
+                        if (input != null) {
+                          List<int> list = utf8.encode("capture!$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           BLEUtils.funcWrite(bytes, "Success Capture!", device);
                         }
@@ -226,10 +229,15 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        List<int> list = utf8.encode("capture_transmit");
-                        Uint8List bytes = Uint8List.fromList(list);
-                        BLEUtils.funcWrite(bytes, "Success Stop!", device);
-                        isCaptureTransmit = true;
+                        String? input =
+                            await _showInputDialog(controller, "Coba Transmit");
+                        if (input != null) {
+                          List<int> list =
+                              utf8.encode("capture_transmit!$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(bytes, "Success Stop!", device);
+                          isCaptureTransmit = true;
+                        }
                       } catch (e) {
                         Snackbar.show(
                             ScreenSnackbar.capturesettings, "Error Stop! : $e",
