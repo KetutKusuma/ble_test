@@ -46,6 +46,11 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
       receiveTimeAdjust = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  TextEditingController receiveEnableTxtController = TextEditingController();
+  TextEditingController receiveScheduleTxtController = TextEditingController();
+  TextEditingController receiveIntervalTxtController = TextEditingController();
+  TextEditingController receiveCountTxtController = TextEditingController();
+  TextEditingController  receiveTimeAdjustTxtController = TextEditingController();
 
   @override
   void initState() {

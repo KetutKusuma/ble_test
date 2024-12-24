@@ -9,6 +9,7 @@ import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
@@ -46,6 +47,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       timeUTCTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  TextEditingController modelMeterTxtController = TextEditingController();
+  TextEditingController meterSnTxtController = TextEditingController();
+  TextEditingController meterSealTxtController = TextEditingController();
+  TextEditingController timeUTCTxtController = TextEditingController();
 
   @override
   void initState() {
@@ -63,6 +68,29 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         }
       },
     );
+    timeUTCTxtController.addListener(() {
+      final text = timeUTCTxtController.text;
+      if (text.isNotEmpty) {
+        final value = int.tryParse(text);
+        if (value != null) {
+          if (value < -12) {
+            // Otomatis set menjadi -12 jika kurang dari -12
+           timeUTCTxtController.text = '-12';
+           timeUTCTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: timeUTCTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          } else if (value > 12) {
+             // Otomatis set menjadi 12 jika lebih dari 12
+            timeUTCTxtController.text = '12';
+           timeUTCTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: timeUTCTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
     initGetRawMetaData();
     initDiscoverServices();
   }
@@ -184,6 +212,199 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     }
   }
 
+ Future<String?> _showInputDialogModelMeter(
+    TextEditingController controller) async {
+  String? input = await showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Enter Value Meter Model"),
+        content: Form(
+          child: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.text,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Enter valid meter model',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.clear();
+              Navigator.of(context).pop();
+            },
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                Navigator.pop(context, controller.text);
+                controller.clear();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Input cannot be empty!")),
+                );
+              }
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+
+  return input;
+}
+
+ Future<String?> _showInputDialogMeterSn(
+    TextEditingController controller) async {
+  String? input = await showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Enter Value Meter Sn"),
+        content: Form(
+          child: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.text,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Enter valid meter sn',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.clear();
+              Navigator.of(context).pop();
+            },
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                Navigator.pop(context, controller.text);
+                controller.clear();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Input cannot be empty!")),
+                );
+              }
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+
+  return input;
+}
+
+ Future<String?> _showInputDialogMeterSeal(
+    TextEditingController controller) async {
+  String? input = await showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Enter Value Meter Seal"),
+        content: Form(
+          child: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.text,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Enter valid meter seal',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.clear();
+              Navigator.of(context).pop();
+            },
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                Navigator.pop(context, controller.text);
+                controller.clear();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Input cannot be empty!")),
+                );
+              }
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+
+  return input;
+}
+
+ Future<String?> _showInputDialogTimeUTC(
+      TextEditingController controller) async {
+    String? input = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Enter Value Time UTC"),
+          content: Form(
+            child: TextFormField(
+              controller: controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(signed: true, decimal: false),
+              inputFormatters: [
+                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Value between -12 and 12',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                controller.clear();
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                } else {}
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return input;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
@@ -235,7 +456,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Model Meter",
                       data: modelMeterTxt,
-                      onTap: () {},
+                     onTap: () async {
+                        String? input = await _showInputDialogModelMeter(
+                            modelMeterTxtController);
+                        if (input != null && input.isNotEmpty) {
+                          List<int> list = utf8.encode("meter_model=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "metermodel", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Model Meter", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.compass_calibration_rounded,
                       ),
@@ -243,7 +475,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Meter SN",
                       data: meterSnTxt,
-                      onTap: () {},
+                     onTap: () async {
+                        String? input = await _showInputDialogMeterSn(
+                            meterSnTxtController);
+                        if (input != null && input.isNotEmpty) {
+                          List<int> list = utf8.encode("meter_sn=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "metersn", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Meter Sn", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.podcasts_rounded,
                       ),
@@ -251,7 +494,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Meter Seal",
                       data: meterSealTxt,
-                      onTap: () {},
+                        onTap: () async {
+                        String? input = await _showInputDialogMeterSeal(
+                            meterSealTxtController);
+                        if (input != null && input.isNotEmpty) {
+                          List<int> list = utf8.encode("meter_seal=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "meterseal", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Meter Seal", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.upload_file,
                       ),
@@ -259,7 +513,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Time UTC",
                       data: timeUTCTxt,
-                      onTap: () {},
+                       onTap: () async {
+                        String? input = await _showInputDialogTimeUTC(
+                            timeUTCTxtController);
+                        if (input != null) {
+                          List<int> list = utf8.encode("time_utc=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "timeutc", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Time UTC", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.upload_rounded,
                       ),
