@@ -7,6 +7,7 @@ import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart'
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
@@ -46,6 +47,11 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
       receiveTimeAdjust = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  TextEditingController receiveEnableTxtController = TextEditingController();
+  TextEditingController receiveScheduleTxtController = TextEditingController();
+  TextEditingController receiveIntervalTxtController = TextEditingController();
+  TextEditingController receiveCountTxtController = TextEditingController();
+  TextEditingController  receiveTimeAdjustTxtController = TextEditingController();
   bool isReceiveDataSettings = true;
 
   @override
@@ -190,6 +196,79 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     }
   }
 
+    Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text(msg),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, true); // Return true
+              },
+              child: const Text('True'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, false); // Return false
+              },
+              child: const Text('False'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return selectedValue;
+  }
+
+ Future<String?> _showInputDialogInteger(
+      TextEditingController controller, String field, String time) async {
+    String? input = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter Value $field" ),
+          content: Form(
+            child: TextFormField(
+              controller: controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(signed: false, decimal: false),
+              inputFormatters: [
+                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+              ],
+              decoration:  InputDecoration(
+                labelText: 'Value in $time',
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                controller.clear();
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                } else {}
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return input;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
@@ -241,23 +320,63 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                     SettingsContainer(
                       title: "Receive Enable",
                       data: receiveEnableTxt,
-                      onTap: () {},
+                      onTap: () async {
+                        bool? input = await _showTrueFalseDialog(context,"Set Receive Enable");
+                        if (input != null) {
+                          // Ubah nilai boolean menjadi string "1" untuk true atau "0" untuk false
+                          String encodedValue = input ? "1" : "0"; 
+                          List<int> list = utf8.encode("receive_enable=$encodedValue");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                            setSettings: "receive_enable",
+                            value: encodedValue,
+                          );
+                          BLEUtils.funcWrite(
+                            bytes, 
+                            "Success Set Receive Enable", 
+                            device,
+                          );
+                        }
+                      },
                       icon: const Icon(
                         Icons.compass_calibration_rounded,
                       ),
                     ),
+
                     SettingsContainer(
-                      title: "Receive Schedule",
+                      title: "Receive Schedule (minute)",
                       data: receiveScheduleTxt,
-                      onTap: () {},
+                      onTap: () async {
+                        String? input = await _showInputDialogInteger(
+                            receiveScheduleTxtController, "Receive Schedule", "minute");
+                        if (input != null) {
+                          List<int> list = utf8.encode("receive_schedule=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "receive_schedule", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Receive Schedule", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.podcasts_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Receive Interval",
+                      title: "Receive Interval (minute)",
                       data: receiveIntervalTxt,
-                      onTap: () {},
+                      onTap: () async {
+                        String? input = await _showInputDialogInteger(
+                            receiveIntervalTxtController, "Receive Interval", "minute");
+                        if (input != null) {
+                          List<int> list = utf8.encode("receive_interval=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "receive_interval", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Receive Interval", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.upload_file,
                       ),
@@ -265,15 +384,37 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                     SettingsContainer(
                       title: "Receive Count",
                       data: receiveCountTxt,
-                      onTap: () {},
+                      onTap: () async {
+                        String? input = await  _showInputDialogInteger(
+                            receiveCountTxtController, "Receive Count","number");
+                        if (input != null) {
+                          List<int> list = utf8.encode("receive_count=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "receive_count", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Receive Count", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.upload_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Receive Time Adjust",
+                      title: "Receive Time Adjust (seconds)",
                       data: receiveTimeAdjust,
-                      onTap: () {},
+                      onTap: () async {
+                        String? input = await   _showInputDialogInteger(
+                            receiveTimeAdjustTxtController, "Receive Time Adjust","seconds");
+                        if (input != null) {
+                          List<int> list = utf8.encode("receive_time_adjust=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "receive_time_adjust", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Receive Time Adjust", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.vertical_align_top_rounded,
                       ),
