@@ -193,6 +193,33 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     }
   }
 
+    Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text(msg),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, true); // Return true
+              },
+              child: const Text('True'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, false); // Return false
+              },
+              child: const Text('False'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return selectedValue;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
