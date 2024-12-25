@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 import '../../../constant/constant_color.dart';
 
@@ -62,11 +63,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   ];
   List<int> bits = [];
   bool isAdminSettings = true;
+  late SimpleFontelicoProgressDialog _progressDialog;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
@@ -121,6 +128,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     }
     isAdminSettings = false;
     super.dispose();
+  }
+
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Please wait...",
+    );
   }
 
   void _onTextChanged(TextEditingController textEditingController) {
@@ -206,6 +219,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 if (_value.length > 16) {
                   List<dynamic> result =
                       AdminSettingsConverter().convertAdminSettings(_value);
+                  _progressDialog.hide();
+
                   if (mounted) {
                     setState(() {
                       statusTxt = result[0].toString();
@@ -524,7 +539,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    Text("VALUE : $_value"),
+                    // Text("VALUE : $_value"),
                     SettingsContainer(
                       icon: const Icon(
                         CupertinoIcons.settings,

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
@@ -53,10 +54,16 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   TextEditingController timeUTCTxtController = TextEditingController();
 
   bool isMetaDataSettings = true;
+  late SimpleFontelicoProgressDialog _progressDialog;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
@@ -105,6 +112,12 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     }
     isMetaDataSettings = false;
     super.dispose();
+  }
+
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Please wait...",
+    );
   }
 
   onRefresh() async {
@@ -166,6 +179,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 if (_value.length > 45) {
                   List<dynamic> result =
                       MetaDataSettingsConvert.convertMetaDataSettings(_value);
+                  _progressDialog.hide();
+
                   if (mounted) {
                     setState(() {
                       statusTxt = result[0].toString();
@@ -351,7 +366,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    Text("VALUE : $_value"),
+                    // Text("VALUE : $_value"),
                     SettingsContainer(
                       title: "Status",
                       data: statusTxt,
@@ -376,7 +391,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.compass_calibration_rounded,
+                        Icons.model_training_rounded,
                       ),
                     ),
                     SettingsContainer(
@@ -395,7 +410,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.podcasts_rounded,
+                        Icons.numbers_rounded,
                       ),
                     ),
                     SettingsContainer(
@@ -414,7 +429,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.upload_file,
+                        Icons.shield_outlined,
                       ),
                     ),
                     SettingsContainer(
@@ -433,7 +448,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.upload_rounded,
+                        Icons.access_time,
                       ),
                     ),
                   ],

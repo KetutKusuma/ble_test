@@ -339,6 +339,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  simple_fontellico_progress_dialog:
+    dependency: "direct main"
+    description:
+      name: simple_fontellico_progress_dialog
+      sha256: "5e99669759556c43d5b347d44af888441a3c7806ba967884c992fef61be16e7d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.0"
   sky_engine:
     dependency: transitive
     description: flutter

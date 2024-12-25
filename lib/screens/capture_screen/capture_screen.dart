@@ -8,6 +8,7 @@ import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/capture/capture.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -51,14 +52,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   // this is for the image
   bool isCaptureTransmit = false;
-  List<int> imageBytes = [];
-  List<int> listChunk = [];
 
   List<dynamic> captureResult = [];
   List<List<dynamic>> captureResultTransmitTemp = [];
   List<int> totalChunkData = [];
   bool isCaptureDone = false;
-  bool isCaptureCommandDone = false;
+
+  final ValueNotifier<bool> isCaptureCommandNotifier =
+      ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -67,13 +68,25 @@ class _CaptureScreenState extends State<CaptureScreen> {
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
-            context,
-          );
+          if (mounted) {
+            Navigator.pop(
+              context,
+            );
+          }
         }
         if (mounted) {
           setState(() {});
         }
+      },
+    );
+    isCaptureCommandNotifier.addListener(
+      () {
+        if (isCaptureCommandNotifier.value) {
+          List<int> listT = utf8.encode("capture_transmit!");
+          Uint8List bytesT = Uint8List.fromList(listT);
+          BLEUtils.funcWrite(bytesT, "Success Capture Transmit!", device);
+        }
+        isCaptureCommandNotifier.value = false;
       },
     );
     initDiscoverServices();
@@ -84,7 +97,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
-    isCaptureCommandDone = false;
+    isCaptureCommandNotifier.removeListener(() {});
     isCaptureScreen = false;
     captureResult.clear();
     captureResultTransmitTemp.clear();
@@ -120,7 +133,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 // log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
 
-                // log("VALUE : $_value, ${_value.length}");
+                log("VALUE : $_value, ${_value.length}");
 
                 /// this is for receive image
                 // if (isCaptureTransmit) {}
@@ -140,7 +153,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   captureResult =
                       CaptureConverter.convertManifestCapture(_value);
                   // log("captureResult : $captureResult");
-                  isCaptureCommandDone = true;
+                  isCaptureCommandNotifier.value = true;
                 }
 
                 // this is for capture_transmit! response
@@ -174,91 +187,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
                       // insert new
                       captureResultTransmitTemp.insert(
                           captureTransmitResult[0], captureTransmitResult);
-                      try {
-                        log("helper start ...");
-                        // check jika length temp sama dengan total chunck
-                        if (captureResultTransmitTemp.length !=
-                            captureResult[2]) {
-                          // check jika squence number sama dengan urutan pada temp
-                          for (int i = 0;
-                              i < captureResultTransmitTemp.length - 1;
-                              i++) {
-                            log("logst 1 ${captureResultTransmitTemp[i][0]} == $i");
-                            if (captureResultTransmitTemp[i][0] != i) {
-                              // jika tidak sama maka akan disort ulang
-                              captureResultTransmitTemp.sort(
-                                (a, b) => a[0].compareTo(
-                                  b[0],
-                                ),
-                              );
-                              break;
-                            }
-                            log("logst $i == ${captureResultTransmitTemp.length - 1}");
-                            if (i == captureResultTransmitTemp.length - 1) {
-                              // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
-                              // mungkin dilakukan pengecekan crc32
-                              totalChunkData = captureResultTransmitTemp
-                                  .expand((outer) => outer.first)
-                                  .toList() as List<int>;
-                              log("total chunk : $totalChunkData");
-                              if (mounted) {
-                                setState(() {
-                                  isCaptureDone = true;
-                                });
-                              }
-                            } else {
-                              log("BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
-                            }
-                          }
-                        }
-                      } catch (e) {
-                        log("error when helper last value : $e");
-                      }
+                      helperLastValue();
                     } else {
                       log("sampai add transmit temp");
                       // jika sama maka tambah saja
                       captureResultTransmitTemp.add(captureTransmitResult);
-
-                      // try {
-                      //   log("helper start ...");
-                      //   // check jika length temp sama dengan total chunck
-                      //   if (captureResultTransmitTemp.length !=
-                      //       captureResult[2]) {
-                      //     // check jika squence number sama dengan urutan pada temp
-                      //     for (int i = 0;
-                      //         i < captureResultTransmitTemp.length - 1;
-                      //         i++) {
-                      //       log("logss 1 ${captureResultTransmitTemp[i][0]} == $i");
-                      //       if (captureResultTransmitTemp[i][0] != i) {
-                      //         // jika tidak sama maka akan disort ulang
-                      //         captureResultTransmitTemp.sort(
-                      //           (a, b) => a[0].compareTo(
-                      //             b[0],
-                      //           ),
-                      //         );
-                      //         break;
-                      //       }
-                      //       log("logss $i == ${captureResultTransmitTemp.length - 1}");
-                      //       if (i == captureResultTransmitTemp.length - 1) {
-                      //         // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
-                      //         // mungkin dilakukan pengecekan crc32
-                      //         totalChunkData = captureResultTransmitTemp
-                      //             .expand((outer) => outer.first)
-                      //             .toList() as List<int>;
-                      //         log("total chunk : $totalChunkData");
-                      //         if (mounted) {
-                      //           setState(() {
-                      //             isCaptureDone = true;
-                      //           });
-                      //         }
-                      //       } else {
-                      //         log("2 BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
-                      //       }
-                      //     }
-                      //   }
-                      // } catch (e) {
-                      //   log("error when helper last value : $e");
-                      // }
+                      helperLastValue();
                     }
                     // } else {
                     //   // lakukan perbaikan
@@ -302,33 +236,28 @@ class _CaptureScreenState extends State<CaptureScreen> {
       // check jika length temp sama dengan total chunck
       if (captureResultTransmitTemp.length != captureResult[2]) {
         // check jika squence number sama dengan urutan pada temp
+        log("tidak sama");
+        // for (int i = 0; i < captureResultTransmitTemp.length - 1; i++) {
+        //   if (captureResultTransmitTemp[i][0] != i) {
+        //     // jika tidak sama maka akan disort ulang
+        //     captureResultTransmitTemp.sort(
+        //       (a, b) => a[0].compareTo(
+        //         b[0],
+        //       ),
+        //     );
+        //     break;
+        //   }
+      } else {
         for (int i = 0; i < captureResultTransmitTemp.length - 1; i++) {
-          log("logss 1 ${captureResultTransmitTemp[i][0]} == $i");
-          if (captureResultTransmitTemp[i][0] != i) {
-            // jika tidak sama maka akan disort ulang
-            captureResultTransmitTemp.sort(
-              (a, b) => a[0].compareTo(
-                b[0],
-              ),
-            );
-            break;
-          }
-          log("logss $i == ${captureResultTransmitTemp.length - 1}");
-          if (i == captureResultTransmitTemp.length - 1) {
-            // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
-            // mungkin dilakukan pengecekan crc32
-            totalChunkData = captureResultTransmitTemp
-                .expand((outer) => outer.first)
-                .toList() as List<int>;
-            log("total chunk : $totalChunkData");
-            if (mounted) {
-              setState(() {
-                isCaptureDone = true;
-              });
-            }
-          } else {
-            log("BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
-          }
+          List<dynamic> outer = captureResultTransmitTemp[i];
+          // Add the first sublist of each outer list to the result
+          totalChunkData.addAll(outer[2]);
+        }
+        // log("total chunk : $totalChunkData");
+        if (mounted) {
+          setState(() {
+            isCaptureDone = true;
+          });
         }
       }
     } catch (e) {
@@ -372,88 +301,68 @@ class _CaptureScreenState extends State<CaptureScreen> {
               hasScrollBody: false,
               child: Column(
                 children: [
-                  Text("Value : $_value, ${_value.length}"),
+                  // Text("Value : $_value, ${_value.length}"),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 50),
+                    padding: const EdgeInsets.all(10),
+                    width: MediaQuery.of(context).size.width,
+                    height: 240,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black26),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: !isCaptureDone && totalChunkData.isEmpty
+                        ? const Icon(
+                            CupertinoIcons.photo,
+                            color: Colors.black45,
+                            size: 40,
+                          )
+                        : isCaptureDone && totalChunkData.isEmpty
+                            ? SizedBox(
+                                height: 30,
+                                width: 30,
+                                child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: const CircularProgressIndicator()))
+                            : Center(
+                                child: Image.memory(
+                                  Uint8List.fromList(totalChunkData),
+                                  fit: BoxFit.fitWidth,
+                                  scale: 1,
+                                ),
+                              ),
+                  ),
+
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(15), // Set the corner radius
+                      ),
+                    ),
                     onPressed: () async {
                       try {
                         totalChunkData.clear();
                         captureResultTransmitTemp.clear();
+                        captureResult.clear();
                         List<int> list = utf8.encode("capture!500");
                         Uint8List bytes = Uint8List.fromList(list);
                         BLEUtils.funcWrite(bytes, "Success Capture!", device);
-
-                        await Future.delayed(const Duration(milliseconds: 800));
-                        List<int> listT = utf8.encode("capture_transmit!");
-                        Uint8List bytesT = Uint8List.fromList(listT);
-                        BLEUtils.funcWrite(
-                            bytesT, "Success Capture Transmit!", device);
                       } catch (e) {
                         Snackbar.show(
                             ScreenSnackbar.capture, "Error Capture! : $e",
                             success: false);
                       }
                     },
-                    child: const Text("Capture"),
+                    child: const Icon(
+                      Icons.camera,
+                      size: 35,
+                    ),
                   ),
-                  // ElevatedButton(
-                  //   onPressed: () async {
-                  //     try {
-                  //       // String? input =
-                  //       //     await _showInputDialog(controller, "Capturenya");
-                  //       // if (input != null) {
-                  //       //   List<int> list = utf8.encode("capture!$input");
-                  //       //   Uint8List bytes = Uint8List.fromList(list);
-                  //       //   BLEUtils.funcWrite(bytes, "Success Capture!", device);
-                  //       // }
-                  //       List<int> list = utf8.encode("capture!500");
-                  //       Uint8List bytes = Uint8List.fromList(list);
-                  //       BLEUtils.funcWrite(bytes, "Success Capture!", device);
-                  //     } catch (e) {
-                  //       Snackbar.show(ScreenSnackbar.capturesettings,
-                  //           "Error Capture! : $e",
-                  //           success: false);
-                  //     }
-                  //   },
-                  //   child: const Text("Capture!"),
-                  // ),
-
-                  // //! THIS IS FOR CAPTURE TRANSMIT TEST
-                  // //! AFTER THIS WORK I WANT TO MERGE THE CAPTURE AND CAPTURE TRANSMIT
-                  // //! TO CAPTURE JUST CAPTURE
-                  // ElevatedButton(
-                  //   onPressed: () async {
-                  //     try {
-                  //       // String? input =
-                  //       //     await _showInputDialog(controller, "Coba Transmit");
-                  //       // if (input != null) {
-                  //       //   List<int> list =
-                  //       //       utf8.encode("capture_transmit!$input");
-                  //       //   Uint8List bytes = Uint8List.fromList(list);
-                  //       //   BLEUtils.funcWrite(bytes, "Success Stop!", device);
-                  //       //   isCaptureTransmit = true;
-                  //       // }
-                  //       totalChunkData.clear();
-                  //       captureResultTransmitTemp.clear();
-                  //       // captureResult.clear();
-                  //       List<int> list = utf8.encode("capture_transmit!");
-                  //       Uint8List bytes = Uint8List.fromList(list);
-                  //       BLEUtils.funcWrite(
-                  //           bytes, "Success Capture Transmit!", device);
-
-                  //       // isCaptureTransmit = true;
-                  //     } catch (e) {
-                  //       Snackbar.show(
-                  //           ScreenSnackbar.capturesettings, "Error Stop! : $e",
-                  //           success: false);
-                  //     }
-                  //   },
-                  //   child: const Text("Capture Transmit!"),
-                  // ),
-                  !isCaptureDone
-                      ? const SizedBox()
-                      : Image.memory(
-                          Uint8List.fromList(totalChunkData),
-                        )
                 ],
               ),
             )

@@ -11,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
@@ -46,10 +47,16 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   bool isTransmitSettings = true;
+  late SimpleFontelicoProgressDialog _progressDialog;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
@@ -75,6 +82,12 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     }
     isTransmitSettings = false;
     super.dispose();
+  }
+
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Please wait...",
+    );
   }
 
   onRefresh() async {
@@ -136,6 +149,8 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 if (_value.length > 35) {
                   List<dynamic> result =
                       TransmitSettingsConvert.convertTransmitSettings(_value);
+                  _progressDialog.hide();
+
                   if (mounted) {
                     setState(() {
                       statusTxt = result[0].toString();
@@ -223,7 +238,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    Text("VALUE : $_value"),
+                    // Text("VALUE : $_value"),
                     SettingsContainer(
                       title: "Status",
                       data: statusTxt,
@@ -237,7 +252,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       data: destinationEnableTxt,
                       onTap: () {},
                       icon: const Icon(
-                        Icons.compass_calibration_rounded,
+                        Icons.check_circle_outline_rounded,
                       ),
                     ),
                     SettingsContainer(
@@ -245,7 +260,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       data: destinationIdTxt,
                       onTap: () {},
                       icon: const Icon(
-                        Icons.podcasts_rounded,
+                        Icons.perm_device_info_outlined,
                       ),
                     ),
                     SettingsContainer(
@@ -253,7 +268,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       data: transmitScheduleTxt,
                       onTap: () {},
                       icon: const Icon(
-                        Icons.upload_file,
+                        Icons.calendar_today_outlined,
                       ),
                     ),
                   ],
