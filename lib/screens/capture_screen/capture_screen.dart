@@ -5,6 +5,7 @@ import 'dart:ffi';
 
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
+import 'package:ble_test/utils/converter/capture/capture.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
   bool isCaptureTransmit = false;
   List<int> imageBytes = [];
   List<int> listChunk = [];
+
+  List<dynamic> captureResult = [];
+  List<List<dynamic>> captureResultChunk = [];
 
   @override
   void initState() {
@@ -110,7 +114,36 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 log("VALUE : $_value, ${_value.length}");
 
                 /// this is for receive image
-                if (isCaptureTransmit) {}
+                // if (isCaptureTransmit) {}
+                // this is for capture! response
+                if (_value.length == 39) {
+                  // pertama ubah dulu datanya atau convert
+                  // lalu simpan
+                  // nanti jika sudah semua datanya ada cek dengan
+                  // cek panjangnya dapat berapa dari capture! == panjang datanya berapa
+                  // cek jika crc32 == data dihash crc32 sama atau tidak?
+                  // lakukan juga pengecekan number of chunk jika ada yang kosong atau kelewat
+                  // maka akan dicari dengan menggunakan capture_transmit?<number of missing>
+                  captureResult =
+                      CaptureConverter.convertManifestCapture(_value);
+                  log("captureResult : $captureResult");
+                }
+
+                // this is for capture_transmit! response
+                if (_value.length >= 500) {
+                  // pertama ubah dulu datanya atau convert
+                  // simpan ke dalam list chunk jika
+                  // crc32 == hashCrc32(data) jika tidak maka akan diberikan error
+                  // lakukan juga pengecekan number of chunk jika ada yang kosong atau kelewat
+                  try {
+                    List<dynamic> captureTransmitResult =
+                        CaptureConverter.convertSquenceCapture(_value, 500);
+                    // captureResultChunk.add(captureTransmitResult);
+                    log("captureTransmitResult : $captureTransmitResult");
+                  } catch (e) {
+                    log("error when get squance chunck : $e");
+                  }
+                }
 
                 if (mounted) {
                   setState(() {});

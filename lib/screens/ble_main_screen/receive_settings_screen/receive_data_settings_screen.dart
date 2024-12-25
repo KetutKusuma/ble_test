@@ -51,7 +51,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   TextEditingController receiveScheduleTxtController = TextEditingController();
   TextEditingController receiveIntervalTxtController = TextEditingController();
   TextEditingController receiveCountTxtController = TextEditingController();
-  TextEditingController  receiveTimeAdjustTxtController = TextEditingController();
+  TextEditingController receiveTimeAdjustTxtController =
+      TextEditingController();
   bool isReceiveDataSettings = true;
 
   @override
@@ -76,10 +77,12 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
 
   @override
   void dispose() {
+    _connectionStateSubscription.cancel();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
     isReceiveDataSettings = false;
+
     super.dispose();
   }
 
@@ -196,7 +199,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     }
   }
 
-    Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
+  Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
     bool? selectedValue = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -223,22 +226,22 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     return selectedValue;
   }
 
- Future<String?> _showInputDialogInteger(
+  Future<String?> _showInputDialogInteger(
       TextEditingController controller, String field, String time) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $field" ),
+          title: Text("Enter Value $field"),
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(signed: false, decimal: false),
+              keyboardType: const TextInputType.numberWithOptions(
+                  signed: false, decimal: false),
               inputFormatters: [
-                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
               ],
-              decoration:  InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Value in $time',
                 border: const OutlineInputBorder(),
               ),
@@ -321,36 +324,40 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       title: "Receive Enable",
                       data: receiveEnableTxt,
                       onTap: () async {
-                        bool? input = await _showTrueFalseDialog(context,"Set Receive Enable");
+                        bool? input = await _showTrueFalseDialog(
+                            context, "Set Receive Enable");
                         if (input != null) {
                           // Ubah nilai boolean menjadi string "1" untuk true atau "0" untuk false
-                          String encodedValue = input ? "1" : "0"; 
-                          List<int> list = utf8.encode("receive_enable=$encodedValue");
+                          String encodedValue = input ? "1" : "0";
+                          List<int> list =
+                              utf8.encode("receive_enable=$encodedValue");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                             setSettings: "receive_enable",
                             value: encodedValue,
                           );
                           BLEUtils.funcWrite(
-                            bytes, 
-                            "Success Set Receive Enable", 
+                            bytes,
+                            "Success Set Receive Enable",
                             device,
                           );
                         }
                       },
                       icon: const Icon(
-                        Icons.compass_calibration_rounded,
+                        Icons.check_circle_outline_rounded,
                       ),
                     ),
-
                     SettingsContainer(
                       title: "Receive Schedule (minute)",
                       data: receiveScheduleTxt,
                       onTap: () async {
                         String? input = await _showInputDialogInteger(
-                            receiveScheduleTxtController, "Receive Schedule", "minute");
+                            receiveScheduleTxtController,
+                            "Receive Schedule",
+                            "minute");
                         if (input != null) {
-                          List<int> list = utf8.encode("receive_schedule=$input");
+                          List<int> list =
+                              utf8.encode("receive_schedule=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "receive_schedule", value: input);
@@ -359,7 +366,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.podcasts_rounded,
+                        Icons.calendar_today_outlined,
                       ),
                     ),
                     SettingsContainer(
@@ -367,9 +374,12 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       data: receiveIntervalTxt,
                       onTap: () async {
                         String? input = await _showInputDialogInteger(
-                            receiveIntervalTxtController, "Receive Interval", "minute");
+                            receiveIntervalTxtController,
+                            "Receive Interval",
+                            "minute");
                         if (input != null) {
-                          List<int> list = utf8.encode("receive_interval=$input");
+                          List<int> list =
+                              utf8.encode("receive_interval=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "receive_interval", value: input);
@@ -378,15 +388,17 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.upload_file,
+                        Icons.trending_up_rounded,
                       ),
                     ),
                     SettingsContainer(
                       title: "Receive Count",
                       data: receiveCountTxt,
                       onTap: () async {
-                        String? input = await  _showInputDialogInteger(
-                            receiveCountTxtController, "Receive Count","number");
+                        String? input = await _showInputDialogInteger(
+                            receiveCountTxtController,
+                            "Receive Count",
+                            "number");
                         if (input != null) {
                           List<int> list = utf8.encode("receive_count=$input");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -397,17 +409,20 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.upload_rounded,
+                        Icons.looks_3_outlined,
                       ),
                     ),
                     SettingsContainer(
                       title: "Receive Time Adjust (seconds)",
                       data: receiveTimeAdjust,
                       onTap: () async {
-                        String? input = await   _showInputDialogInteger(
-                            receiveTimeAdjustTxtController, "Receive Time Adjust","seconds");
+                        String? input = await _showInputDialogInteger(
+                            receiveTimeAdjustTxtController,
+                            "Receive Time Adjust",
+                            "seconds");
                         if (input != null) {
-                          List<int> list = utf8.encode("receive_time_adjust=$input");
+                          List<int> list =
+                              utf8.encode("receive_time_adjust=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "receive_time_adjust", value: input);
@@ -416,7 +431,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.vertical_align_top_rounded,
+                        Icons.timer_sharp,
                       ),
                     ),
                   ],

@@ -54,7 +54,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   bool isMetaDataSettings = true;
 
-
   @override
   void initState() {
     super.initState();
@@ -78,15 +77,15 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         if (value != null) {
           if (value < -12) {
             // Otomatis set menjadi -12 jika kurang dari -12
-           timeUTCTxtController.text = '-12';
-           timeUTCTxtController.selection = TextSelection.fromPosition(
+            timeUTCTxtController.text = '-12';
+            timeUTCTxtController.selection = TextSelection.fromPosition(
                 TextPosition(
                     offset: timeUTCTxtController
                         .text.length)); // Memastikan cursor di akhir
           } else if (value > 12) {
-             // Otomatis set menjadi 12 jika lebih dari 12
+            // Otomatis set menjadi 12 jika lebih dari 12
             timeUTCTxtController.text = '12';
-           timeUTCTxtController.selection = TextSelection.fromPosition(
+            timeUTCTxtController.selection = TextSelection.fromPosition(
                 TextPosition(
                     offset: timeUTCTxtController
                         .text.length)); // Memastikan cursor di akhir
@@ -100,6 +99,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   @override
   void dispose() {
+    _connectionStateSubscription.cancel();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
@@ -216,56 +216,57 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     }
   }
 
- Future<String?> _showInputDialog(
-    TextEditingController controller, String field) async {
-  String? input = await showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("Enter Value $field" ),
-        content: Form(
-          child: TextFormField(
-            controller: controller,
-            keyboardType: TextInputType.text,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
-            ],
-            decoration: InputDecoration(
-              labelText: "Enter Valid $field",
-              border: const OutlineInputBorder(),
+  Future<String?> _showInputDialog(
+      TextEditingController controller, String field) async {
+    String? input = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter Value $field"),
+          content: Form(
+            child: TextFormField(
+              controller: controller,
+              keyboardType: TextInputType.text,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                    RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
+              ],
+              decoration: InputDecoration(
+                labelText: "Enter Valid $field",
+                border: const OutlineInputBorder(),
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.clear();
-              Navigator.of(context).pop();
-            },
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                Navigator.pop(context, controller.text);
+          actions: [
+            TextButton(
+              onPressed: () {
                 controller.clear();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Input cannot be empty!")),
-                );
-              }
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      );
-    },
-  );
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Input cannot be empty!")),
+                  );
+                }
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
 
-  return input;
-}
+    return input;
+  }
 
- Future<String?> _showInputDialogTimeUTC(
+  Future<String?> _showInputDialogTimeUTC(
       TextEditingController controller) async {
     String? input = await showDialog<String>(
       context: context,
@@ -275,10 +276,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(signed: true, decimal: false),
+              keyboardType: const TextInputType.numberWithOptions(
+                  signed: true, decimal: false),
               inputFormatters: [
-                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
               ],
               decoration: const InputDecoration(
                 labelText: 'Value between -12 and 12',
@@ -363,17 +364,17 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Model Meter",
                       data: modelMeterTxt,
                       onTap: () async {
-                          String? input = await  _showInputDialog(
-                              modelMeterTxtController, "Model Meter");
-                          if (input != null && input.isNotEmpty) {
-                            List<int> list = utf8.encode("meter_model=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "meter_model", value: input);
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Model Meter", device);
-                          }
-                        },
+                        String? input = await _showInputDialog(
+                            modelMeterTxtController, "Model Meter");
+                        if (input != null && input.isNotEmpty) {
+                          List<int> list = utf8.encode("meter_model=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "meter_model", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Model Meter", device);
+                        }
+                      },
                       icon: const Icon(
                         Icons.compass_calibration_rounded,
                       ),
@@ -381,7 +382,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Meter SN",
                       data: meterSnTxt,
-                     onTap: () async {
+                      onTap: () async {
                         String? input = await _showInputDialog(
                             meterSnTxtController, "Meter Sn");
                         if (input != null && input.isNotEmpty) {
@@ -400,9 +401,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Meter Seal",
                       data: meterSealTxt,
-                        onTap: () async {
+                      onTap: () async {
                         String? input = await _showInputDialog(
-                            meterSealTxtController,"Meter Seal");
+                            meterSealTxtController, "Meter Seal");
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_seal=$input");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -419,9 +420,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     SettingsContainer(
                       title: "Time UTC",
                       data: timeUTCTxt,
-                       onTap: () async {
-                        String? input = await _showInputDialogTimeUTC(
-                            timeUTCTxtController);
+                      onTap: () async {
+                        String? input =
+                            await _showInputDialogTimeUTC(timeUTCTxtController);
                         if (input != null) {
                           List<int> list = utf8.encode("time_utc=$input");
                           Uint8List bytes = Uint8List.fromList(list);

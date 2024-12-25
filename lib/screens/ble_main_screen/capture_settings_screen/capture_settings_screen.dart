@@ -74,7 +74,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    _connectionStateSubscription.cancel();
     isCaptureSettings = false;
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
@@ -327,7 +327,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.trending_up_sharp,
+                        Icons.trending_up_rounded,
                       ),
                     ),
                     SettingsContainer(

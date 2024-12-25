@@ -69,6 +69,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   @override
   void dispose() {
+    _connectionStateSubscription.cancel();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }

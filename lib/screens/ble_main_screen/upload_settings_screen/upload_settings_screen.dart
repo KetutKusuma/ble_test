@@ -82,6 +82,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   @override
   void dispose() {
+    _connectionStateSubscription.cancel();
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
@@ -596,6 +597,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.wifi_tethering_error,
                       ),
                     ),
+                    const SizedBox(
+                      height: 15,
+                    )
                   ],
                 ),
               )
