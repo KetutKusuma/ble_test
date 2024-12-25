@@ -35,6 +35,19 @@ class CaptureConverter {
     log("-- check if the length of chunck data == lengthInt we got ---");
     log("${chunkData.length == lengthInt} | ${chunkData.length} == $lengthInt");
 
+    if (calculatedCrc32 != crc32) {
+      log("Crc32 is not match, chuck sequence number : $chuckSquenceNumber");
+      Map error = {
+        "status": false,
+        "message": "CRC32 not match",
+        "command": "capture_transmit!$chuckSquenceNumber",
+      };
+      return [
+        chuckSquenceNumber,
+        error,
+      ];
+    }
+
     return [chuckSquenceNumber, lengthInt, chunkData, crc32];
   }
 

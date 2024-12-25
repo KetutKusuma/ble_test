@@ -13,6 +13,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+import '../../utils/crc32.dart';
+
 class CaptureScreen extends StatefulWidget {
   final BluetoothDevice device;
 
@@ -53,7 +55,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
   List<int> listChunk = [];
 
   List<dynamic> captureResult = [];
-  List<List<dynamic>> captureResultChunk = [];
+  List<List<dynamic>> captureResultTransmit = [];
+  List<int> totalChunkData = [];
+  bool isCaptureDone = false;
 
   @override
   void initState() {
@@ -76,11 +80,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   void dispose() {
-    super.dispose();
-    isCaptureTransmit = false;
+    isCaptureScreen = false;
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
+    super.dispose();
   }
 
   Future initDiscoverServices() async {
@@ -124,6 +128,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   // cek jika crc32 == data dihash crc32 sama atau tidak?
                   // lakukan juga pengecekan number of chunk jika ada yang kosong atau kelewat
                   // maka akan dicari dengan menggunakan capture_transmit?<number of missing>
+                  // [0] -> status
+                  // [1] -> message
+                  // [2] -> total chunk
+                  // [3] -> crc32
                   captureResult =
                       CaptureConverter.convertManifestCapture(_value);
                   log("captureResult : $captureResult");
@@ -138,7 +146,33 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   try {
                     List<dynamic> captureTransmitResult =
                         CaptureConverter.convertSquenceCapture(_value, 500);
-                    // captureResultChunk.add(captureTransmitResult);
+                    // [0] -> chunck sequence number
+                    // [1] -> length of chunk
+                    // [2] -> chunk data
+                    // [3] -> crc32
+                    captureResultTransmit.add(captureTransmitResult);
+                    log("type of transmit[2] : ${captureTransmitResult[2].runtimeType}");
+                    totalChunkData = totalChunkData + captureTransmitResult[2];
+                    // checking total chunck == captureResultChnk length
+                    log("capture result chunk : ${captureResult[2]} == ${captureResultTransmit.length}");
+                    if (captureResult[2] == captureResultTransmit.length) {
+                      log("MATCH TOTAL CHUNK");
+                      for (int i = 0; i < captureResultTransmit.length; i++) {
+                        List<dynamic> element = captureResultTransmit[i];
+
+                        /// checking number of chunck
+                        log("number of chunck : ${element[0]}");
+                        // checking if the chunck just has length 2 that mean the chunck sequence is error
+                        log("length of element : ${element.length}");
+                      }
+                      log("LENGTH OF CHUNCK DATA : ${totalChunkData.length}");
+                      log("CHUNCK DATA : $totalChunkData");
+                      // checking hashcrc32(totalchunck) == crc32 of captureResult
+                      int crc32TotalChunck = CRC32.compute(totalChunkData);
+                      log("CRC32 total chunck : $crc32TotalChunck");
+                      log("MATCH CRC32 total chunck : ${crc32TotalChunck == captureResult[3]} | hash : $crc32TotalChunck == crc32 got : ${captureResult[3]}");
+                      isCaptureDone = true;
+                    }
                     log("captureTransmitResult : $captureTransmitResult");
                   } catch (e) {
                     log("error when get squance chunck : $e");
@@ -244,13 +278,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        String? input =
-                            await _showInputDialog(controller, "Capturenya");
-                        if (input != null) {
-                          List<int> list = utf8.encode("capture!$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes, "Success Capture!", device);
-                        }
+                        // String? input =
+                        //     await _showInputDialog(controller, "Capturenya");
+                        // if (input != null) {
+                        //   List<int> list = utf8.encode("capture!$input");
+                        //   Uint8List bytes = Uint8List.fromList(list);
+                        //   BLEUtils.funcWrite(bytes, "Success Capture!", device);
+                        // }
+                        List<int> list = utf8.encode("capture!500");
+                        Uint8List bytes = Uint8List.fromList(list);
+                        BLEUtils.funcWrite(bytes, "Success Capture!", device);
                       } catch (e) {
                         Snackbar.show(ScreenSnackbar.capturesettings,
                             "Error Capture! : $e",
@@ -259,18 +296,31 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     },
                     child: const Text("Capture!"),
                   ),
+
+                  //! THIS IS FOR CAPTURE TRANSMIT TEST
+                  //! AFTER THIS WORK I WANT TO MERGE THE CAPTURE AND CAPTURE TRANSMIT
+                  //! TO CAPTURE JUST CAPTURE
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        String? input =
-                            await _showInputDialog(controller, "Coba Transmit");
-                        if (input != null) {
-                          List<int> list =
-                              utf8.encode("capture_transmit!$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes, "Success Stop!", device);
-                          isCaptureTransmit = true;
-                        }
+                        // String? input =
+                        //     await _showInputDialog(controller, "Coba Transmit");
+                        // if (input != null) {
+                        //   List<int> list =
+                        //       utf8.encode("capture_transmit!$input");
+                        //   Uint8List bytes = Uint8List.fromList(list);
+                        //   BLEUtils.funcWrite(bytes, "Success Stop!", device);
+                        //   isCaptureTransmit = true;
+                        // }
+                        totalChunkData.clear();
+                        captureResultTransmit.clear();
+                        // captureResult.clear();
+                        List<int> list = utf8.encode("capture_transmit!");
+                        Uint8List bytes = Uint8List.fromList(list);
+                        BLEUtils.funcWrite(
+                            bytes, "Success Capture Transmit!", device);
+
+                        // isCaptureTransmit = true;
                       } catch (e) {
                         Snackbar.show(
                             ScreenSnackbar.capturesettings, "Error Stop! : $e",
@@ -279,6 +329,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     },
                     child: const Text("Capture Transmit!"),
                   ),
+                  !isCaptureDone
+                      ? const SizedBox()
+                      : Image.memory(
+                          Uint8List.fromList(totalChunkData),
+                        )
                 ],
               ),
             )
