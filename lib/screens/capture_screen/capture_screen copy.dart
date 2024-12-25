@@ -157,121 +157,121 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     List<dynamic> captureTransmitResult =
                         CaptureConverter.convertSquenceCapture(_value, 500);
 
-                    // if (captureTransmitResult.length != 2) {
-                    // tambah pada captureReusltTransmit Temp
-                    // check dulu numbersnya sama atau tidak dengan length captureResultTransmitTemp
-                    // jika iya maka tambah
-                    // jika tidak maka gantikan dengan nomer tersebut
-                    log("sudah sampai ygy");
-                    log("adek : ${captureResultTransmitTemp.length} == ${captureTransmitResult[0]}");
-                    if (captureResultTransmitTemp.length !=
-                        captureTransmitResult[0]) {
-                      // log("sampai transmit temp tidak sama dengan capture[0] ${captureResultTransmitTemp.length} / numbers : ${captureTransmitResult[0]}");
-                      // jika tidak sama maka gantikan
-                      // remove
-                      captureResultTransmitTemp
-                          .removeAt(captureTransmitResult[0]);
-                      // insert new
-                      captureResultTransmitTemp.insert(
-                          captureTransmitResult[0], captureTransmitResult);
-                      try {
-                        log("helper start ...");
-                        // check jika length temp sama dengan total chunck
-                        if (captureResultTransmitTemp.length !=
-                            captureResult[2]) {
-                          // check jika squence number sama dengan urutan pada temp
-                          for (int i = 0;
-                              i < captureResultTransmitTemp.length - 1;
-                              i++) {
-                            log("logst 1 ${captureResultTransmitTemp[i][0]} == $i");
-                            if (captureResultTransmitTemp[i][0] != i) {
-                              // jika tidak sama maka akan disort ulang
-                              captureResultTransmitTemp.sort(
-                                (a, b) => a[0].compareTo(
-                                  b[0],
-                                ),
-                              );
-                              break;
-                            }
-                            log("logst $i == ${captureResultTransmitTemp.length - 1}");
-                            if (i == captureResultTransmitTemp.length - 1) {
-                              // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
-                              // mungkin dilakukan pengecekan crc32
-                              totalChunkData = captureResultTransmitTemp
-                                  .expand((outer) => outer.first)
-                                  .toList() as List<int>;
-                              log("total chunk : $totalChunkData");
-                              if (mounted) {
-                                setState(() {
-                                  isCaptureDone = true;
-                                });
+                    if (captureTransmitResult.length == 2) {
+                      // lakukan perbaikan
+                      captureResultTransmitTemp.add(captureTransmitResult);
+                      log("got error when capture transmit result number : ${captureTransmitResult[0]} error : ${captureTransmitResult[1]}");
+                      List<int> list = utf8.encode(
+                          "capture_transmit!${captureTransmitResult[0]}");
+                      Uint8List bytes = Uint8List.fromList(list);
+                      BLEUtils.funcWrite(
+                          bytes,
+                          "Success Capture Transmit fixing ${captureTransmitResult[0]}",
+                          device);
+                    } else {
+                      // tambah pada captureReusltTransmit Temp
+                      // check dulu numbersnya sama atau tidak dengan length captureResultTransmitTemp
+                      // jika iya maka tambah
+                      // jika tidak maka gantikan dengan nomer tersebut
+                      log("sudah sampai ygy");
+                      log("adek : ${captureResultTransmitTemp.length} == ${captureTransmitResult[0]}");
+                      if (captureResultTransmitTemp.length !=
+                          captureTransmitResult[0]) {
+                        // log("sampai transmit temp tidak sama dengan capture[0] ${captureResultTransmitTemp.length} / numbers : ${captureTransmitResult[0]}");
+                        // jika tidak sama maka gantikan
+                        // remove
+                        captureResultTransmitTemp
+                            .removeAt(captureTransmitResult[0]);
+                        // insert new
+                        captureResultTransmitTemp.insert(
+                            captureTransmitResult[0], captureTransmitResult);
+                        try {
+                          log("helper start ...");
+                          // check jika length temp sama dengan total chunck
+                          if (captureResultTransmitTemp.length !=
+                              captureResult[2]) {
+                            // check jika squence number sama dengan urutan pada temp
+                            for (int i = 0;
+                                i < captureResultTransmitTemp.length - 1;
+                                i++) {
+                              log("logst 1 ${captureResultTransmitTemp[i][0]} == $i");
+                              if (captureResultTransmitTemp[i][0] != i) {
+                                // jika tidak sama maka akan disort ulang
+                                captureResultTransmitTemp.sort(
+                                  (a, b) => a[0].compareTo(
+                                    b[0],
+                                  ),
+                                );
+                                break;
                               }
-                            } else {
-                              log("BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
+                              log("logst $i == ${captureResultTransmitTemp.length - 1}");
+                              if (i == captureResultTransmitTemp.length - 1) {
+                                // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
+                                // mungkin dilakukan pengecekan crc32
+                                totalChunkData = captureResultTransmitTemp
+                                    .expand((outer) => outer.first)
+                                    .toList() as List<int>;
+                                log("total chunk : $totalChunkData");
+                                if (mounted) {
+                                  setState(() {
+                                    isCaptureDone = true;
+                                  });
+                                }
+                              } else {
+                                log("BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
+                              }
                             }
                           }
+                        } catch (e) {
+                          log("error when helper last value : $e");
                         }
-                      } catch (e) {
-                        log("error when helper last value : $e");
-                      }
-                    } else {
-                      log("sampai add transmit temp");
-                      // jika sama maka tambah saja
-                      captureResultTransmitTemp.add(captureTransmitResult);
+                      } else {
+                        log("sampai add transmit temp");
+                        // jika sama maka tambah saja
+                        captureResultTransmitTemp.add(captureTransmitResult);
 
-                      // try {
-                      //   log("helper start ...");
-                      //   // check jika length temp sama dengan total chunck
-                      //   if (captureResultTransmitTemp.length !=
-                      //       captureResult[2]) {
-                      //     // check jika squence number sama dengan urutan pada temp
-                      //     for (int i = 0;
-                      //         i < captureResultTransmitTemp.length - 1;
-                      //         i++) {
-                      //       log("logss 1 ${captureResultTransmitTemp[i][0]} == $i");
-                      //       if (captureResultTransmitTemp[i][0] != i) {
-                      //         // jika tidak sama maka akan disort ulang
-                      //         captureResultTransmitTemp.sort(
-                      //           (a, b) => a[0].compareTo(
-                      //             b[0],
-                      //           ),
-                      //         );
-                      //         break;
-                      //       }
-                      //       log("logss $i == ${captureResultTransmitTemp.length - 1}");
-                      //       if (i == captureResultTransmitTemp.length - 1) {
-                      //         // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
-                      //         // mungkin dilakukan pengecekan crc32
-                      //         totalChunkData = captureResultTransmitTemp
-                      //             .expand((outer) => outer.first)
-                      //             .toList() as List<int>;
-                      //         log("total chunk : $totalChunkData");
-                      //         if (mounted) {
-                      //           setState(() {
-                      //             isCaptureDone = true;
-                      //           });
-                      //         }
-                      //       } else {
-                      //         log("2 BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
-                      //       }
-                      //     }
-                      //   }
-                      // } catch (e) {
-                      //   log("error when helper last value : $e");
-                      // }
+                        // try {
+                        //   log("helper start ...");
+                        //   // check jika length temp sama dengan total chunck
+                        //   if (captureResultTransmitTemp.length !=
+                        //       captureResult[2]) {
+                        //     // check jika squence number sama dengan urutan pada temp
+                        //     for (int i = 0;
+                        //         i < captureResultTransmitTemp.length - 1;
+                        //         i++) {
+                        //       log("logss 1 ${captureResultTransmitTemp[i][0]} == $i");
+                        //       if (captureResultTransmitTemp[i][0] != i) {
+                        //         // jika tidak sama maka akan disort ulang
+                        //         captureResultTransmitTemp.sort(
+                        //           (a, b) => a[0].compareTo(
+                        //             b[0],
+                        //           ),
+                        //         );
+                        //         break;
+                        //       }
+                        //       log("logss $i == ${captureResultTransmitTemp.length - 1}");
+                        //       if (i == captureResultTransmitTemp.length - 1) {
+                        //         // berarti ini sudah lolos dan lanjut ditambahkan ke dalam total chunk
+                        //         // mungkin dilakukan pengecekan crc32
+                        //         totalChunkData = captureResultTransmitTemp
+                        //             .expand((outer) => outer.first)
+                        //             .toList() as List<int>;
+                        //         log("total chunk : $totalChunkData");
+                        //         if (mounted) {
+                        //           setState(() {
+                        //             isCaptureDone = true;
+                        //           });
+                        //         }
+                        //       } else {
+                        //         log("2 BAHWA ERROR DISINI KETIKA MELAKUKAN PERBAIKAN SAYA PUSING");
+                        //       }
+                        //     }
+                        //   }
+                        // } catch (e) {
+                        //   log("error when helper last value : $e");
+                        // }
+                      }
                     }
-                    // } else {
-                    //   // lakukan perbaikan
-                    //   captureResultTransmitTemp.add(captureTransmitResult);
-                    //   log("got error when capture transmit result number : ${captureTransmitResult[0]} error : ${captureTransmitResult[1]}");
-                    //   List<int> list = utf8.encode(
-                    //       "capture_transmit!${captureTransmitResult[0]}");
-                    //   Uint8List bytes = Uint8List.fromList(list);
-                    //   BLEUtils.funcWrite(
-                    //       bytes,
-                    //       "Success Capture Transmit fixing ${captureTransmitResult[0]}",
-                    //       device);
-                    // }
 
                     // log("captureTransmitResult : $captureTransmitResult");
                   } catch (e) {

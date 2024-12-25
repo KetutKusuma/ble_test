@@ -15,7 +15,7 @@ class CaptureConverter {
 
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
-    log("MASUK CONVERTER SEQUENCE CAPTURE");
+    // log("MASUK CONVERTER SEQUENCE CAPTURE");
     int chuckSquenceNumber =
         BytesConvert.bytesToInt16(bytes.sublist(0, 2), isBigEndian: true);
     int lengthInt = byteData.getUint16(2, Endian.big);
@@ -23,24 +23,23 @@ class CaptureConverter {
 
     List<int> chunkData = bytes.sublist(4, lengthInt + 4);
 
-    List<int> sublistCrc32 = bytes.sublist(lengthInt + 4, lengthInt + 8);
+    // List<int> sublistCrc32 = bytes.sublist(lengthInt + 4, lengthInt + 8);
     int crc32 = byteData.getUint32((lengthInt + 4), Endian.big);
     // melakukan pengecekan crc32
     int calculatedCrc32 = CRC32.compute(chunkData);
 
     /// checking
-    log("hashing chunck data crc32 : $calculatedCrc32");
-    log("MATCH : ${calculatedCrc32 == crc32} | $crc32 == $calculatedCrc32");
+    // log("hashing chunck data crc32 : $calculatedCrc32");
+    // log("MATCH : ${calculatedCrc32 == crc32} | $crc32 == $calculatedCrc32");
 
-    log("-- check if the length of chunck data == lengthInt we got ---");
-    log("${chunkData.length == lengthInt} | ${chunkData.length} == $lengthInt");
+    // log("-- check if the length of chunck data == lengthInt we got ---");
+    // log("${chunkData.length == lengthInt} | ${chunkData.length} == $lengthInt");
 
     if (calculatedCrc32 != crc32) {
       log("Crc32 is not match, chuck sequence number : $chuckSquenceNumber");
       Map error = {
         "status": false,
         "message": "CRC32 not match",
-        "command": "capture_transmit!$chuckSquenceNumber",
       };
       return [
         chuckSquenceNumber,

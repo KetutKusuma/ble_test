@@ -14,6 +14,7 @@ enum ScreenSnackbar {
   receivesettings,
   transmitsettings,
   uploadsettings,
+  capture,
 }
 
 class Snackbar {
@@ -56,6 +57,8 @@ class Snackbar {
         return snackBarKeyTransmitSettings;
       case ScreenSnackbar.uploadsettings:
         return snackBarKeyUploadSettings;
+      case ScreenSnackbar.capture:
+        return snackBarCapture;
     }
   }
 
