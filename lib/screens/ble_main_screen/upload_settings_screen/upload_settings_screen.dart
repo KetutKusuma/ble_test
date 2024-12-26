@@ -10,6 +10,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../utils/ble.dart';
@@ -51,6 +52,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       modemApnTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  TextEditingController portController = TextEditingController();
 
   final List<Map<String, dynamic>> listMapUploadUsing = [
     {"title": "Wifi", "value": 0},
@@ -84,6 +86,29 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       },
     );
+    portController.addListener(() {
+      final text = portController.text;
+      if (text.isNotEmpty) {
+        final value = double.tryParse(text);
+        if (value != null) {
+          if (value < 0 && text.length > 65535) {
+            // Otomatis set menjadi 0.5 jika kurang dari 0.5
+            portController.text = '0';
+            portController.selection = TextSelection.fromPosition(TextPosition(
+                offset:
+                    portController.text.length)); // Memastikan cursor di akhir
+          } else if (value > 65535) {
+            // Otomatis set menjadi 1.5 jika lebih dari 1.5
+            portController.text = '65535';
+            portController.selection = TextSelection.fromPosition(
+              TextPosition(
+                offset: portController.text.length,
+              ),
+            ); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
     initGetRawUpload();
     initDiscoverServices();
   }
@@ -122,7 +147,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         BLEUtils.funcWrite(bytes, "Success Get Raw Upload", device);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
+      Snackbar.show(ScreenSnackbar.uploadsettings, "Error get raw admin : $e",
           success: false);
     }
   }
@@ -215,11 +240,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                     } else if (_setSettings.setSettings == "modem_apn") {
                       modemApnTxt = _setSettings.value;
                     }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.uploadsettings,
                         "Success set ${_setSettings.setSettings}",
                         success: true);
                   } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.uploadsettings,
                         "Failed set ${_setSettings.setSettings}",
                         success: false);
                   }
@@ -352,27 +377,27 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         appBar: AppBar(
           title: const Text('Upload Settings'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
+          // actions: [
+          //   Row(
+          //     children: [
+          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
+          //       TextButton(
+          //         onPressed: _isConnecting
+          //             ? onCancelPressed
+          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
+          //         child: Text(
+          //           _isConnecting
+          //               ? "CANCEL"
+          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
+          //           style: Theme.of(context)
+          //               .primaryTextTheme
+          //               .labelLarge
+          //               ?.copyWith(color: Colors.white),
+          //         ),
+          //       )
+          //     ],
+          //   ),
+          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -424,12 +449,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: portTxt,
                       onTap: () async {
                         try {
-                          String? input =
-                              await _showInputDialog(controller, "Upload Port",
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  keyboardType: TextInputType.number);
+                          String? input = await _showInputDialog(
+                            portController,
+                            "Upload Port",
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            keyboardType: TextInputType.number,
+                          );
                           if (input != null) {
                             List<int> list = utf8.encode("port=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -593,6 +620,73 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       },
                       icon: const Icon(
                         Icons.wifi_password_rounded,
+                      ),
+                    ),
+
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 10.0, right: 10, top: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                List<int> list = utf8.encode("wifi_connect!");
+                                Uint8List bytes = Uint8List.fromList(list);
+                                BLEUtils.funcWrite(
+                                    bytes, "Success Connect Wifi", device);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 10),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.green.shade600),
+                                child: Text(
+                                  "Connect Wifi",
+                                  style: GoogleFonts.readexPro(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          Expanded(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                splashColor: Colors.black,
+                                onTap: () {
+                                  List<int> list =
+                                      utf8.encode("wifi_disconnect!");
+                                  Uint8List bytes = Uint8List.fromList(list);
+                                  BLEUtils.funcWrite(
+                                      bytes, "Success Disonnect Wifi", device);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.grey.shade600),
+                                  child: Text(
+                                    "Disconnect Wifi",
+                                    style: GoogleFonts.readexPro(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     SettingsContainer(

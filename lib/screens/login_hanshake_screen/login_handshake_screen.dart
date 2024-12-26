@@ -217,27 +217,27 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
         appBar: AppBar(
           elevation: 0,
           title: Text('${_device.remoteId}'),
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
+          // actions: [
+          //   Row(
+          //     children: [
+          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
+          //       TextButton(
+          //         onPressed: _isConnecting
+          //             ? onCancelPressed
+          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
+          //         child: Text(
+          //           _isConnecting
+          //               ? "CANCEL"
+          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
+          //           style: Theme.of(context)
+          //               .primaryTextTheme
+          //               .labelLarge
+          //               ?.copyWith(color: Colors.white),
+          //         ),
+          //       )
+          //     ],
+          //   ),
+          // ],
         ),
         body: CustomScrollView(
           slivers: [

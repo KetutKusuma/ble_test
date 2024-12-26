@@ -2,17 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/transmit_settings_convert.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
@@ -207,27 +204,27 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
         appBar: AppBar(
           title: const Text('Transmit Settings'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
+          // actions: [
+          //   Row(
+          //     children: [
+          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
+          //       TextButton(
+          //         onPressed: _isConnecting
+          //             ? onCancelPressed
+          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
+          //         child: Text(
+          //           _isConnecting
+          //               ? "CANCEL"
+          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
+          //           style: Theme.of(context)
+          //               .primaryTextTheme
+          //               .labelLarge
+          //               ?.copyWith(color: Colors.white),
+          //         ),
+          //       )
+          //     ],
+          //   ),
+          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,

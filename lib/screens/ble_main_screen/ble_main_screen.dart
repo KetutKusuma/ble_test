@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
@@ -11,15 +10,13 @@ import 'package:ble_test/screens/ble_main_screen/receive_settings_screen/receive
 import 'package:ble_test/screens/ble_main_screen/transmit_settings_screen/transmit_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
 import 'package:ble_test/screens/capture_screen/capture_screen.dart';
-import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-
-import '../../utils/converter/bytes_convert.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BleMainScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -279,27 +276,27 @@ class _BleMainScreenState extends State<BleMainScreen> {
         appBar: AppBar(
           title: const Text('Menu Settings'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
+          // actions: [
+          //   Row(
+          //     children: [
+          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
+          //       TextButton(
+          //         onPressed: _isConnecting
+          //             ? onCancelPressed
+          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
+          //         child: Text(
+          //           _isConnecting
+          //               ? "CANCEL"
+          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
+          //           style: Theme.of(context)
+          //               .primaryTextTheme
+          //               .labelLarge
+          //               ?.copyWith(color: Colors.white),
+          //         ),
+          //       )
+          //     ],
+          //   ),
+          // ],
         ),
         body: CustomScrollView(
           slivers: [
@@ -307,40 +304,6 @@ class _BleMainScreenState extends State<BleMainScreen> {
               hasScrollBody: false,
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(
-                              Colors.amber.shade800,
-                            ),
-                          ),
-                          onPressed: () {
-                            List<int> list = utf8.encode("reset!");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(bytes, "Reset success", device);
-                          },
-                          child: const Text("Reset"),
-                        ),
-                        ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(
-                              Colors.red.shade800,
-                            ),
-                          ),
-                          onPressed: () {
-                            List<int> list = utf8.encode("reset!");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(bytes, "Reset success", device);
-                          },
-                          child: const Text("Logout"),
-                        )
-                      ],
-                    ),
-                  ),
                   FeatureWidget(
                     title: "Admin Settings",
                     icon: const Icon(Icons.admin_panel_settings_outlined),
@@ -383,7 +346,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   ),
                   FeatureWidget(
                     title: "Transmit Settings",
-                    icon: const Icon(Icons.wifi),
+                    icon: const Icon(CupertinoIcons.paperplane),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -419,6 +382,55 @@ class _BleMainScreenState extends State<BleMainScreen> {
                         ),
                       );
                     },
+                  ),
+                  FeatureWidget(
+                    title: "Set Password",
+                    onTap: () {},
+                    icon: const Icon(
+                      Icons.lock_outlined,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      List<int> list = utf8.encode("logout!");
+                      Uint8List bytes = Uint8List.fromList(list);
+                      BLEUtils.funcWrite(bytes, "Logout success", device);
+                      // ini harusnya dengan disconnect juga
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade800,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.logout_outlined,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            "Logout",
+                            style: GoogleFonts.readexPro(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -464,13 +476,13 @@ class FeatureWidget extends StatelessWidget {
             children: [
               icon,
               const SizedBox(
-                width: 5,
+                width: 8,
               ),
               Text(
                 title,
-                style: const TextStyle(
+                style: GoogleFonts.readexPro(
                   fontSize: 15,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

@@ -273,27 +273,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
         appBar: AppBar(
           title: const Text("Capture Screen"),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
+          // actions: [
+          //   Row(
+          //     children: [
+          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
+          //       TextButton(
+          //         onPressed: _isConnecting
+          //             ? onCancelPressed
+          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
+          //         child: Text(
+          //           _isConnecting
+          //               ? "CANCEL"
+          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
+          //           style: Theme.of(context)
+          //               .primaryTextTheme
+          //               .labelLarge
+          //               ?.copyWith(color: Colors.white),
+          //         ),
+          //       )
+          //     ],
+          //   ),
+          // ],
         ),
         body: CustomScrollView(
           slivers: [
