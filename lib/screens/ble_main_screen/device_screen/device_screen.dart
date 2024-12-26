@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 
+import 'package:ble_test/utils/converter/bytes_convert.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
@@ -34,13 +36,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
   List<BluetoothService> _services = [];
   List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-", batteryStatusTxt = "-", batteryLevelTxt = "-";
+  String statusTxt = "-", timeTxt = "-", firmwareTxt = "-", versionTxt = "-";
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   bool isDeviceScreen = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
+  bool isGetTime = false;
+  bool isGetFirmware = false;
+  bool isGetVersion = false;
 
   @override
   void initState() {
@@ -64,6 +69,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
         }
       },
     );
+    initGetDevice();
     initDiscoverServices();
   }
 
@@ -85,7 +91,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   onRefresh() async {
     try {
-      initGetBattery();
+      initGetDevice();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -93,12 +99,27 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
   }
 
-  initGetBattery() async {
+  initGetDevice() async {
     try {
+      List<int> list = [];
+      Uint8List bytes = Uint8List(0);
       if (isConnected) {
-        List<int> list = utf8.encode("battery?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Battery", device);
+        list = utf8.encode("time?");
+        bytes = Uint8List.fromList(list);
+        BLEUtils.funcWrite(bytes, "Success Get Time", device);
+        isGetTime = true;
+
+        await Future.delayed(const Duration(seconds: 3));
+        list = utf8.encode("firmware?");
+        bytes = Uint8List.fromList(list);
+        BLEUtils.funcWrite(bytes, "Success Get Firmware", device);
+        isGetFirmware = true;
+
+        await Future.delayed(const Duration(seconds: 3));
+        list = utf8.encode("version?");
+        bytes = Uint8List.fromList(list);
+        BLEUtils.funcWrite(bytes, "Success Get Version", device);
+        isGetVersion = true;
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
@@ -137,19 +158,33 @@ class _DeviceScreenState extends State<DeviceScreen> {
                   setState(() {});
                 }
                 log("VALUE : $_value, ${_value.length}");
+                if (isGetTime) {
+                  isGetTime = false;
+                  int timeInt = BytesConvert.bytesToInt32(
+                    _value,
+                  );
+                  timeTxt = DateTime.fromMillisecondsSinceEpoch(timeInt * 1000)
+                      .toString();
+                }
 
-                // this is for get raw admin
-                if (_value.length >= 9) {
-                  List<dynamic> result =
-                      StatusConverter.convertBatteryStatus(_value);
+                if (isGetFirmware) {
+                  isGetFirmware = false;
+                  firmwareTxt = BytesConvert.bytesToString(_value);
+                }
+
+                if (isGetVersion) {
+                  isGetVersion = false;
+                  versionTxt = BytesConvert.bytesToString(_value);
+                }
+
+                if (timeTxt != '-' && firmwareTxt != '-' && versionTxt != '-') {
                   _progressDialog.hide();
+                }
 
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      batteryStatusTxt = result[1].toString();
-                      batteryLevelTxt = result[2].toString();
-                    });
+                log("value : ${value.length} && value[0] : ${value[0]}");
+                if (_value.length == 1 && _value[0] == 1) {
+                  if (_setSettings.setSettings == "time") {
+                    timeTxt = _setSettings.value;
                   }
                 }
 
@@ -171,9 +206,95 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
   }
 
+  Future<DateTime?> selectDateTime(BuildContext context) async {
+    // Select Date
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      // Select Time
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (pickedTime != null) {
+        // Combine Date and Time
+        return DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+      }
+    }
+    // Return null if either date or time selection is canceled
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return ScaffoldMessenger(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Device'),
+          elevation: 0,
+        ),
+        body: SmartRefresher(
+          controller: _refreshController,
+          onRefresh: onRefresh,
+          child: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    children: [
+                      SettingsContainer(
+                        title: "Time",
+                        data: timeTxt,
+                        onTap: () async {
+                          DateTime? input = await selectDateTime(context);
+                          if (input != null) {
+                            int secondsInput =
+                                input.millisecondsSinceEpoch ~/ 1000;
+                            List<int> list = utf8.encode("time=$secondsInput");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "time", value: input.toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Time", device);
+                          }
+                        },
+                        icon: const Icon(
+                          CupertinoIcons.time,
+                        ),
+                      ),
+                      SettingsContainer(
+                        title: "Firmware",
+                        data: firmwareTxt,
+                        onTap: () {},
+                        icon: const Icon(
+                          Icons.memory_rounded,
+                        ),
+                      ),
+                      SettingsContainer(
+                        title: "Version",
+                        data: versionTxt,
+                        onTap: () {},
+                        icon: const Icon(
+                          Icons.settings_suggest_outlined,
+                        ),
+                      ),
+                    ],
+                  ))
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // GET

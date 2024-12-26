@@ -680,6 +680,45 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ),
                     GestureDetector(
                       onTap: () async {
+                        List<int> list = utf8.encode("format!");
+                        Uint8List bytes = Uint8List.fromList(list);
+                        BLEUtils.funcWrite(bytes, "Set Format success", device);
+                      },
+                      child: Container(
+                        margin:
+                            const EdgeInsets.only(left: 10, right: 10, top: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.shade700,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.drive_file_move_rtl_outlined,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              "Format",
+                              style: GoogleFonts.readexPro(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
                         bool? input =
                             await _showTrueFalseDialog(context, "Enable");
                         if (input != null) {
