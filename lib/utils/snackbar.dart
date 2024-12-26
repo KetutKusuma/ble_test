@@ -15,6 +15,8 @@ enum ScreenSnackbar {
   transmitsettings,
   uploadsettings,
   capture,
+  setpassword,
+  devicesettings,
 }
 
 class Snackbar {
@@ -32,6 +34,8 @@ class Snackbar {
       GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyUploadSettings = GlobalKey<ScaffoldMessengerState>();
   static final snackBarCapture = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarSetPassword = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarDeviceSettings = GlobalKey<ScaffoldMessengerState>();
 
   static GlobalKey<ScaffoldMessengerState> getSnackbar(ScreenSnackbar ss) {
     switch (ss) {
@@ -59,6 +63,10 @@ class Snackbar {
         return snackBarKeyUploadSettings;
       case ScreenSnackbar.capture:
         return snackBarCapture;
+      case ScreenSnackbar.setpassword:
+        return snackBarSetPassword;
+      case ScreenSnackbar.devicesettings:
+        return snackBarDeviceSettings;
     }
   }
 

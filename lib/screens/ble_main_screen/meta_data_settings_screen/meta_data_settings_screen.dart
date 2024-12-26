@@ -138,7 +138,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         BLEUtils.funcWrite(bytes, "Success Get Raw Meta data", device);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
+      Snackbar.show(ScreenSnackbar.metadatasettings, "Error get raw admin : $e",
           success: false);
     }
   }
@@ -203,11 +203,11 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     } else if (_setSettings.setSettings == "time_utc") {
                       timeUTCTxt = _setSettings.value;
                     }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.metadatasettings,
                         "Success set ${_setSettings.setSettings}",
                         success: true);
                   } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.metadatasettings,
                         "Failed set ${_setSettings.setSettings}",
                         success: false);
                   }

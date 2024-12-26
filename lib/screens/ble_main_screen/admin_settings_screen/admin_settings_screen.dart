@@ -678,6 +678,50 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                     ),
+                    GestureDetector(
+                      onTap: () async {
+                        bool? input =
+                            await _showTrueFalseDialog(context, "Enable");
+                        if (input != null) {
+                          List<int> list = utf8.encode("enable?$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(
+                              bytes, "Set Enable $input success", device);
+                        }
+                      },
+                      child: Container(
+                        margin:
+                            const EdgeInsets.only(left: 10, right: 10, top: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade600,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              "Enable",
+                              style: GoogleFonts.readexPro(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     // Text("VALUE : $_value"),
                     SettingsContainer(
                       icon: const Icon(

@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/capture_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
@@ -139,7 +137,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         BLEUtils.funcWrite(bytes, "Success Get Raw Capture", device);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
+      Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
           success: false);
     }
   }
@@ -221,11 +219,11 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         "special_capture_count") {
                       spCaptureCountTxt = _setSettings.value;
                     }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.capturesettings,
                         "Success set ${_setSettings.setSettings}",
                         success: true);
                   } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.capturesettings,
                         "Failed set ${_setSettings.setSettings}",
                         success: false);
                   }

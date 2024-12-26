@@ -4,9 +4,14 @@ import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/battery_screen/battery_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/device_screen/device_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/file_screen/file_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/meta_data_settings_screen/meta_data_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/receive_settings_screen/receive_data_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/set_password_screen/set_password_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/storage_screen/storage_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/transmit_settings_screen/transmit_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
 import 'package:ble_test/screens/capture_screen/capture_screen.dart';
@@ -384,8 +389,72 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                   ),
                   FeatureWidget(
+                    title: "Battery",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BatteryScreen(device: device),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      CupertinoIcons.battery_charging,
+                    ),
+                  ),
+                  FeatureWidget(
+                    title: "Storage",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StorageScreen(device: device),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.sd_storage_outlined,
+                    ),
+                  ),
+                  FeatureWidget(
+                    title: "Files",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FilesScreen(device: device),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.insert_drive_file_outlined,
+                    ),
+                  ),
+                  FeatureWidget(
+                    title: "Device",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DeviceScreen(device: device),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      CupertinoIcons.device_phone_portrait,
+                    ),
+                  ),
+                  FeatureWidget(
                     title: "Set Password",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              SetPasswordScreen(device: device),
+                        ),
+                      );
+                    },
                     icon: const Icon(
                       Icons.lock_outlined,
                     ),
@@ -399,6 +468,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       Uint8List bytes = Uint8List.fromList(list);
                       BLEUtils.funcWrite(bytes, "Logout success", device);
                       // ini harusnya dengan disconnect juga
+                      onDisconnectPressed();
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -432,6 +502,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(
+                    height: 80,
+                  )
                 ],
               ),
             ),

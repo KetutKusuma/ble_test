@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
@@ -117,7 +116,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         BLEUtils.funcWrite(bytes, "Success Get Raw Receive", device);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
+      Snackbar.show(ScreenSnackbar.receivesettings, "Error get raw admin : $e",
           success: false);
     }
   }
@@ -186,11 +185,11 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         "receive_time_adjust") {
                       receiveTimeAdjust = _setSettings.value;
                     }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.receivesettings,
                         "Success set ${_setSettings.setSettings}",
                         success: true);
                   } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
+                    Snackbar.show(ScreenSnackbar.receivesettings,
                         "Failed set ${_setSettings.setSettings}",
                         success: false);
                   }
