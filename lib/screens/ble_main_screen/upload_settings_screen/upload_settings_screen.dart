@@ -245,7 +245,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   Future<String?> _showInputDialog(
       TextEditingController controller, String title,
-      {List<TextInputFormatter>? inputFormatters}) async {
+      {List<TextInputFormatter>? inputFormatters,
+      TextInputType? keyboardType = TextInputType.text}) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -258,7 +259,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 labelText: "Enter Value",
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: keyboardType,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter some text';
@@ -277,10 +278,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
             ),
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty && controller.text.length > 12) {
+                if (controller.text.isNotEmpty) {
                   Navigator.pop(context, controller.text);
                   controller.clear();
-                } else {}
+                }
               },
               child: const Text("OK"),
             ),
@@ -423,10 +424,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: portTxt,
                       onTap: () async {
                         try {
-                          String? input = await _showInputDialog(
-                              controller, "Upload Port", inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ]);
+                          String? input =
+                              await _showInputDialog(controller, "Upload Port",
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  keyboardType: TextInputType.number);
                           if (input != null) {
                             List<int> list = utf8.encode("port=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -458,6 +461,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             List<int> list =
                                 utf8.encode("upload_enable=$input");
                             Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings.setSettings = "upload_enable";
+                            _setSettings.value = input.toString();
                             BLEUtils.funcWrite(
                                 bytes, "Success Set Upload Enable", device);
                           }
@@ -482,7 +487,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               context, listMapUploadUsing);
                           if (input != null) {
                             List<int> list =
-                                utf8.encode("port=${input['value']}");
+                                utf8.encode("upload_using=${input['value']}");
                             Uint8List bytes = Uint8List.fromList(list);
                             _setSettings.setSettings = "upload_using";
                             _setSettings.value = input['value'].toString();
@@ -500,7 +505,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Initial Delay",
+                      title: "Upload Initial Delay (seconds)",
                       data: uploadInitialDelayTxt,
                       onTap: () async {
                         try {
@@ -508,7 +513,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               controller, "Upload Initial Delay",
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly
-                              ]);
+                              ],
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      signed: false, decimal: true));
                           if (input != null) {
                             List<int> list =
                                 utf8.encode("upload_initial_delay=$input");
@@ -535,8 +543,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: wifiSsidTxt,
                       onTap: () async {
                         try {
-                          String? input =
-                              await _showInputDialog(controller, "Wifi SSID");
+                          String? input = await _showInputDialog(
+                            controller,
+                            "Wifi SSID",
+                          );
                           if (input != null) {
                             List<int> list = utf8.encode("wifi_ssid=$input");
                             Uint8List bytes = Uint8List.fromList(list);

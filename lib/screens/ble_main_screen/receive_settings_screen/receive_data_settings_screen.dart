@@ -174,7 +174,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
                     if (_setSettings.setSettings == "receive_enable") {
-                      receiveEnableTxt = _setSettings.value;
+                      receiveEnableTxt =
+                          (_setSettings.value == '1' ? true : false).toString();
                     } else if (_setSettings.setSettings == "receive_schedule") {
                       receiveScheduleTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "receive_interval") {

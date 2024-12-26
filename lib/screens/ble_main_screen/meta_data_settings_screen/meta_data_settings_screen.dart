@@ -195,13 +195,13 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
                     if (_setSettings.setSettings == "meter_model") {
-                      _setSettings.value = modelMeterTxt;
+                      modelMeterTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "meter_sn") {
-                      _setSettings.value = meterSnTxt;
+                      meterSnTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "meter_seal") {
-                      _setSettings.value = meterSealTxt;
+                      meterSealTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "time_utc") {
-                      _setSettings.value = timeUTCTxt;
+                      timeUTCTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
                         "Success set ${_setSettings.setSettings}",
@@ -442,7 +442,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           List<int> list = utf8.encode("time_utc=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
-                              setSettings: "timeutc", value: input);
+                              setSettings: "time_utc", value: input);
                           BLEUtils.funcWrite(
                               bytes, "Success Set Time UTC", device);
                         }

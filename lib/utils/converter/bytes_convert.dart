@@ -23,7 +23,7 @@ class BytesConvert {
     return result;
   }
 
-  static int bytesToInt16(List<int> bytes, {bool isBigEndian = false}) {
+  static int bytesToInt16(List<int> bytes, {bool isBigEndian = true}) {
     // Create a ByteData from the list
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
@@ -32,12 +32,12 @@ class BytesConvert {
     return result;
   }
 
-  static int bytesToInt32(List<int> bytes) {
+  static int bytesToInt32(List<int> bytes, {bool isBigEndian = true}) {
     // Create a ByteData from the list
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
     // Read as int32 (little-endian)
-    int result = byteData.getInt32(0, Endian.little);
+    int result = byteData.getInt32(0, isBigEndian ? Endian.big : Endian.little);
     return result;
   }
 
@@ -46,7 +46,8 @@ class BytesConvert {
     return value;
   }
 
-  static double bytesToFloatorDouble(List<int> bytes) {
+  static double bytesToFloatorDouble(List<int> bytes,
+      {bool isBigEndian = true}) {
     try {
       Uint8List uint8list = Uint8List.fromList(bytes);
 
@@ -54,7 +55,8 @@ class BytesConvert {
       ByteData byteData = uint8list.buffer.asByteData();
 
       // Read the float from the ByteData (little-endian)
-      double value = byteData.getFloat32(0, Endian.little);
+      double value =
+          byteData.getFloat32(0, isBigEndian ? Endian.big : Endian.little);
       return (value * 100).truncateToDouble() / 100;
     } catch (e) {
       log("error When convert bytes to float : $e");

@@ -55,11 +55,28 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController idTxtController = TextEditingController();
   TextEditingController voltageCoefTxtController = TextEditingController();
+  TextEditingController cameraJpegQualityController = TextEditingController();
 
-  final List<Map<String, dynamic>> dataMap = [
+  final List<Map<String, dynamic>> dataMapRole = [
     {"title": "Undefiend", "value": 0},
     {"title": "Regular", "value": 1},
     {"title": "Gateway", "value": 2},
+  ];
+  final List<Map<String, dynamic>> dataMapBrightnessContrastSaturation = [
+    {"title": "-2", "value": -2},
+    {"title": "-1", "value": -1},
+    {"title": "0", "value": 0},
+    {"title": "1", "value": 1},
+    {"title": "2", "value": 2},
+  ];
+  final List<Map<String, dynamic>> dataMapSpecialEffect = [
+    {"title": "No Effect", "value": 0},
+    {"title": "Negative", "value": 1},
+    {"title": "Grayscale", "value": 2},
+    {"title": "Red Tint", "value": 3},
+    {"title": "Green Tint", "value": 4},
+    {"title": "Blue Tint", "value": 5},
+    {"title": "Sepia", "value": 6},
   ];
   List<int> bits = [];
   bool isAdminSettings = true;
@@ -106,6 +123,29 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           } else if (value > 1.5) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
             voltageCoefTxtController.text = '1.5';
+            voltageCoefTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: voltageCoefTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
+    cameraJpegQualityController.addListener(() {
+      final text = voltageCoefTxtController.text;
+      if (text.isNotEmpty) {
+        final value = double.tryParse(text);
+        if (value != null) {
+          if (value < 0) {
+            // Otomatis set menjadi 0.5 jika kurang dari 0.5
+            voltageCoefTxtController.text = '0';
+            voltageCoefTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: voltageCoefTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          } else if (value > 63) {
+            // Otomatis set menjadi 1.5 jika lebih dari 1.5
+            voltageCoefTxtController.text = '63';
             voltageCoefTxtController.selection = TextSelection.fromPosition(
                 TextPosition(
                     offset: voltageCoefTxtController
@@ -230,7 +270,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       brightnessText = (result[4]).toString();
                       contrastText = (result[5]).toString();
                       saturationText = (result[6]).toString();
-                      specialEffectText = result[7].toString();
+                      specialEffectText = getSpecialEffectString(result[7]);
                       hMirrorText = result[8].toString();
                       vFlipText = result[9].toString();
                       cameraJpgQualityTxt = result[10].toString();
@@ -253,6 +293,32 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       voltCoef1Txt = _setSettings.value;
                     } else if (_setSettings.setSettings == "voltcoef2") {
                       voltCoef2Txt = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "camera_setting_brightness") {
+                      brightnessText = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "camera_setting_contrast") {
+                      contrastText = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "camera_setting_saturation") {
+                      saturationText = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "camera_setting_special_effect") {
+                      try {
+                        specialEffectText = getSpecialEffectString(
+                            int.parse(_setSettings.value));
+                      } catch (e) {
+                        log("error catch on special effect : $e");
+                      }
+                    } else if (_setSettings.setSettings ==
+                        "camera_setting_vflip") {
+                      vFlipText = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "camera_setting_hmirror") {
+                      hMirrorText = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "camera_jpeg_quality") {
+                      cameraJpgQualityTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "role") {
                       roleTxt = _setSettings.value == "0"
                           ? "Undifined"
@@ -300,6 +366,27 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         ),
       ),
     );
+  }
+
+  String getSpecialEffectString(int value) {
+    switch (value) {
+      case 0:
+        return "None";
+      case 1:
+        return "Negative";
+      case 2:
+        return "Grayscale";
+      case 3:
+        return "Red Tint";
+      case 4:
+        return "Green Tint";
+      case 5:
+        return "Blue Tint";
+      case 6:
+        return "Sepia";
+      default:
+        return "None";
+    }
   }
 
   /// ===== for connection ===================
@@ -359,7 +446,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       builder: (BuildContext context) {
         return SimpleDialog(
           title: Text(msg),
-          children: <Widget>[
+          children: [
             SimpleDialogOption(
               onPressed: () {
                 Navigator.pop(context, true); // Return true
@@ -381,42 +468,52 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   // Function to show a dialog for input
-  Future<String?> _showInputDialog(TextEditingController controller) async {
+  Future<String?> _showInputDialog(
+    TextEditingController controller,
+    String title, {
+    String? label = '',
+    TextInputType? keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? lengthTextNeed = 0,
+  }) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Enter New ID"),
+          title: Text("Enter $title"),
           content: Form(
             child: TextFormField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: "Enter New ID",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: "Enter $label",
+                border: const OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: keyboardType,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter some text';
                 }
                 return null;
               },
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(14),
-                FilteringTextInputFormatter.digitsOnly
-              ],
+              inputFormatters: inputFormatters,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                controller.clear();
               },
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty && controller.text.length > 12) {
+                if (lengthTextNeed != 0 &&
+                    lengthTextNeed! < controller.text.length) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                }
+                if (lengthTextNeed == 0) {
                   Navigator.pop(context, controller.text);
                   controller.clear();
                 } else {}
@@ -477,7 +574,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return input;
   }
 
-  Future<Map?> _showSelectionPopup(BuildContext context) async {
+  Future<Map?> _showSelectionPopup(
+      BuildContext context, List<Map<String, dynamic>> dataMap) async {
     Map? result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
@@ -557,7 +655,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       title: "ID",
                       data: idTxt,
                       onTap: () async {
-                        String? input = await _showInputDialog(idTxtController);
+                        String? input = await _showInputDialog(
+                          idTxtController,
+                          "New ID",
+                          label: 'New ID ',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(14),
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          lengthTextNeed: 12,
+                        );
                         log("input : $input");
                         if (input != null) {
                           List<int> list = utf8.encode("id=$input");
@@ -606,31 +714,97 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       icon: const Icon(Icons.brightness_5),
                       title: "Camera Brightness",
                       data: brightnessText,
-                      onTap: () {},
+                      onTap: () async {
+                        Map? input = await _showSelectionPopup(
+                            context, dataMapBrightnessContrastSaturation);
+                        if (input != null) {
+                          List<int> list = utf8.encode(
+                              "camera_setting_brightness=${input['value']}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "camera_setting_brightness",
+                              value: input['value'].toString());
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Camera Brightness", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: const Icon(Icons.brightness_6),
                       title: "Camera Contrast",
                       data: contrastText,
-                      onTap: () {},
+                      onTap: () async {
+                        Map? input = await _showSelectionPopup(
+                            context, dataMapBrightnessContrastSaturation);
+                        if (input != null) {
+                          List<int> list = utf8.encode(
+                              "camera_setting_contrast=${input['value']}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "camera_setting_contrast",
+                              value: input['value'].toString());
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Camera Contrast", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: const Icon(Icons.brightness_1_rounded),
                       title: "Camera Saturation",
                       data: saturationText,
-                      onTap: () {},
+                      onTap: () async {
+                        Map? input = await _showSelectionPopup(
+                            context, dataMapBrightnessContrastSaturation);
+                        if (input != null) {
+                          List<int> list = utf8.encode(
+                              "camera_setting_saturation=${input['value']}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "camera_setting_saturation",
+                              value: input['value'].toString());
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Camera Saturation", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: const Icon(CupertinoIcons.wand_stars_inverse),
                       title: "Camera Special effect",
                       data: specialEffectText,
-                      onTap: () {},
+                      onTap: () async {
+                        Map? input = await _showSelectionPopup(
+                            context, dataMapSpecialEffect);
+                        if (input != null) {
+                          List<int> list = utf8.encode(
+                              "camera_setting_special_effect=${input['value']}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                            setSettings: "camera_setting_special_effect",
+                            value: input['value'].toString(),
+                          );
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Camera Brightness", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: const Icon(Icons.flip),
                       title: "Camera H Mirror",
                       data: hMirrorText,
-                      onTap: () {},
+                      onTap: () async {
+                        bool? input = await _showTrueFalseDialog(
+                            context, "Camera H Mirror");
+                        if (input != null) {
+                          List<int> list =
+                              utf8.encode("camera_setting_hmirror=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "camera_setting_hmirror",
+                              value: input.toString());
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Camera H Mirror", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: Transform.rotate(
@@ -641,22 +815,56 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                       title: "Camera V Flip",
                       data: vFlipText,
-                      onTap: () {},
+                      onTap: () async {
+                        bool? input = await _showTrueFalseDialog(
+                            context, "Camera V Flip");
+                        if (input != null) {
+                          List<int> list =
+                              utf8.encode("camera_setting_vflip=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "camera_setting_vflip",
+                              value: input.toString());
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Camera V Flip", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: const Icon(
                         Icons.high_quality_outlined,
                       ),
-                      title: "Camera Jpg Quality",
+                      title: "Camera Jpeg Quality",
                       data: cameraJpgQualityTxt,
-                      onTap: () {},
+                      onTap: () async {
+                        String? input = await _showInputDialog(
+                          cameraJpegQualityController,
+                          "Camera Jpeg Quality",
+                          label: '0 to 63',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(2),
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                        );
+                        log("input : $input");
+                        if (input != null) {
+                          List<int> list =
+                              utf8.encode("camera_jpeg_quality=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "camera_jpeg_quality", value: input);
+                          BLEUtils.funcWrite(bytes, "Success Set ID", device);
+                        }
+                      },
                     ),
                     SettingsContainer(
                       icon: const Icon(CupertinoIcons.gear_big),
                       title: "Role",
                       data: roleTxt,
                       onTap: () async {
-                        Map? result = await _showSelectionPopup(context);
+                        Map? result =
+                            await _showSelectionPopup(context, dataMapRole);
                         if (result != null) {
                           List<int> list =
                               utf8.encode("role=${result["value"]}");
@@ -689,9 +897,11 @@ class SettingsContainer extends StatelessWidget {
     required this.data,
     required this.onTap,
     required this.icon,
+    this.description,
   });
 
   final String title;
+  final String? description;
   final String data;
   final void Function() onTap;
   final Widget icon;
@@ -723,12 +933,27 @@ class SettingsContainer extends StatelessWidget {
               ),
               Expanded(
                 flex: 4,
-                child: Text(
-                  title,
-                  style: GoogleFonts.readexPro(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.readexPro(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    (description == null)
+                        ? const SizedBox()
+                        : Text(
+                            description ?? '',
+                            style: GoogleFonts.readexPro(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ],
                 ),
               ),
               Expanded(

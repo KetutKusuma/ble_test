@@ -11,9 +11,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
+import '../../../constant/constant_color.dart';
 import '../admin_settings_screen/admin_settings_screen.dart';
 
 class CaptureSettingsScreen extends StatefulWidget {
@@ -52,6 +54,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   TextEditingController controller = TextEditingController();
   bool isCaptureSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
+  TextEditingController spCaptureDateTxtController = TextEditingController();
 
   @override
   void initState() {
@@ -75,6 +78,29 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         }
       },
     );
+    spCaptureDateTxtController.addListener(() {
+      final text = spCaptureDateTxtController.text;
+      if (text.isNotEmpty) {
+        final value = double.tryParse(text);
+        if (value != null) {
+          if (value <= 1 && text.length >= 31) {
+            // Otomatis set menjadi 0.5 jika kurang dari 0.5
+            spCaptureDateTxtController.text = '1';
+            spCaptureDateTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: spCaptureDateTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          } else if (value >= 31) {
+            // Otomatis set menjadi 1.5 jika lebih dari 1.5
+            spCaptureDateTxtController.text = '31';
+            spCaptureDateTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: spCaptureDateTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
     initGetRawCapture();
     initDiscoverServices();
   }
@@ -163,7 +189,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       captureIntervalTxt = result[2].toString();
                       captureCountTxt = result[3].toString();
                       captureRecentLimitTxt = (result[4]).toString();
-                      spCaptureDateTxt = (result[5]).toString();
+                      spCaptureDateTxt = getDateSpecialCaptureDate(result[5]);
                       spCaptureScheduleTxt = (result[6]).toString();
                       spCaptrueIntervalTxt = result[7].toString();
                       spCaptureCountTxt = result[8].toString();
@@ -182,6 +208,18 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     } else if (_setSettings.setSettings ==
                         "capture_recent_limit") {
                       captureRecentLimitTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "special_capture_date") {
+                      spCaptureDateTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "special_capture_schedule") {
+                      spCaptureScheduleTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "special_capture_interval") {
+                      spCaptrueIntervalTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings ==
+                        "special_capture_count") {
+                      spCaptureCountTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
                         "Success set ${_setSettings.setSettings}",
@@ -211,8 +249,23 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     }
   }
 
+  String getDateSpecialCaptureDate(List<int> value) {
+    List<int> dateTemp = [];
+
+    // Iterate over the list
+    for (int i = 0; i < value.length; i++) {
+      if (value[i] == 1) {
+        dateTemp.add(i + 1); // Add (index + 1) to match days of the month
+      }
+    }
+    return dateTemp.toString().replaceAll("[", "").replaceAll("]", "");
+  }
+
   Future<String?> _showInputDialog(
-      TextEditingController controller, String inputTitle) async {
+    TextEditingController controller,
+    String inputTitle, {
+    String label = '',
+  }) async {
     return await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -224,9 +277,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Enter a value',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Enter $label',
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -248,6 +301,77 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
               child: const Text("OK"),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Future<Map?> _showInputSpecialCaptureDateDialog(
+    String inputTitle,
+  ) async {
+    return await showDialog<Map>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter Value $inputTitle"),
+          content: SizedBox(
+            height: 150,
+            child: Form(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: spCaptureDateTxtController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: false),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Enter Date (1 - 31)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  const Text("Status Special Capture Date"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          if (spCaptureDateTxtController.text.isNotEmpty) {
+                            Navigator.pop(context, {
+                              "date": spCaptureDateTxtController.text,
+                              "status": true,
+                            });
+                          }
+                        },
+                        child: const Text("Active"),
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (spCaptureDateTxtController.text.isNotEmpty) {
+                            Navigator.pop(context, {
+                              "date": spCaptureDateTxtController.text,
+                              "status": false,
+                            });
+                          }
+                        },
+                        child: const Text("Unactive"),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -303,11 +427,13 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Capture Schedule",
+                      description: "(Start minute of a day)",
                       data: captureScheduleTxt,
                       onTap: () async {
                         if (isConnected) {
                           String? input = await _showInputDialog(
-                              controller, "Capture Schedule");
+                              controller, "Capture Schedule",
+                              label: "what minute of a day");
                           if (input != null) {
                             _setSettings.setSettings = "capture_schedule";
                             _setSettings.value = input;
@@ -325,11 +451,13 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Capture Interval",
+                      description: "(Repetition capture of a day)",
                       data: captureIntervalTxt,
                       onTap: () async {
                         if (isConnected) {
                           String? input = await _showInputDialog(
-                              controller, "Capture Interval");
+                              controller, "Capture Interval",
+                              label: "repetition capture");
                           if (input != null) {
                             _setSettings.setSettings = "capture_interval";
                             _setSettings.value = input;
@@ -347,11 +475,13 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Capture Count",
+                      description: "(How many repetitions of a day)",
                       data: captureCountTxt,
                       onTap: () async {
                         if (isConnected) {
                           String? input = await _showInputDialog(
-                              controller, "Capture Count");
+                              controller, "Capture Count",
+                              label: "how many repetitions a day");
                           if (input != null) {
                             _setSettings.setSettings = "capture_count";
                             _setSettings.value = input;
@@ -369,11 +499,15 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Capture Recent Limit",
+                      description:
+                          "(The number of photo histories stored before deletion)",
                       data: captureRecentLimitTxt,
                       onTap: () async {
                         if (isConnected) {
                           String? input = await _showInputDialog(
-                              controller, "Capture Recent Limit");
+                            controller,
+                            "Capture Recent Limit",
+                          );
                           if (input != null) {
                             _setSettings.setSettings = "capture_recent_limit";
                             _setSettings.value = input;
@@ -389,34 +523,162 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         Icons.switch_camera_outlined,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Special Capture Date",
-                      data: "belom",
-                      onTap: () async {},
-                      icon: const Icon(
-                        Icons.edit_calendar_outlined,
+                    GestureDetector(
+                      onTap: () async {
+                        // ini agak special untuk updatenya
+                        Map? input = await _showInputSpecialCaptureDateDialog(
+                            "Special Capture Date");
+                        if (input != null) {
+                          spCaptureDateTxtController.clear();
+                          log("input : $input | special_capture_date=${input["date"]};${input["status"]}");
+                          List<int> list = utf8.encode(
+                              "special_capture_date=${input["date"]};${input["status"]}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(bytes,
+                              "Success Set Special Capture Date", device);
+                        }
+                        // nanti setelah 200 detik get lagi raw_capture
+                        // hold dulu
+                        await Future.delayed(const Duration(milliseconds: 200));
+                        initGetRawCapture();
+                      },
+                      child: Container(
+                        margin:
+                            const EdgeInsets.only(top: 7, left: 10, right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Icon(Icons.edit_calendar_outlined),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Special Capture Date",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      "(The date active for special capture)",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Text(
+                                    spCaptureDateTxt,
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
                       ),
                     ),
+
                     SettingsContainer(
                       title: "Special Capture Schedule",
-                      data: "belom",
-                      onTap: () async {},
+                      description: "(Start minute of the special day)",
+                      data: spCaptureScheduleTxt,
+                      onTap: () async {
+                        if (isConnected) {
+                          String? input = await _showInputDialog(
+                              controller, "Special Capture Schedule",
+                              label: "start minute");
+                          if (input != null) {
+                            _setSettings.setSettings =
+                                "special_capture_schedule";
+                            _setSettings.value = input;
+                            List<int> list =
+                                utf8.encode("special_capture_schedule=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(bytes,
+                                "Success Set Special Capture Schedule", device);
+                          }
+                        }
+                      },
                       icon: const Icon(
                         Icons.calendar_month_sharp,
                       ),
                     ),
                     SettingsContainer(
                       title: "Special Capture Interval",
-                      data: "belom",
-                      onTap: () async {},
+                      description: "(Repetition capture of the special day)",
+                      data: spCaptrueIntervalTxt,
+                      onTap: () async {
+                        if (isConnected) {
+                          String? input = await _showInputDialog(
+                              controller, "Special Capture Interval",
+                              label: "repetition capture");
+                          if (input != null) {
+                            _setSettings.setSettings =
+                                "special_capture_interval";
+                            _setSettings.value = input;
+                            List<int> list =
+                                utf8.encode("special_capture_interval=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(bytes,
+                                "Success Set Special Capture Interval", device);
+                          }
+                        }
+                      },
                       icon: const Icon(
                         Icons.trending_up_outlined,
                       ),
                     ),
                     SettingsContainer(
                       title: "Special Capture Count",
-                      data: "belom",
-                      onTap: () async {},
+                      description: "(How many repetitions of the special date)",
+                      data: spCaptureCountTxt,
+                      onTap: () async {
+                        if (isConnected) {
+                          String? input = await _showInputDialog(
+                            controller,
+                            "Special Capture Count",
+                            label: "how many repetitions a day",
+                          );
+                          if (input != null) {
+                            _setSettings.setSettings = "special_capture_count";
+                            _setSettings.value = input;
+                            List<int> list =
+                                utf8.encode("special_capture_count=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(bytes,
+                                "Success Set Spcial Capture Count", device);
+                          }
+                        }
+                      },
                       icon: const Icon(
                         Icons.looks_4_outlined,
                       ),

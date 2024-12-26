@@ -25,13 +25,15 @@ class AdminSettingsConverter {
     // 6:9 -> bytes to float
     // log("list 7 : ${bytes[7]}");
     log("sublist 6,10 : ${bytes.sublist(6, 10)}");
-    double floatVoltageCoef1 =
-        BytesConvert.bytesToFloatorDouble(bytes.sublist(6, 10));
+    double floatVoltageCoef1 = BytesConvert.bytesToFloatorDouble(
+        bytes.sublist(6, 10),
+        isBigEndian: false);
 
     // 10:13 -> bytes to float
     log("sublist 10,13 : ${bytes.sublist(10, 14)}");
-    double floatVoltageCoef2 =
-        BytesConvert.bytesToFloatorDouble(bytes.sublist(10, 14));
+    double floatVoltageCoef2 = BytesConvert.bytesToFloatorDouble(
+        bytes.sublist(10, 14),
+        isBigEndian: false);
 
     int brightnessInt = BytesConvert.bytesToInt8([bytes[14]]);
     int contrastInt = BytesConvert.bytesToInt8([bytes[15]]);
