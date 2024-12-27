@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
+import 'package:ble_test/utils/converter/bytes_convert.dart';
 import 'package:ble_test/utils/converter/settings/transmit_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../utils/ble.dart';
@@ -46,6 +50,28 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   bool isTransmitSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
 
+  // untuk para destination
+  // enable
+
+  String? destinationEnableIndex; // ini untuk formfield
+  bool? destinationEnableIndexBoolStatus; // ini untuk formfield
+  bool isDestinationEnableStatus = false;
+  String? resultDestinationEnable;
+
+  /// destination id
+  String? destinationIdIndex; // ini untuk formfield
+  String? destinationNewIdText; // ini untuk formfield
+  bool isDestinationIdStatus = false;
+  String? resultDestinationId;
+  TextEditingController destinationIDTxtController = TextEditingController();
+
+  /// transmit schedule
+  String? transmitScheduleIndex; // ini untuk formfield
+  String? transmitScheduleIntString; // ini untuk formfield
+  bool isTransmitScheduleStatus = false;
+  String? resultTransmitSchedule;
+  TextEditingController transmitScheduleTxtController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +93,33 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
         }
       },
     );
+    destinationIDTxtController.addListener(() {
+      _onTextChanged(destinationIDTxtController);
+    });
+    transmitScheduleTxtController.addListener(() {
+      final text = transmitScheduleTxtController.text;
+      if (text.isNotEmpty) {
+        final value = double.tryParse(text);
+        if (value != null) {
+          if (value < 0) {
+            // Otomatis set menjadi 0.5 jika kurang dari 0.5
+            transmitScheduleTxtController.text = '0';
+            transmitScheduleTxtController.selection =
+                TextSelection.fromPosition(TextPosition(
+                    offset: transmitScheduleTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          } else if (value > 65535) {
+            // Otomatis set menjadi 1.5 jika lebih dari 1.5
+            transmitScheduleTxtController.text = '65535';
+            transmitScheduleTxtController.selection =
+                TextSelection.fromPosition(TextPosition(
+                    offset: transmitScheduleTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
+
     initGetRawTransmit();
     initDiscoverServices();
   }
@@ -85,6 +138,31 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     _progressDialog.show(
       message: "Please wait...",
     );
+  }
+
+  void _onTextChanged(TextEditingController textEditingController) {
+    String text = textEditingController.text
+        .replaceAll(":", ""); // Remove existing colons
+    String formattedText = "";
+
+    // Add colon after every 2 characters
+    for (int i = 0; i < text.length; i++) {
+      formattedText += text[i];
+      if ((i + 1) % 2 == 0 && i != text.length - 1) {
+        formattedText += ":";
+      }
+    }
+
+    // Prevent unnecessary updates (cursor position fixes)
+    if (formattedText != textEditingController.text) {
+      final cursorPosition = textEditingController.selection.baseOffset;
+      textEditingController.value = textEditingController.value.copyWith(
+        text: formattedText,
+        selection: TextSelection.collapsed(
+            offset: cursorPosition +
+                (formattedText.length - textEditingController.text.length)),
+      );
+    }
   }
 
   onRefresh() async {
@@ -157,6 +235,24 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                     });
                   }
                 }
+                // destination enable
+                if (isDestinationEnableStatus) {
+                  isDestinationEnableStatus = false;
+                  resultDestinationEnable = (_value[0] == 1).toString();
+                }
+
+                // destination id
+                if (isDestinationIdStatus) {
+                  isDestinationIdStatus = false;
+                  resultDestinationId = String.fromCharCodes(_value);
+                }
+                // transmit schedule
+                if (isTransmitScheduleStatus) {
+                  isTransmitScheduleStatus = false;
+                  resultTransmitSchedule =
+                      BytesConvert.bytesToInt16(_value, isBigEndian: false)
+                          .toString();
+                }
                 // this is for set
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
@@ -168,12 +264,14 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                         "transmit_schedule") {
                       transmitScheduleTxt = _setSettings.value;
                     }
+                    // if(_setSettings.setSettings == )
+
                     Snackbar.show(ScreenSnackbar.transmitsettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Success ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.transmitsettings,
-                        "Failed set ${_setSettings.setSettings}",
+                        "Failed ${_setSettings.setSettings}",
                         success: false);
                   }
                 }
@@ -194,6 +292,125 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           success: false);
       log(e.toString());
     }
+  }
+
+  final List<Map<String, dynamic>> dataMapIndex = [
+    {"title": "1", "value": 1},
+    {"title": "2", "value": 2},
+    {"title": "3", "value": 3},
+    {"title": "4", "value": 4},
+    {"title": "5", "value": 5},
+  ];
+
+  Future<Map?> _showSelectionPopup(
+      BuildContext context, List<Map<String, dynamic>> dataMap) async {
+    Map? result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select an Option'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: dataMap.map((item) {
+              return ListTile(
+                title: Text(item['title']),
+                onTap: () {
+                  Navigator.of(context).pop(item); // Return the selected item
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+    return result;
+  }
+
+  Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text(msg),
+          children: [
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, true); // Return true
+              },
+              child: const Text('True'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, false); // Return false
+              },
+              child: const Text('False'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return selectedValue;
+  }
+
+  Future<String?> _showInputDialog(
+    TextEditingController controller,
+    String title, {
+    String? label = '',
+    TextInputType? keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? lengthTextNeed = 0,
+  }) async {
+    String? input = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter $title"),
+          content: Form(
+            child: TextFormField(
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: "Enter $label",
+                border: const OutlineInputBorder(),
+              ),
+              keyboardType: keyboardType,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter some text';
+                }
+                return null;
+              },
+              inputFormatters: inputFormatters,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.clear();
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (lengthTextNeed != 0 &&
+                    lengthTextNeed! < controller.text.length) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                }
+                if (lengthTextNeed == 0) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                } else {}
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return input;
   }
 
   @override
@@ -252,6 +469,294 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                         Icons.check_circle_outline_rounded,
                       ),
                     ),
+                    // for search in destination enable
+                    // DESTINATION ENABLE
+                    Column(
+                      children: [
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(
+                              top: 5, left: 20, right: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        Map? input = await _showSelectionPopup(
+                                                context, dataMapIndex)
+                                            .then((value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              destinationEnableIndex =
+                                                  value['title'];
+                                            });
+                                          }
+                                        });
+                                        if (input != null) {
+                                          destinationEnableIndex =
+                                              input['title'];
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          destinationEnableIndex ?? "Index",
+                                          style: GoogleFonts.readexPro(
+                                            color:
+                                                destinationEnableIndex == null
+                                                    ? Colors.grey
+                                                    : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (destinationEnableIndex != null) {
+                                          isDestinationEnableStatus = true;
+                                          List<int> list = utf8.encode(
+                                              "destination_enable?$destinationEnableIndex");
+                                          Uint8List bytes =
+                                              Uint8List.fromList(list);
+                                          _setSettings.setSettings =
+                                              "get destination enable";
+                                          BLEUtils.funcWrite(
+                                            bytes,
+                                            "Success Destination Enable!",
+                                            device,
+                                          );
+                                        }
+                                      },
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors
+                                                .lightBlueAccent.shade700),
+                                        child: Text(
+                                          "Search",
+                                          style: GoogleFonts.readexPro(
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              resultDestinationEnable == null
+                                  ? const SizedBox()
+                                  : Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      margin: const EdgeInsets.only(
+                                          right: 10, top: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        "result : $resultDestinationEnable",
+                                        style: GoogleFonts.readexPro(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                        // ini untuk set destination enable
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(
+                              top: 5, left: 20, right: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        Map? input = await _showSelectionPopup(
+                                                context, dataMapIndex)
+                                            .then((value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              destinationEnableIndex =
+                                                  value['title'];
+                                            });
+                                          }
+                                        });
+                                        if (input != null) {
+                                          destinationEnableIndex =
+                                              input['title'];
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          destinationEnableIndex ?? "Index",
+                                          style: GoogleFonts.readexPro(
+                                            color:
+                                                destinationEnableIndex == null
+                                                    ? Colors.grey
+                                                    : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        bool? input =
+                                            await _showTrueFalseDialog(
+                                          context,
+                                          "Destination Enable",
+                                        );
+                                        if (input != null) {
+                                          destinationEnableIndexBoolStatus =
+                                              input;
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          (destinationEnableIndexBoolStatus ??
+                                                  "Status")
+                                              .toString(),
+                                          style: GoogleFonts.readexPro(
+                                            fontSize: 13,
+                                            color:
+                                                destinationEnableIndexBoolStatus ==
+                                                        null
+                                                    ? Colors.grey
+                                                    : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  if (destinationEnableIndex != null) {
+                                    isDestinationEnableStatus = true;
+                                    List<int> list = utf8.encode(
+                                        "destination_enable=$destinationEnableIndex;$destinationEnableIndexBoolStatus");
+                                    Uint8List bytes = Uint8List.fromList(list);
+                                    _setSettings.setSettings =
+                                        "destination_enable";
+                                    _setSettings.value =
+                                        destinationEnableIndexBoolStatus
+                                            .toString();
+                                    BLEUtils.funcWrite(
+                                      bytes,
+                                      "Success Set Destination Enable!",
+                                      device,
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  margin:
+                                      const EdgeInsets.only(right: 10, top: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.lightBlueAccent.shade700),
+                                  child: Text(
+                                    "Set Enable Destination",
+                                    style: GoogleFonts.readexPro(
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // DESTINATION ID
                     SettingsContainer(
                       title: "Destination ID",
                       data: destinationIdTxt,
@@ -260,13 +765,590 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                         Icons.perm_device_info_outlined,
                       ),
                     ),
+                    // for destination id
+                    Column(
+                      children: [
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(
+                              top: 5, left: 20, right: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        Map? input = await _showSelectionPopup(
+                                                context, dataMapIndex)
+                                            .then((value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              destinationIdIndex =
+                                                  value['title'];
+                                            });
+                                          }
+                                        });
+                                        if (input != null) {
+                                          destinationIdIndex = input['title'];
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          destinationIdIndex ?? "Index",
+                                          style: GoogleFonts.readexPro(
+                                            color: destinationIdIndex == null
+                                                ? Colors.grey
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (destinationIdIndex != null) {
+                                          isDestinationIdStatus = true;
+                                          List<int> list = utf8.encode(
+                                              "destination_id_string?$destinationIdIndex");
+                                          Uint8List bytes =
+                                              Uint8List.fromList(list);
+                                          _setSettings.setSettings =
+                                              "Get Destination ID";
+
+                                          BLEUtils.funcWrite(
+                                            bytes,
+                                            "Success Search Destination ID",
+                                            device,
+                                          );
+                                        }
+                                      },
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors
+                                                .lightBlueAccent.shade700),
+                                        child: Text(
+                                          "Search",
+                                          style: GoogleFonts.readexPro(
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              resultDestinationId == null
+                                  ? const SizedBox()
+                                  : Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      margin: const EdgeInsets.only(
+                                          right: 10, top: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        "result : $resultDestinationId",
+                                        style: GoogleFonts.readexPro(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                        // for set destination ID
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(
+                              top: 5, left: 20, right: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        Map? input = await _showSelectionPopup(
+                                                context, dataMapIndex)
+                                            .then((value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              destinationIdIndex =
+                                                  value['title'];
+                                            });
+                                          }
+                                        });
+                                        if (input != null) {
+                                          destinationIdIndex = input['title'];
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          destinationIdIndex ?? "Index",
+                                          style: GoogleFonts.readexPro(
+                                            color: destinationIdIndex == null
+                                                ? Colors.grey
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        String? input = await _showInputDialog(
+                                          destinationIDTxtController,
+                                          "Destination ID",
+                                          label: 'Destination ID',
+                                          keyboardType: TextInputType.text,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                                RegExp(r'^[a-zA-Z0-9:]*$')),
+                                            LengthLimitingTextInputFormatter(
+                                                14),
+
+                                            // FilteringTextInputFormatter
+                                            //     .digitsOnly
+                                          ],
+                                          lengthTextNeed: 12,
+                                        );
+
+                                        if (input != null) {
+                                          destinationNewIdText = input;
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          (destinationNewIdText ?? "New Id")
+                                              .toString(),
+                                          style: GoogleFonts.readexPro(
+                                            fontSize: 13,
+                                            color: destinationNewIdText == null
+                                                ? Colors.grey
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // this is button for set destination id
+                              GestureDetector(
+                                onTap: () {
+                                  if (destinationIdIndex != null) {
+                                    log("MAMAKE");
+                                    resultDestinationId = null;
+                                    log("mama set destination id : ${"destination_id_string=$destinationIdIndex;$destinationNewIdText"}");
+                                    List<int> list = utf8.encode(
+                                        "destination_id_string=$destinationIdIndex;$destinationNewIdText");
+                                    Uint8List bytes = Uint8List.fromList(list);
+                                    _setSettings.setSettings =
+                                        "destination_id_string";
+                                    _setSettings.value =
+                                        destinationEnableIndexBoolStatus
+                                            .toString();
+                                    BLEUtils.funcWrite(
+                                      bytes,
+                                      "Success Set Destination Id String!",
+                                      device,
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  margin:
+                                      const EdgeInsets.only(right: 10, top: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.lightBlueAccent.shade700),
+                                  child: Text(
+                                    "Set Destination Id",
+                                    style: GoogleFonts.readexPro(
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                     SettingsContainer(
                       title: "Transmit Schedule",
                       data: transmitScheduleTxt,
-                      onTap: () {},
+                      onTap: () async {},
                       icon: const Icon(
                         Icons.calendar_today_outlined,
                       ),
+                    ),
+                    // for transmit schedule
+                    Column(
+                      children: [
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(
+                              top: 5, left: 20, right: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        Map? input = await _showSelectionPopup(
+                                                context, dataMapIndex)
+                                            .then((value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              transmitScheduleIndex =
+                                                  value['title'];
+                                            });
+                                          }
+                                        });
+                                        if (input != null) {
+                                          transmitScheduleIndex =
+                                              input['title'];
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          transmitScheduleIndex ?? "Index",
+                                          style: GoogleFonts.readexPro(
+                                            color: transmitScheduleIndex == null
+                                                ? Colors.grey
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (transmitScheduleIndex != null) {
+                                          isTransmitScheduleStatus = true;
+                                          List<int> list = utf8.encode(
+                                              "transmit_schedule?$transmitScheduleIndex");
+                                          Uint8List bytes =
+                                              Uint8List.fromList(list);
+                                          BLEUtils.funcWrite(
+                                            bytes,
+                                            "Success Get Transmit Schedule $transmitScheduleIndex",
+                                            device,
+                                          );
+                                        }
+                                      },
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors
+                                                .lightBlueAccent.shade700),
+                                        child: Text(
+                                          "Search",
+                                          style: GoogleFonts.readexPro(
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              resultTransmitSchedule == null
+                                  ? const SizedBox()
+                                  : Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      margin: const EdgeInsets.only(
+                                          right: 10, top: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        "result : $resultTransmitSchedule",
+                                        style: GoogleFonts.readexPro(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                        // for set transmit schedule
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: const EdgeInsets.only(
+                              top: 5, left: 20, right: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        Map? input = await _showSelectionPopup(
+                                                context, dataMapIndex)
+                                            .then((value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              transmitScheduleIndex =
+                                                  value['title'];
+                                            });
+                                          }
+                                        });
+                                        if (input != null) {
+                                          transmitScheduleIndex =
+                                              input['title'];
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          transmitScheduleIndex ?? "Index",
+                                          style: GoogleFonts.readexPro(
+                                            color: transmitScheduleIndex == null
+                                                ? Colors.grey
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        String? input = await _showInputDialog(
+                                          transmitScheduleTxtController,
+                                          "Transmit Schedule",
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly
+                                          ],
+                                          keyboardType: TextInputType.number,
+                                        );
+                                        if (input != null) {
+                                          transmitScheduleIntString = input;
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          (transmitScheduleIntString ??
+                                                  "Minutes")
+                                              .toString(),
+                                          style: GoogleFonts.readexPro(
+                                            fontSize: 13,
+                                            color: transmitScheduleIntString ==
+                                                    null
+                                                ? Colors.grey
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  if (transmitScheduleIntString != null) {
+                                    // isTransmitScheduleStatus = true;
+                                    log("papa : ${"transmit_schedule=$transmitScheduleIndex;$transmitScheduleIntString"}");
+                                    List<int> list = utf8.encode(
+                                        "transmit_schedule=$transmitScheduleIndex;$transmitScheduleIntString");
+                                    Uint8List bytes = Uint8List.fromList(list);
+                                    _setSettings.setSettings =
+                                        "transmit_schedule";
+                                    _setSettings.value =
+                                        destinationEnableIndexBoolStatus
+                                            .toString();
+                                    BLEUtils.funcWrite(
+                                      bytes,
+                                      "Success Set Transmit Schedule!",
+                                      device,
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  margin:
+                                      const EdgeInsets.only(right: 10, top: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.lightBlueAccent.shade700),
+                                  child: Text(
+                                    "Set Transmit Schedule",
+                                    style: GoogleFonts.readexPro(
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

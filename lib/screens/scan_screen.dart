@@ -154,8 +154,8 @@ class _ScanScreenState extends State<ScanScreen> {
             device: d,
             onOpen: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => DeviceScreen(device: d),
-                settings: const RouteSettings(name: '/DeviceScreen'),
+                builder: (context) => BleMainScreen(device: d),
+                // settings: const RouteSettings(name: '/DeviceScreen'),
               ),
             ),
             onConnect: () => onConnectPressed(d),
@@ -311,7 +311,7 @@ class _ScanScreenState extends State<ScanScreen> {
           onRefresh: onRefresh,
           child: ListView(
             children: <Widget>[
-              // ..._buildSystemDeviceTiles(context),
+              ..._buildSystemDeviceTiles(context),
               ..._buildScanResultTiles(context),
             ],
           ),

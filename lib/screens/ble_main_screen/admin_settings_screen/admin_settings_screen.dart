@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/admin_settings_convert.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -640,124 +642,138 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     const SizedBox(
                       height: 10,
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        List<int> list = utf8.encode("reset!");
-                        Uint8List bytes = Uint8List.fromList(list);
-                        BLEUtils.funcWrite(bytes, "Reset success", device);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.shade800,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        width: MediaQuery.of(context).size.width,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.settings_backup_restore_rounded,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Reset",
-                              style: GoogleFonts.readexPro(
-                                fontSize: 16,
+
+                    /// RESET
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () {
+                          List<int> list = utf8.encode("reset!");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(bytes, "Reset success", device);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade800,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.settings_backup_restore_rounded,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ],
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Reset",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () async {
-                        List<int> list = utf8.encode("format!");
-                        Uint8List bytes = Uint8List.fromList(list);
-                        BLEUtils.funcWrite(bytes, "Set Format success", device);
-                      },
-                      child: Container(
-                        margin:
-                            const EdgeInsets.only(left: 10, right: 10, top: 5),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.shade700,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        width: MediaQuery.of(context).size.width,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.drive_file_move_rtl_outlined,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Format",
-                              style: GoogleFonts.readexPro(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        bool? input =
-                            await _showTrueFalseDialog(context, "Enable");
-                        if (input != null) {
-                          List<int> list = utf8.encode("enable?$input");
+
+                    /// FORMAT
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          List<int> list = utf8.encode("format!");
                           Uint8List bytes = Uint8List.fromList(list);
                           BLEUtils.funcWrite(
-                              bytes, "Set Enable $input success", device);
-                        }
-                      },
-                      child: Container(
-                        margin:
-                            const EdgeInsets.only(left: 10, right: 10, top: 5),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade600,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        width: MediaQuery.of(context).size.width,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.check_circle_outline,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Enable",
-                              style: GoogleFonts.readexPro(
-                                fontSize: 16,
+                              bytes, "Set Format success", device);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.shade700,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.drive_file_move_rtl_outlined,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ],
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Format",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureB.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          bool? input =
+                              await _showTrueFalseDialog(context, "Enable");
+                          if (input != null) {
+                            List<int> list = utf8.encode("enable?$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(
+                                bytes, "Set Enable $input success", device);
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade600,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Enable",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -800,205 +816,239 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         }
                       },
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.bolt),
-                      title: "Volt Coef 1",
-                      data: voltCoef1Txt,
-                      onTap: () async {
-                        String? input = await _showInputDialogVoltage(
-                            voltageCoefTxtController);
-                        if (input != null) {
-                          List<int> list = utf8.encode("voltage1_coef=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "voltcoef1", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Volt Coef 1", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.bolt),
+                        title: "Volt Coef 1",
+                        data: voltCoef1Txt,
+                        onTap: () async {
+                          String? input = await _showInputDialogVoltage(
+                              voltageCoefTxtController);
+                          if (input != null) {
+                            List<int> list =
+                                utf8.encode("voltage1_coef=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "voltcoef1", value: input);
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Volt Coef 1", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.bolt),
-                      title: "Volt Coef 2",
-                      data: voltCoef2Txt,
-                      onTap: () async {
-                        String? input = await _showInputDialogVoltage(
-                            voltageCoefTxtController);
-                        if (input != null) {
-                          List<int> list = utf8.encode("voltage2_coef=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "voltcoef2", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Volt Coef 2", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.bolt),
+                        title: "Volt Coef 2",
+                        data: voltCoef2Txt,
+                        onTap: () async {
+                          String? input = await _showInputDialogVoltage(
+                              voltageCoefTxtController);
+                          if (input != null) {
+                            List<int> list =
+                                utf8.encode("voltage2_coef=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "voltcoef2", value: input);
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Volt Coef 2", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.brightness_5),
-                      title: "Camera Brightness",
-                      data: brightnessText,
-                      onTap: () async {
-                        Map? input = await _showSelectionPopup(
-                            context, dataMapBrightnessContrastSaturation);
-                        if (input != null) {
-                          List<int> list = utf8.encode(
-                              "camera_setting_brightness=${input['value']}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "camera_setting_brightness",
-                              value: input['value'].toString());
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Camera Brightness", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.brightness_5),
+                        title: "Camera Brightness",
+                        data: brightnessText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapBrightnessContrastSaturation);
+                          if (input != null) {
+                            List<int> list = utf8.encode(
+                                "camera_setting_brightness=${input['value']}");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "camera_setting_brightness",
+                                value: input['value'].toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Camera Brightness", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.brightness_6),
-                      title: "Camera Contrast",
-                      data: contrastText,
-                      onTap: () async {
-                        Map? input = await _showSelectionPopup(
-                            context, dataMapBrightnessContrastSaturation);
-                        if (input != null) {
-                          List<int> list = utf8.encode(
-                              "camera_setting_contrast=${input['value']}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "camera_setting_contrast",
-                              value: input['value'].toString());
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Camera Contrast", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.brightness_6),
+                        title: "Camera Contrast",
+                        data: contrastText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapBrightnessContrastSaturation);
+                          if (input != null) {
+                            List<int> list = utf8.encode(
+                                "camera_setting_contrast=${input['value']}");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "camera_setting_contrast",
+                                value: input['value'].toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Camera Contrast", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.brightness_1_rounded),
-                      title: "Camera Saturation",
-                      data: saturationText,
-                      onTap: () async {
-                        Map? input = await _showSelectionPopup(
-                            context, dataMapBrightnessContrastSaturation);
-                        if (input != null) {
-                          List<int> list = utf8.encode(
-                              "camera_setting_saturation=${input['value']}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "camera_setting_saturation",
-                              value: input['value'].toString());
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Camera Saturation", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.brightness_1_rounded),
+                        title: "Camera Saturation",
+                        data: saturationText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapBrightnessContrastSaturation);
+                          if (input != null) {
+                            List<int> list = utf8.encode(
+                                "camera_setting_saturation=${input['value']}");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "camera_setting_saturation",
+                                value: input['value'].toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Camera Saturation", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.wand_stars_inverse),
-                      title: "Camera Special effect",
-                      data: specialEffectText,
-                      onTap: () async {
-                        Map? input = await _showSelectionPopup(
-                            context, dataMapSpecialEffect);
-                        if (input != null) {
-                          List<int> list = utf8.encode(
-                              "camera_setting_special_effect=${input['value']}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                            setSettings: "camera_setting_special_effect",
-                            value: input['value'].toString(),
-                          );
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Camera Brightness", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.wand_stars_inverse),
+                        title: "Camera Special effect",
+                        data: specialEffectText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapSpecialEffect);
+                          if (input != null) {
+                            List<int> list = utf8.encode(
+                                "camera_setting_special_effect=${input['value']}");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                              setSettings: "camera_setting_special_effect",
+                              value: input['value'].toString(),
+                            );
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Camera Brightness", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.flip),
-                      title: "Camera H Mirror",
-                      data: hMirrorText,
-                      onTap: () async {
-                        bool? input = await _showTrueFalseDialog(
-                            context, "Camera H Mirror");
-                        if (input != null) {
-                          List<int> list =
-                              utf8.encode("camera_setting_hmirror=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "camera_setting_hmirror",
-                              value: input.toString());
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Camera H Mirror", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.flip),
+                        title: "Camera H Mirror",
+                        data: hMirrorText,
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Camera H Mirror");
+                          if (input != null) {
+                            List<int> list =
+                                utf8.encode("camera_setting_hmirror=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "camera_setting_hmirror",
+                                value: input.toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Camera H Mirror", device);
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: Transform.rotate(
-                        angle: 3.14 / 2,
-                        child: const Icon(
-                          Icons.flip,
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: Transform.rotate(
+                          angle: 3.14 / 2,
+                          child: const Icon(
+                            Icons.flip,
+                          ),
                         ),
+                        title: "Camera V Flip",
+                        data: vFlipText,
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Camera V Flip");
+                          if (input != null) {
+                            List<int> list =
+                                utf8.encode("camera_setting_vflip=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "camera_setting_vflip",
+                                value: input.toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Camera V Flip", device);
+                          }
+                        },
                       ),
-                      title: "Camera V Flip",
-                      data: vFlipText,
-                      onTap: () async {
-                        bool? input = await _showTrueFalseDialog(
-                            context, "Camera V Flip");
-                        if (input != null) {
-                          List<int> list =
-                              utf8.encode("camera_setting_vflip=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "camera_setting_vflip",
-                              value: input.toString());
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Camera V Flip", device);
-                        }
-                      },
                     ),
-                    SettingsContainer(
-                      icon: const Icon(
-                        Icons.high_quality_outlined,
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(
+                          Icons.high_quality_outlined,
+                        ),
+                        title: "Camera Jpeg Quality",
+                        data: cameraJpgQualityTxt,
+                        onTap: () async {
+                          String? input = await _showInputDialog(
+                            cameraJpegQualityController,
+                            "Camera Jpeg Quality",
+                            label: '0 to 63',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                          );
+                          log("input : $input");
+                          if (input != null) {
+                            List<int> list =
+                                utf8.encode("camera_jpeg_quality=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "camera_jpeg_quality",
+                                value: input);
+                            BLEUtils.funcWrite(bytes, "Success Set ID", device);
+                          }
+                        },
                       ),
-                      title: "Camera Jpeg Quality",
-                      data: cameraJpgQualityTxt,
-                      onTap: () async {
-                        String? input = await _showInputDialog(
-                          cameraJpegQualityController,
-                          "Camera Jpeg Quality",
-                          label: '0 to 63',
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(2),
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                        );
-                        log("input : $input");
-                        if (input != null) {
-                          List<int> list =
-                              utf8.encode("camera_jpeg_quality=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "camera_jpeg_quality", value: input);
-                          BLEUtils.funcWrite(bytes, "Success Set ID", device);
-                        }
-                      },
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.gear_big),
-                      title: "Role",
-                      data: roleTxt,
-                      onTap: () async {
-                        Map? result =
-                            await _showSelectionPopup(context, dataMapRole);
-                        if (result != null) {
-                          List<int> list =
-                              utf8.encode("role=${result["value"]}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "role",
-                              value: result["value"].toString());
-                          BLEUtils.funcWrite(bytes, "Success Set Role", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.gear_big),
+                        title: "Role",
+                        data: roleTxt,
+                        onTap: () async {
+                          Map? result =
+                              await _showSelectionPopup(context, dataMapRole);
+                          if (result != null) {
+                            List<int> list =
+                                utf8.encode("role=${result["value"]}");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings = SetSettingsModel(
+                                setSettings: "role",
+                                value: result["value"].toString());
+                            BLEUtils.funcWrite(
+                                bytes, "Success Set Role", device);
+                          }
+                        },
+                      ),
                     ),
                     const SizedBox(
                       height: 20,

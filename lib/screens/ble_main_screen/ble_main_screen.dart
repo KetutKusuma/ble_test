@@ -16,7 +16,9 @@ import 'package:ble_test/screens/ble_main_screen/transmit_settings_screen/transm
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
 import 'package:ble_test/screens/capture_screen/capture_screen.dart';
 import 'package:ble_test/utils/ble.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +50,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    // inget dihapus
+    // ini baru percobaan pasti admin
+    roleUser = Role.ADMIN;
     super.initState();
     initMtuRequest();
     _connectionStateSubscription = device.connectionState.listen((state) async {
@@ -310,6 +314,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
               child: Column(
                 children: [
                   FeatureWidget(
+                    visible: featureD.contains(roleUser),
                     title: "Admin Settings",
                     icon: const Icon(Icons.admin_panel_settings_outlined),
                     onTap: () {
@@ -323,6 +328,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                   ),
                   FeatureWidget(
+                    visible: featureB.contains(roleUser),
                     title: "Capture Settings",
                     icon: const Icon(Icons.camera_alt_outlined),
                     onTap: () {
@@ -337,6 +343,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                   ),
                   FeatureWidget(
+                    visible: featureB.contains(roleUser),
                     title: "Receive Settings",
                     icon: const Icon(Icons.download_outlined),
                     onTap: () {
@@ -350,6 +357,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                   ),
                   FeatureWidget(
+                    visible: featureB.contains(roleUser),
                     title: "Transmit Settings",
                     icon: const Icon(CupertinoIcons.paperplane),
                     onTap: () {
@@ -362,20 +370,24 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       );
                     },
                   ),
-                  FeatureWidget(
-                    title: "Upload Settings",
-                    icon: const Icon(Icons.upload_outlined),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              UploadSettingsScreen(device: device),
-                        ),
-                      );
-                    },
+                  Visibility(
+                    visible: featureB.contains(roleUser),
+                    child: FeatureWidget(
+                      title: "Upload Settings",
+                      icon: const Icon(Icons.upload_outlined),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                UploadSettingsScreen(device: device),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   FeatureWidget(
+                    visible: featureB.contains(roleUser),
                     title: "Meta Data Settings",
                     icon: const Icon(Icons.code),
                     onTap: () {
@@ -389,6 +401,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                   ),
                   FeatureWidget(
+                    visible: featureD.contains(roleUser),
                     title: "Battery",
                     onTap: () {
                       Navigator.push(
@@ -403,6 +416,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     ),
                   ),
                   FeatureWidget(
+                    visible: featureB.contains(roleUser),
                     title: "Storage",
                     onTap: () {
                       Navigator.push(
@@ -417,6 +431,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     ),
                   ),
                   FeatureWidget(
+                    visible: featureB.contains(roleUser),
                     title: "Files",
                     onTap: () {
                       Navigator.push(
@@ -431,6 +446,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     ),
                   ),
                   FeatureWidget(
+                    visible: featureC.contains(roleUser),
                     title: "Device",
                     onTap: () {
                       Navigator.push(
@@ -445,6 +461,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     ),
                   ),
                   FeatureWidget(
+                    visible: featureC.contains(roleUser),
                     title: "Set Password",
                     onTap: () {
                       Navigator.push(
@@ -521,44 +538,49 @@ class FeatureWidget extends StatelessWidget {
     required this.title,
     required this.onTap,
     required this.icon,
+    this.visible = true,
   });
 
   final String title;
   final void Function()? onTap;
   final Widget icon;
+  final bool? visible;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: borderColor,
-            width: 1,
+    return Visibility(
+      visible: visible ?? true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: borderColor,
+              width: 1,
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Row(
-            children: [
-              icon,
-              const SizedBox(
-                width: 8,
-              ),
-              Text(
-                title,
-                style: GoogleFonts.readexPro(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: Row(
+              children: [
+                icon,
+                const SizedBox(
+                  width: 8,
                 ),
-              ),
-            ],
+                Text(
+                  title,
+                  style: GoogleFonts.readexPro(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

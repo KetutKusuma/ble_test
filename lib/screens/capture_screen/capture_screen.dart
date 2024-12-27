@@ -265,6 +265,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
+  void _showZoomableImageDialog(BuildContext context, Uint8List imageBytes) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: InteractiveViewer(
+            scaleFactor: 300,
+            clipBehavior: Clip.none,
+            boundaryMargin: const EdgeInsets.all(20),
+            minScale: 0.5,
+            maxScale: 3.0,
+            child: Image.memory(
+              imageBytes,
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
@@ -325,11 +346,19 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                 child: const FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: const CircularProgressIndicator()))
-                            : Center(
-                                child: Image.memory(
-                                  Uint8List.fromList(totalChunkData),
-                                  fit: BoxFit.fitWidth,
-                                  scale: 1,
+                            : GestureDetector(
+                                onTap: () {
+                                  _showZoomableImageDialog(
+                                    context,
+                                    Uint8List.fromList(totalChunkData),
+                                  );
+                                },
+                                child: Center(
+                                  child: Image.memory(
+                                    Uint8List.fromList(totalChunkData),
+                                    fit: BoxFit.fitWidth,
+                                    scale: 1,
+                                  ),
                                 ),
                               ),
                   ),
