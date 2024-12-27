@@ -3,22 +3,29 @@ import 'dart:developer';
 
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
+import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/widgets/scan_result_tile.dart';
+import 'package:ble_test/widgets/system_device_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import '../utils/snackbar.dart';
-import '../widgets/system_device_tile.dart';
-import '../widgets/scan_result_tile.dart';
-import '../utils/extra.dart';
 
-class ScanScreen extends StatefulWidget {
-  const ScanScreen({Key? key}) : super(key: key);
+import '../../utils/snackbar.dart';
+
+class ScanScreenX extends StatefulWidget {
+  final String userRole;
+  final String password;
+  const ScanScreenX({
+    Key? key,
+    required this.userRole,
+    required this.password,
+  }) : super(key: key);
 
   @override
-  State<ScanScreen> createState() => _ScanScreenState();
+  State<ScanScreenX> createState() => _ScanScreenXState();
 }
 
-class _ScanScreenState extends State<ScanScreen> {
+class _ScanScreenXState extends State<ScanScreenX> {
   List<BluetoothDevice> _systemDevices = [];
   List<ScanResult> _scanResults = [];
   bool _isScanning = false;
@@ -112,8 +119,8 @@ class _ScanScreenState extends State<ScanScreen> {
     });
     MaterialPageRoute route = MaterialPageRoute(
         // builder: (context) => DeviceScreen(device: device),
-        builder: (context) => LoginHandshakeScreen(device: device),
-        // builder: (context) => BleMainScreen(device: device),
+        // builder: (context) => LoginHandshakeScreen(device: device),
+        builder: (context) => BleMainScreen(device: device),
         settings: const RouteSettings(name: '/LoginShakeScreen'));
     Navigator.of(context).push(route);
   }

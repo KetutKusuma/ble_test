@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-
-import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/utils/converter/bytes_convert.dart';
 import 'package:ble_test/utils/crypto/crypto.dart';
@@ -40,7 +38,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
   late StreamSubscription<bool> _isConnectingSubscription;
   late StreamSubscription<bool> _isDisconnectingSubscription;
   late StreamSubscription<int> _mtuSubscription;
-  late StreamSubscription<List<int>>? _lastValueSubscription;
+  StreamSubscription<List<int>>? _lastValueSubscription;
   late BluetoothDevice _device;
   final TextEditingController _userRoleTxtController = TextEditingController();
   final TextEditingController _passwordTxtController = TextEditingController();
@@ -55,10 +53,6 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
 
   /// ===== for login form =====
   bool isShowLoginForm = false;
-
-  // global key
-  final GlobalKey<ScaffoldMessengerState> _scaffoldKey =
-      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -381,18 +375,12 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                                       log("VALUE SEBELUM + : $_value");
                                       log("SALT1 SEBELUM + : $SALT1");
 
-                                      String hexString = _value
-                                          .map((num) => num.toRadixString(16)
-                                              .padLeft(2, '0'))
-                                          .join();
-                                      log("hex : $hexString");
-                                      List<int> val = utf8.encode(hexString);
                                       // List<int> _value =
 
-                                      List<int> forIV = val + SALT1;
+                                      List<int> forIV = _value + SALT1;
                                       log("for iv : $forIV");
-                                      List<int> forKey1 = val + SALT2;
-                                      List<int> forKey2 = val + SALT3;
+                                      List<int> forKey1 = _value + SALT2;
+                                      List<int> forKey2 = _value + SALT3;
 
                                       log("process iv");
                                       String iv = md5.convert(forIV).toString();
@@ -412,6 +400,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                                           .encryptCustomV2(key, iv,
                                               _passwordTxtController.text);
 
+                                      log("${"login=${_userRoleTxtController.text};$resultAes256"}");
                                       String commLogin =
                                           "login=${_userRoleTxtController.text};$resultAes256";
                                       List<int> list = utf8.encode(commLogin);

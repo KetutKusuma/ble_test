@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:ble_test/screens/login_screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -52,7 +53,8 @@ class _FlutterBlueAppState extends State<FlutterBlueApp> {
   @override
   Widget build(BuildContext context) {
     Widget screen = _adapterState == BluetoothAdapterState.on
-        ? const ScanScreen()
+        // ? const ScanScreen()
+        ? const LoginScreen()
         : BluetoothOffScreen(adapterState: _adapterState);
 
     return MaterialApp(
