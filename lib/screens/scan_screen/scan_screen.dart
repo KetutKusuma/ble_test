@@ -31,7 +31,6 @@ class _ScanScreenXState extends State<ScanScreenX> {
   bool _isScanning = false;
   late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
   late StreamSubscription<bool> _isScanningSubscription;
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -53,7 +52,6 @@ class _ScanScreenXState extends State<ScanScreenX> {
         setState(() {});
       }
     });
-    _searchController.addListener(_onTextChanged);
   }
 
   @override
@@ -188,133 +186,14 @@ class _ScanScreenXState extends State<ScanScreenX> {
     }).toList();
   }
 
-  void _onTextChanged() {
-    String text =
-        _searchController.text.replaceAll(":", ""); // Remove existing colons
-    String formattedText = "";
-
-    // Add colon after every 2 characters
-    for (int i = 0; i < text.length; i++) {
-      formattedText += text[i];
-      if ((i + 1) % 2 == 0 && i != text.length - 1) {
-        formattedText += ":";
-      }
-    }
-
-    // Prevent unnecessary updates (cursor position fixes)
-    if (formattedText != _searchController.text) {
-      final cursorPosition = _searchController.selection.baseOffset;
-      _searchController.value = _searchController.value.copyWith(
-        text: formattedText,
-        selection: TextSelection.collapsed(
-            offset: cursorPosition +
-                (formattedText.length - _searchController.text.length)),
-      );
-    }
-  }
-
-  void scanForDevices(String targetMacAddress) {
-    log("Scanning for devices...");
-    FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
-    bool isFound = false;
-
-    _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
-      log("LISTENNNING");
-      for (ScanResult result in results) {
-        // log("device remote id : ${result.device} == ${targetMacAddress.toUpperCase()}");
-        // Match device ID with the target MAC address
-        log("adv name : ${result.device.advName}");
-        if (result.device.advName == "") {}
-
-        if (result.device.remoteId.toString().toUpperCase() ==
-            targetMacAddress.toUpperCase()) {
-          log("Target Device Found: ${result.device}");
-
-          isFound = true;
-          FlutterBluePlus.stopScan(); // Stop scanning
-          onConnectPressed(result.device);
-          _scanResultsSubscription.cancel();
-          break;
-        }
-      }
-    });
-
-    log("isFound : $isFound");
-    if (isFound == false) {
-      Snackbar.show(ScreenSnackbar.scan, "Target Device Not Found",
-          success: false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyScan,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Find Devices'),
+          title: const Text('Scan Devices'),
           elevation: 0,
-          actions: [
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text("Search"),
-                      content: Form(
-                        child: TextFormField(
-                          controller: _searchController,
-                          decoration: const InputDecoration(
-                            labelText: "Enter MAC Addresses",
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(20)
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            _searchController.clear();
-                          },
-                          child: const Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            if (_searchController.text.isNotEmpty &&
-                                _searchController.text.length > 16) {
-                              log("search text : ${_searchController.text}");
-                              scanForDevices(_searchController.text);
-
-                              Navigator.pop(context);
-                              _searchController.clear();
-                            } else {
-                              Snackbar.show(ScreenSnackbar.scan,
-                                  "Please enter a valid MAC address",
-                                  success: false);
-                            }
-                          },
-                          child: const Text("Search"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              icon: const Icon(
-                Icons.search,
-              ),
-            ),
-          ],
         ),
         body: RefreshIndicator(
           onRefresh: onRefresh,
