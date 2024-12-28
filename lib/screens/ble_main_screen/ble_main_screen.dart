@@ -52,9 +52,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
   void initState() {
     // inget dihapus
     // ini baru percobaan pasti admin
-    roleUser = Role.ADMIN;
     super.initState();
-    initMtuRequest();
+    // initMtuRequest();
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
@@ -78,6 +77,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
     }
     onLogout();
     isLogout = false;
+    roleUser = Role.NONE;
   }
 
   Future initDiscoverServices() async {
@@ -486,6 +486,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       BLEUtils.funcWrite(bytes, "Logout success", device);
                       // ini harusnya dengan disconnect juga
                       onDisconnectPressed();
+                      Navigator.pop(context);
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),

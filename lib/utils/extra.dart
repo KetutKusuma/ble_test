@@ -32,12 +32,14 @@ extension Extra on BluetoothDevice {
   }
 
   // connect & update stream
-  Future<void> connectAndUpdateStream() async {
+  Future<bool> connectAndUpdateStream() async {
     _cstream.add(true);
     try {
-      await connect(mtu: null);
+      await connect(mtu: 512);
+      return true;
     } catch (e) {
       log("ERROR CATCH CONNECT AND UPDATE STREAM: $e");
+      return false;
     } finally {
       _cstream.add(false);
     }

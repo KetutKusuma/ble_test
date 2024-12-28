@@ -74,7 +74,6 @@ class _ScanScreenState extends State<ScanScreen> {
           success: false,
         );
       }
-      print(e);
     }
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));

@@ -122,7 +122,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
               if (characters.properties.notify) {
                 isNotifying = characters.isNotifying;
                 _value = value;
-                log("_VALUE : $_value");
+                log("_VALUE : $_value, ${_value.length}");
                 if (_value.isNotEmpty && isWriteHandshake) {
                   isShowLoginForm = true;
                 }
@@ -186,7 +186,7 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
 
   Future onRequestMtuPressed() async {
     try {
-      await _device.requestMtu(512, predelay: 1);
+      await _device.requestMtu(512, predelay: 0);
       Snackbar.show(ScreenSnackbar.login, "Request Mtu: Success",
           success: true);
     } catch (e) {
@@ -211,27 +211,27 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
         appBar: AppBar(
           elevation: 0,
           title: Text('${_device.remoteId}'),
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
+          actions: [
+            Row(
+              children: [
+                if (_isConnecting || _isDisconnecting) buildSpinner(context),
+                TextButton(
+                  onPressed: _isConnecting
+                      ? onCancelPressed
+                      : (isConnected ? onDisconnectPressed : onConnectPressed),
+                  child: Text(
+                    _isConnecting
+                        ? "CANCEL"
+                        : (isConnected ? "DISCONNECT" : "CONNECT"),
+                    style: Theme.of(context)
+                        .primaryTextTheme
+                        .labelLarge
+                        ?.copyWith(color: Colors.white),
+                  ),
+                )
+              ],
+            ),
+          ],
         ),
         body: CustomScrollView(
           slivers: [
