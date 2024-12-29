@@ -218,6 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
               } else if (userRoleTxtController.text == "guest") {
                 roleUser = Role.GUEST;
               }
+              isLoginScreen = false;
               Navigator.push(
                 context,
                 MaterialPageRoute(
