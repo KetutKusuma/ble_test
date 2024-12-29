@@ -77,8 +77,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
+          Navigator.popUntil(
             context,
+            (route) => route.isFirst,
           );
         }
         if (mounted) {

@@ -69,8 +69,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
           if (mounted) {
-            Navigator.pop(
+            Navigator.popUntil(
               context,
+              (route) => route.isFirst,
             );
           }
         }

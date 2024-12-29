@@ -88,6 +88,13 @@ class Snackbar {
     getSnackbar(ss).currentState?.showSnackBar(snackBar);
   }
 
+  static showNotConnectedFalse(ScreenSnackbar ss,
+      {String msg = "Device is not connected"}) {
+    final snackBar = SnackBar(content: Text(msg), backgroundColor: Colors.red);
+    getSnackbar(ss).currentState?.removeCurrentSnackBar();
+    getSnackbar(ss).currentState?.showSnackBar(snackBar);
+  }
+
   static showA(GlobalKey<ScaffoldMessengerState> key, String msg,
       {required bool success}) {
     final snackBar = success

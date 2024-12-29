@@ -57,8 +57,9 @@ class _FilesScreenState extends State<FilesScreen> {
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
+          Navigator.popUntil(
             context,
+            (route) => route.isFirst,
           );
         }
         if (mounted) {

@@ -50,14 +50,12 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
   @override
   void initState() {
-    // inget dihapus
-    // ini baru percobaan pasti admin
     super.initState();
     // initMtuRequest();
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
-        Navigator.pop(context);
+        Navigator.popUntil(context, (route) => route.isFirst);
         // Navigator.popUntil(context, (route) => route.isCurrent);
       }
       if (mounted) {
@@ -284,7 +282,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
             }),
         appBar: AppBar(
           title: const Text('Menu Settings'),
+          centerTitle: true,
           elevation: 0,
+          automaticallyImplyLeading: false,
           // actions: [
           //   Row(
           //     children: [
@@ -332,14 +332,18 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     title: "Capture Settings",
                     icon: const Icon(Icons.camera_alt_outlined),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CaptureSettingsScreen(
-                            device: device,
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CaptureSettingsScreen(
+                              device: device,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                   ),
                   FeatureWidget(
@@ -347,13 +351,17 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     title: "Receive Settings",
                     icon: const Icon(Icons.download_outlined),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ReceiveDataSettingsScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ReceiveDataSettingsScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                   ),
                   FeatureWidget(
@@ -361,13 +369,17 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     title: "Transmit Settings",
                     icon: const Icon(CupertinoIcons.paperplane),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              TransmitSettingsScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TransmitSettingsScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                   ),
                   Visibility(
@@ -376,13 +388,18 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       title: "Upload Settings",
                       icon: const Icon(Icons.upload_outlined),
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                UploadSettingsScreen(device: device),
-                          ),
-                        );
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  UploadSettingsScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
                       },
                     ),
                   ),
@@ -391,25 +408,33 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     title: "Meta Data Settings",
                     icon: const Icon(Icons.code),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              MetaDataSettingsScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MetaDataSettingsScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                   ),
                   FeatureWidget(
                     visible: featureD.contains(roleUser),
                     title: "Battery",
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BatteryScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BatteryScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                     icon: const Icon(
                       CupertinoIcons.battery_charging,
@@ -419,12 +444,16 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     visible: featureB.contains(roleUser),
                     title: "Storage",
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StorageScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StorageScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                     icon: const Icon(
                       Icons.sd_storage_outlined,
@@ -434,12 +463,16 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     visible: featureB.contains(roleUser),
                     title: "Files",
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FilesScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FilesScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                     icon: const Icon(
                       Icons.insert_drive_file_outlined,
@@ -449,12 +482,16 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     visible: featureC.contains(roleUser),
                     title: "Device",
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DeviceScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DeviceScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                     icon: const Icon(
                       CupertinoIcons.device_phone_portrait,
@@ -464,13 +501,17 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     visible: featureC.contains(roleUser),
                     title: "Set Password",
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              SetPasswordScreen(device: device),
-                        ),
-                      );
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                SetPasswordScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
                     },
                     icon: const Icon(
                       Icons.lock_outlined,
@@ -480,13 +521,21 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     height: 15,
                   ),
                   GestureDetector(
-                    onTap: () {
-                      List<int> list = utf8.encode("logout!");
-                      Uint8List bytes = Uint8List.fromList(list);
-                      BLEUtils.funcWrite(bytes, "Logout success", device);
-                      // ini harusnya dengan disconnect juga
-                      onDisconnectPressed();
-                      Navigator.pop(context);
+                    onTap: () async {
+                      if (isConnected) {
+                        List<int> list = utf8.encode("logout!");
+                        Uint8List bytes = Uint8List.fromList(list);
+                        BLEUtils.funcWrite(bytes, "Logout success", device);
+                        // ini harusnya dengan disconnect juga
+                        onDisconnectPressed();
+                        Navigator.pop(context);
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                        await Future.delayed(const Duration(seconds: 2));
+                        if (mounted) {
+                          Navigator.popUntil(context, (route) => route.isFirst);
+                        }
+                      }
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),

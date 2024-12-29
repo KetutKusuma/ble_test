@@ -97,8 +97,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
+          Navigator.popUntil(
             context,
+            (route) => route.isFirst,
           );
         }
         if (mounted) {

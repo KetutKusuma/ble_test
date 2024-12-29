@@ -4,7 +4,9 @@ import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/salt.dart';
 import 'package:ble_test/widgets/scan_result_tile.dart';
 import 'package:ble_test/widgets/system_device_tile.dart';
@@ -40,11 +42,11 @@ class _SearchScreenState extends State<SearchScreen> {
   late SimpleFontelicoProgressDialog pd;
 
   // for connection ble
+  StreamSubscription<BluetoothConnectionState>? _connectionStateSubscription;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.disconnected;
   List<BluetoothService> _services = [];
   StreamSubscription<List<int>>? _lastValueSubscription;
-  late BluetoothDevice _device;
   List<int> valueHandshake = [];
   List<int> _value = [];
   bool isSearchScreen = true;
@@ -73,6 +75,8 @@ class _SearchScreenState extends State<SearchScreen> {
         setState(() {});
       }
     });
+    _scanResults.clear();
+    _systemDevices.clear();
   }
 
   @override
@@ -91,26 +95,14 @@ class _SearchScreenState extends State<SearchScreen> {
       log("system devices resultnya : $_systemDevices, ${_systemDevices.length}, ${_systemDevices[0].advName}");
     } catch (e) {
       // ini biasanya bisa diabaikans
-      log("error scan system device connect to this device : $e");
-      if (e.toString() ==
-          "RangeError (index): Invalid value: Valid value range is empty: 0") {
-        // Snackbar.show(ScreenSnackbar.scan, "System Devices is Not Found",
-        //     success: false);
-      } else {
-        // Snackbar.show(
-        //   ScreenSnackbar.scan,
-        //   prettyException("System Devices Error:", e),
-        //   success: false,
-        // );
-      }
+      log("error scan system connect to this device : $e");
     }
     try {
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 8));
     } catch (e) {
+      log("error scan result device : $e");
       if (e.toString() ==
           "RangeError (index): Invalid value: Valid value range is empty: 0") {
-        Snackbar.show(ScreenSnackbar.scan, "Start Scan Result is Not Found",
-            success: false);
       } else {
         Snackbar.show(
             ScreenSnackbar.scan, prettyException("Start Scan Error:", e),
@@ -132,16 +124,31 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void onConnectPressed(BluetoothDevice device) async {
-    device.connectAndUpdateStream().catchError((e) {
+    log("SCAN  DEVICE : $device");
+    log("name : ${device.advName}");
+    log("remote id : ${device.remoteId}");
+    bool konek = await device.connectAndUpdateStream().catchError((e) {
       log("FAILED CONNECT search screen");
       Snackbar.show(ScreenSnackbar.scan, prettyException("Connect Error:", e),
           success: false);
     });
-    log("SUCCESS CONNECT search screen");
-    Future.delayed(const Duration(seconds: 1, milliseconds: 500));
+    log("SUCCESS CONNECT search screen : $konek");
+    pd.show(message: "Login process . . .");
+    Future.delayed(const Duration(seconds: 4, milliseconds: 500));
 
-    // request mtu 512
-    device.requestMtu(512);
+    // listen for connection state
+    _connectionStateSubscription = device.connectionState.listen(
+      (state) async {
+        _connectionState = state;
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
+    log("isconnected : $isConnected");
+
+    /// disini harusnya ada pengecekan connected
+    await initDiscoverServices(device);
 
     /// DO HANDSHAKE
     List<int> list = utf8.encode("handshake?");
@@ -152,8 +159,10 @@ class _SearchScreenState extends State<SearchScreen> {
     await Future.delayed(const Duration(seconds: 2));
     // LOGIN
     if (valueHandshake.isNotEmpty) {
+      log("login process search screen . . .");
       loginProcess(device);
     } else {
+      pd.hide();
       Snackbar.show(
           ScreenSnackbar.loginscreen, "Login Failed! Value handshake is empty",
           success: false);
@@ -178,14 +187,14 @@ class _SearchScreenState extends State<SearchScreen> {
     Uint8List bytes = Uint8List.fromList(list);
 
     await BLEUtils.funcWrite(bytes, "Command login success", device);
+    pd.hide();
   }
 
   Future initDiscoverServices(BluetoothDevice device) async {
     await Future.delayed(const Duration(seconds: 2));
     try {
       _services = await device.discoverServices();
-      initSubscription();
-      initLastValueSubscription(_device);
+      initSubscription(device);
     } catch (e) {
       Snackbar.show(ScreenSnackbar.loginscreen,
           prettyException("Discover Services Error:", e),
@@ -197,54 +206,57 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  initLastValueSubscription(BluetoothDevice device) {
+  initLastValueSubscription(BluetoothCharacteristic c, BluetoothDevice device) {
     // ini disini harusnya ada algoritm untuk ambil data value notify
     // ketika handshake? ke write
     try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              log("is notifying ga nih : ${characters.isNotifying}");
-              if (characters.properties.notify && isSearchScreen) {
-                _value = value;
-                log("_VALUE : $_value");
+      // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
+      _lastValueSubscription = c.lastValueStream.listen(
+        (value) {
+          log("is notifying ga nih : ${c.isNotifying}");
+          if (c.properties.notify && isSearchScreen) {
+            _value = value;
+            log("_VALUE : $_value");
 
-                /// this is for login
-                if (_value.length == 1 && _value[0] == 1) {
-                  pd.hide();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BleMainScreen(
-                        device: _device,
-                      ),
-                    ),
-                  );
-                } else if (_value.length == 1 && _value[0] == 0) {
-                  Snackbar.show(
-                    ScreenSnackbar.loginscreen,
-                    "Login Failed",
-                    success: false,
-                  );
-                }
-
-                /// handshake
-                if (_value.length > 1) {
-                  log("LENGTH HANDSHAKE : ${_value.length}");
-                  valueHandshake = _value;
-                }
-                if (mounted) {
-                  setState(() {});
-                }
+            /// this is for login
+            if (_value.length == 1 && _value[0] == 1) {
+              pd.hide();
+              if (userRole == "admin") {
+                roleUser = Role.ADMIN;
+              } else if (userRole == "operator") {
+                roleUser = Role.OPERATOR;
+              } else if (userRole == "guest") {
+                roleUser = Role.GUEST;
               }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BleMainScreen(
+                    device: device,
+                  ),
+                ),
+              );
+            } else if (_value.length == 1 && _value[0] == 0) {
+              Snackbar.show(
+                ScreenSnackbar.loginscreen,
+                "Login Failed",
+                success: false,
+              );
+            }
+
+            /// handshake
+            if (_value.length > 1) {
+              log("LENGTH HANDSHAKE : ${_value.length}");
+              valueHandshake = _value;
+            }
+            if (mounted) {
+              setState(() {});
+            }
+          }
+        },
+        cancelOnError: true,
+      );
+      // _lastValueSubscription.cancel();
     } catch (e) {
       Snackbar.show(
           ScreenSnackbar.loginscreen, prettyException("Last Value Error:", e),
@@ -253,14 +265,14 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  void initSubscription() {
+  void initSubscription(BluetoothDevice device) {
     for (var service in _services) {
       // log("characteristic : ${service.characteristics}");
       for (var characteristic in service.characteristics) {
         // log("ini true kah : ${characteristic.properties.notify}");
         if (characteristic.properties.notify) {
           // await characteristic
-          subscribeProcess(characteristic);
+          subscribeProcess(characteristic, device);
           if (mounted) {
             setState(() {});
           }
@@ -269,15 +281,14 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Future subscribeProcess(BluetoothCharacteristic c) async {
+  Future subscribeProcess(
+      BluetoothCharacteristic c, BluetoothDevice device) async {
     log("masuk sini tak ?");
     try {
-      String op = c.isNotifying == false ? "Subscribe" : "Unubscribe";
       await c.setNotifyValue(true);
-      // if (c.isNotifying) {
-      //   initLastValueSubscription(_device);
-      // }
-      Snackbar.show(ScreenSnackbar.loginscreen, "$op : Success", success: true);
+      if (c.isNotifying) {
+        initLastValueSubscription(c, device);
+      }
       if (c.properties.read) {
         await c.read();
       }
@@ -378,5 +389,10 @@ class _SearchScreenState extends State<SearchScreen> {
         floatingActionButton: buildScanButton(context),
       ),
     );
+  }
+
+  // connected
+  bool get isConnected {
+    return _connectionState == BluetoothConnectionState.connected;
   }
 }

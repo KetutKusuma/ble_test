@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   StreamSubscription<List<int>>? _lastValueSubscription;
 
   late StreamSubscription<bool> _isScanningSubscription;
-  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
+  StreamSubscription<List<ScanResult>>? _scanResultsSubscription;
 
   List<int> _value = [];
 
@@ -84,11 +84,17 @@ class _LoginScreenState extends State<LoginScreen> {
     // TODO: implement dispose
     super.dispose();
     isLoginScreen = false;
-    _scanResultsSubscription.cancel();
+    if (_scanResultsSubscription != null) {
+      _scanResultsSubscription!.cancel();
+    }
     _isScanningSubscription.cancel();
     if (_connectionStateSubscription != null) {
       _connectionStateSubscription!.cancel();
     }
+    userRoleTxtController.clear();
+    passwordTxtController.clear();
+    macAddressTxtConroller.clear();
+    idTxtController.clear();
     valueHandshake.clear();
   }
 
@@ -186,76 +192,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // #5
-  initLastValueSubscriptionB(BluetoothDevice device) {
-    // ini disini harusnya ada algoritm untuk ambil data value notify
-    // ketika handshake? ke write
-    log("masuk ke init last value");
-    log("DEVICENYA : $device");
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              log("is notifying ga nih : ${characters.isNotifying}");
-              if (characters.properties.notify && isLoginScreen) {
-                _value = value;
-                log("_VALUE : $_value");
-
-                /// this is for login
-                if (_value.length == 1 && _value[0] == 1) {
-                  pd.hide();
-                  if (userRoleTxtController.text == "admin") {
-                    roleUser = Role.ADMIN;
-                  } else if (userRoleTxtController.text == "operator") {
-                    roleUser = Role.OPERATOR;
-                  } else if (userRoleTxtController.text == "guest") {
-                    roleUser = Role.GUEST;
-                  }
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BleMainScreen(
-                        device: device,
-                      ),
-                    ),
-                  );
-                } else if (_value.length == 1 && _value[0] == 0) {
-                  Snackbar.show(
-                    ScreenSnackbar.loginscreen,
-                    "Login Failed",
-                    success: false,
-                  );
-                }
-
-                /// handshake
-                if (_value.length == 16) {
-                  log("LENGTH HANDSHAKE : ${_value.length}");
-                  valueHandshake = _value;
-                }
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.loginscreen, prettyException("Last Value Error:", e),
-          success: false);
-      log("last value : $e");
-    }
-  }
-
   initLastValueSubscription(BluetoothCharacteristic c, BluetoothDevice device) {
     // ini disini harusnya ada algoritm untuk ambil data value notify
     // ketika handshake? ke write
     log("masuk ke init last value");
     try {
+      if (_lastValueSubscription != null) {
+        _lastValueSubscription!.cancel();
+      }
       // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
       _lastValueSubscription = c.lastValueStream.listen(
         (value) {
@@ -386,40 +330,58 @@ class _LoginScreenState extends State<LoginScreen> {
   /// #1
   void searchForDevices() async {
     FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
-    bool isFound = false;
-
+    bool isFoundbyId = false;
+    bool isFoundbyMacAddress = false;
+    if (_scanResultsSubscription != null) {
+      _scanResultsSubscription!.cancel();
+    }
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
         log("SCAN RESULT : ${result}");
         log("SCAN RESULT DEVICE : ${result.device}");
         log("name : ${result.device.advName}");
         log("remote id : ${result.device.remoteId}");
-        if (result.device.remoteId.toString().toUpperCase() ==
-            idTxtController.text.toUpperCase()) {
-          log("Target Device by id found");
-          FlutterBluePlus.stopScan(); // Stop scanning
-          connectProcess(result.device);
-          _scanResultsSubscription.cancel();
-          isFound = true;
-          break;
+        if (idTxtController.text.isNotEmpty) {
+          if (result.device.remoteId.toString().toUpperCase() ==
+              idTxtController.text.toUpperCase()) {
+            log("Target Device by id found");
+            FlutterBluePlus.stopScan(); // Stop scanning
+            connectProcess(result.device);
+            if (_scanResultsSubscription != null) {
+              _scanResultsSubscription!.cancel();
+            }
+            isFoundbyId = true;
+            break;
+          }
         }
 
-        if (result.device.advName.toUpperCase() ==
-            macAddressTxtConroller.text.toUpperCase()) {
-          log("Target Device by name found");
-          FlutterBluePlus.stopScan();
-          connectProcess(result.device);
-          _scanResultsSubscription.cancel();
-          isFound = true;
-          break;
+        if (macAddressTxtConroller.text.isNotEmpty) {
+          if (result.device.advName.toUpperCase() ==
+              macAddressTxtConroller.text.toUpperCase()) {
+            log("Target Device by name found");
+            FlutterBluePlus.stopScan();
+            connectProcess(result.device);
+            if (_scanResultsSubscription != null) {
+              _scanResultsSubscription!.cancel();
+            }
+            isFoundbyMacAddress = true;
+            break;
+          }
         }
       }
     });
 
-    // if (isFound == false) {
-    //   Snackbar.show(ScreenSnackbar.loginscreen, "Target Device Not Found",
-    //       success: false);
-    // }
+    await Future.delayed(const Duration(seconds: 10));
+    if (isFoundbyId == false && idTxtController.text.isNotEmpty) {
+      Snackbar.show(ScreenSnackbar.loginscreen, "Target Device Not Found by Id",
+          success: false);
+    }
+    if (isFoundbyMacAddress == false &&
+        macAddressTxtConroller.text.isNotEmpty) {
+      Snackbar.show(
+          ScreenSnackbar.loginscreen, "Target Device Not Found by Mac Address",
+          success: false);
+    }
   }
 
   @override
@@ -524,7 +486,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Padding(
                   padding:
                       const EdgeInsets.only(left: 20.0, right: 20, bottom: 5),
-                  child: Text("Choose one way to log in",
+                  child: Text("Choose a way to log in",
                       style: GoogleFonts.readexPro()),
                 ),
               ),
@@ -550,7 +512,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           setState(() {});
                         },
                         child: Card(
-                          elevation: 0,
+                          elevation: 1.5,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               10,
@@ -606,8 +568,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () async {
-                              if (macAddressTxtConroller.text.isNotEmpty) {
-                                searchForDevices();
+                              if (userRoleTxtController.text.isNotEmpty &&
+                                  passwordTxtController.text.isNotEmpty) {
+                                if (macAddressTxtConroller.text.isNotEmpty) {
+                                  searchForDevices();
+                                }
+                              } else {
+                                Snackbar.show(ScreenSnackbar.loginscreen,
+                                    "Please fill all form before login",
+                                    success: false);
                               }
                             },
                             child: Container(
@@ -661,8 +630,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () async {
-                              if (idTxtController.text.isNotEmpty) {
-                                searchForDevices();
+                              if (userRoleTxtController.text.isNotEmpty &&
+                                  passwordTxtController.text.isNotEmpty) {
+                                if (idTxtController.text.isNotEmpty) {
+                                  searchForDevices();
+                                }
+                              } else {
+                                Snackbar.show(ScreenSnackbar.loginscreen,
+                                    "Please fill all form before login",
+                                    success: false);
                               }
                             },
                             child: Container(
@@ -697,15 +673,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           GestureDetector(
                             onTap: () async {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SearchScreen(
-                                    userRole: userRoleTxtController.text,
-                                    password: passwordTxtController.text,
+                              if (userRoleTxtController.text.isNotEmpty &&
+                                  passwordTxtController.text.isNotEmpty) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SearchScreen(
+                                      userRole: userRoleTxtController.text,
+                                      password: passwordTxtController.text,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              } else {
+                                Snackbar.show(ScreenSnackbar.loginscreen,
+                                    "Please fill all form before login",
+                                    success: false);
+                              }
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(

@@ -42,8 +42,8 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
-        Navigator.pop(context);
-        // Navigator.popUntil(context, (route) => route.isCurrent);
+        // Navigator.pop(context);
+        Navigator.popUntil(context, (route) => route.isFirst);
       }
       if (mounted) {
         setState(() {});
