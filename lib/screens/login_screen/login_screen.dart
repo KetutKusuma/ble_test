@@ -219,6 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 roleUser = Role.GUEST;
               }
               isLoginScreen = false;
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -226,7 +227,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     device: device,
                   ),
                 ),
-              );
+              ).then((value) {
+                userRoleTxtController.clear();
+                passwordTxtController.clear();
+                macAddressTxtConroller.clear();
+                idTxtController.clear();
+              });
             } else if (_value.length == 1 && _value[0] == 0) {
               Snackbar.show(
                 ScreenSnackbar.loginscreen,
@@ -684,7 +690,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       password: passwordTxtController.text,
                                     ),
                                   ),
-                                );
+                                ).then((value) {
+                                  userRoleTxtController.clear();
+                                  passwordTxtController.clear();
+                                });
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
                                     "Please fill all form before login",

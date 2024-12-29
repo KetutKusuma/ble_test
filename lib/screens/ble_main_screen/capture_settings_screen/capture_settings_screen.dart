@@ -497,6 +497,22 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
+                      title: "TEST Capture Count?",
+                      description: "(How many repetitions of a day)",
+                      data: captureCountTxt,
+                      onTap: () async {
+                        if (isConnected) {
+                          List<int> list = utf8.encode("capture_count?");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Capture Count", device);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.looks_3_outlined,
+                      ),
+                    ),
+                    SettingsContainer(
                       title: "Capture Recent Limit",
                       description:
                           "(The number of photo histories stored before deletion)",
