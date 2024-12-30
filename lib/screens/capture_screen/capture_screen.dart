@@ -107,7 +107,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(milliseconds: 500));
     if (isConnected) {
       try {
         _services = await device.discoverServices();

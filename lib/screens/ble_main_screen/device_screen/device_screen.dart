@@ -6,6 +6,7 @@ import 'package:ble_test/utils/converter/bytes_convert.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../utils/ble.dart';
@@ -124,7 +125,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 200));
     if (isConnected) {
       try {
         _services = await device.discoverServices();
@@ -222,10 +223,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       SettingsContainer(
                         title: "Time",
                         data: timeTxt,
+                        onTap: () async {},
+                        icon: const Icon(
+                          CupertinoIcons.time,
+                        ),
+                      ),
+                      GestureDetector(
                         onTap: () async {
-                          DateTime subtraction = DateTime(
-                            2000,
-                          );
+                          DateTime subtraction =
+                              DateTime.utc(2000, 1, 1, 0, 0, 0);
                           log("datetime fo subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
                           DateTime dateTimeNow = DateTime.now();
                           int result =
@@ -240,8 +246,37 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           );
                           BLEUtils.funcWrite(bytes, "Success Set Time", device);
                         },
-                        icon: const Icon(
-                          CupertinoIcons.time,
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade600,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Set Time",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       SettingsContainer(

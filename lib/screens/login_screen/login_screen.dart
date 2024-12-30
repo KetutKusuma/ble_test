@@ -56,6 +56,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoginScreen = true;
 
   List<int> valueHandshake = [];
+  bool isFoundbyId = false;
+  bool isFoundbyMacAddress = false;
+  static int firstInt = 0;
 
   @override
   void initState() {
@@ -69,11 +72,24 @@ class _LoginScreenState extends State<LoginScreen> {
     macAddressTxtConroller.addListener(() {
       _onTextChanged(macAddressTxtConroller);
     });
+
     _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
+      // log("listen scanning : ${firstInt}");
       if (state) {
         // pd.show(message: "Scanning...");
       } else {
-        // pd.hide();
+        if (firstInt > 0) {
+          if (!isFoundbyId && !isFoundbyMacAddress) {
+            pd.hide();
+            Snackbar.show(
+              ScreenSnackbar.loginscreen,
+              "Target Device Not Found",
+              success: false,
+            );
+          }
+        } else {
+          firstInt = 1;
+        }
       }
       if (mounted) {
         setState(() {});
@@ -224,8 +240,8 @@ class _LoginScreenState extends State<LoginScreen> {
             } else if (userRoleTxtController.text == "guest") {
               roleUser = Role.GUEST;
             }
-            isLoginScreen = false;
 
+            isLoginScreen = false;
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -234,6 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ).then((value) {
+              isLoginScreen = true;
               userRoleTxtController.clear();
               passwordTxtController.clear();
               macAddressTxtConroller.clear();
@@ -339,8 +356,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// #1
   void searchForDevices() async {
     FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
-    bool isFoundbyId = false;
-    bool isFoundbyMacAddress = false;
+
     if (_scanResultsSubscription != null) {
       _scanResultsSubscription!.cancel();
     }
@@ -674,6 +690,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: () async {
                               if (userRoleTxtController.text.isNotEmpty &&
                                   passwordTxtController.text.isNotEmpty) {
+                                isLoginScreen = false;
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -683,6 +700,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ).then((value) {
+                                  isLoginScreen = true;
                                   userRoleTxtController.clear();
                                   passwordTxtController.clear();
                                 });

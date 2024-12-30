@@ -249,105 +249,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   initLastValueSubscription(BluetoothDevice device) {
     try {
-      log("LAST VALUE G : $lastValueG, ${lastValueG.length}");
-
-      if (lastValueG.isNotEmpty) {
-        _value = lastValueG;
-        log("VALUE ADMIN SETTINGS : $_value, ${_value.length}");
-
-        // this is for get raw admin
-        if (_value.length == 22) {
-          List<dynamic> result =
-              AdminSettingsConverter().convertAdminSettings(_value);
-          _progressDialog.hide();
-
-          if (mounted) {
-            setState(() {
-              statusTxt = result[0].toString();
-              idTxt = result[1].toString();
-              voltCoef1Txt = result[2].toString();
-              voltCoef2Txt = result[3].toString();
-              brightnessText = (result[4]).toString();
-              contrastText = (result[5]).toString();
-              saturationText = (result[6]).toString();
-              specialEffectText = getSpecialEffectString(result[7]);
-              hMirrorText = result[8].toString();
-              vFlipText = result[9].toString();
-              cameraJpgQualityTxt = result[10].toString();
-              roleTxt = result[11] == 0
-                  ? "Undifined"
-                  : result[10] == 1
-                      ? "Regular"
-                      : result[10] == 2
-                          ? "Gateway"
-                          : "Error";
-            });
-          }
-        }
-        // this is for set
-        if (_value.length == 1) {
-          if (_value[0] == 1) {
-            if (_setSettings.setSettings == "id") {
-              idTxt = _setSettings.value;
-            } else if (_setSettings.setSettings == "voltcoef1") {
-              voltCoef1Txt = _setSettings.value;
-            } else if (_setSettings.setSettings == "voltcoef2") {
-              voltCoef2Txt = _setSettings.value;
-            } else if (_setSettings.setSettings ==
-                "camera_setting_brightness") {
-              brightnessText = _setSettings.value;
-            } else if (_setSettings.setSettings == "camera_setting_contrast") {
-              contrastText = _setSettings.value;
-            } else if (_setSettings.setSettings ==
-                "camera_setting_saturation") {
-              saturationText = _setSettings.value;
-            } else if (_setSettings.setSettings ==
-                "camera_setting_special_effect") {
-              try {
-                specialEffectText =
-                    getSpecialEffectString(int.parse(_setSettings.value));
-              } catch (e) {
-                log("error catch on special effect : $e");
-              }
-            } else if (_setSettings.setSettings == "camera_setting_vflip") {
-              vFlipText = _setSettings.value;
-            } else if (_setSettings.setSettings == "camera_setting_hmirror") {
-              hMirrorText = _setSettings.value;
-            } else if (_setSettings.setSettings == "camera_jpeg_quality") {
-              cameraJpgQualityTxt = _setSettings.value;
-            } else if (_setSettings.setSettings == "role") {
-              roleTxt = _setSettings.value == "0"
-                  ? "Undifined"
-                  : _setSettings.value == "1"
-                      ? "Regular"
-                      : _setSettings.value == "2"
-                          ? "Gateway"
-                          : "Error";
-            }
-            Snackbar.show(ScreenSnackbar.adminsettings,
-                "Success set ${_setSettings.setSettings}",
-                success: true);
-          } else {
-            Snackbar.show(ScreenSnackbar.adminsettings,
-                "Failed set ${_setSettings.setSettings}",
-                success: false);
-          }
-
-          if (mounted) {
-            setState(() {});
-          }
-        }
-      }
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
-    }
-  }
-
-  initLastValueSubscriptionB(BluetoothDevice device) {
-    try {
       for (var service in device.servicesList) {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
@@ -994,6 +895,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                       ),
                     ),
+
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
@@ -1014,6 +916,56 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 bytes, "Success Set Role", device);
                           }
                         },
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    Visibility(
+                      visible: featureB.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          bool? input =
+                              await _showTrueFalseDialog(context, "Enable");
+                          if (input != null) {
+                            List<int> list = utf8.encode("enable?$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(
+                                bytes, "Set Enable $input success", device);
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade600,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Enable",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(
@@ -1107,53 +1059,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                     ),
-                    Visibility(
-                      visible: featureB.contains(roleUser),
-                      child: GestureDetector(
-                        onTap: () async {
-                          bool? input =
-                              await _showTrueFalseDialog(context, "Enable");
-                          if (input != null) {
-                            List<int> list = utf8.encode("enable?$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes, "Set Enable $input success", device);
-                          }
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade600,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          width: MediaQuery.of(context).size.width,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.check_circle_outline,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                "Enable",
-                                style: GoogleFonts.readexPro(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+
                     const SizedBox(
                       height: 20,
                     ),
