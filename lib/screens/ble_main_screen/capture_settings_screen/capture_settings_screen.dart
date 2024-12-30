@@ -144,7 +144,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 1));
     if (isConnected) {
       try {
         _services = await device.discoverServices();
@@ -496,22 +496,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         Icons.looks_3_outlined,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "TEST Capture Count?",
-                      description: "(How many repetitions of a day)",
-                      data: captureCountTxt,
-                      onTap: () async {
-                        if (isConnected) {
-                          List<int> list = utf8.encode("capture_count?");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Capture Count", device);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.looks_3_outlined,
-                      ),
-                    ),
+
                     SettingsContainer(
                       title: "Capture Recent Limit",
                       description:

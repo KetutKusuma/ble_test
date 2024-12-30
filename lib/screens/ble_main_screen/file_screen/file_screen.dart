@@ -111,7 +111,7 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 1));
     if (isConnected) {
       try {
         _services = await device.discoverServices();
@@ -181,6 +181,7 @@ class _FilesScreenState extends State<FilesScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
+      key: Snackbar.snackBarKeyFileScreen,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Files'),
@@ -216,7 +217,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Near Unset",
+                          title: "Dir Near Unsent",
                           data: dirNearUnsetTxt,
                           onTap: () {},
                           icon: const Icon(Icons.folder),

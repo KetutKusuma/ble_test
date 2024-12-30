@@ -211,51 +211,54 @@ class _SearchScreenState extends State<SearchScreen> {
     // ketika handshake? ke write
     try {
       // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
-      _lastValueSubscription = c.lastValueStream.listen(
+      lastValueSubscription = c.lastValueStream.listen(
         (value) {
           log("is notifying ga nih : ${c.isNotifying}");
-          if (c.properties.notify && isSearchScreen) {
-            _value = value;
-            log("_VALUE : $_value");
-
-            /// this is for login
-            if (_value.length == 1 && _value[0] == 1) {
-              pd.hide();
-              if (userRole == "admin") {
-                roleUser = Role.ADMIN;
-              } else if (userRole == "operator") {
-                roleUser = Role.OPERATOR;
-              } else if (userRole == "guest") {
-                roleUser = Role.GUEST;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BleMainScreen(
-                    device: device,
-                  ),
-                ),
-              );
-            } else if (_value.length == 1 && _value[0] == 0) {
-              Snackbar.show(
-                ScreenSnackbar.loginscreen,
-                "Login Failed",
-                success: false,
-              );
-            }
-
-            /// handshake
-            if (_value.length > 1) {
-              log("LENGTH HANDSHAKE : ${_value.length}");
-              valueHandshake = _value;
-            }
-            if (mounted) {
-              setState(() {});
-            }
-          }
         },
         cancelOnError: true,
       );
+
+      lastValueSubscription!.onData((data) {
+        if (c.properties.notify && isSearchScreen) {
+          lastValueG = data;
+          log("_VALUE LOGIN : $lastValueG");
+
+          /// this is for login
+          if (lastValueG.length == 1 && lastValueG[0] == 1) {
+            pd.hide();
+            if (userRole == "admin") {
+              roleUser = Role.ADMIN;
+            } else if (userRole == "operator") {
+              roleUser = Role.OPERATOR;
+            } else if (userRole == "guest") {
+              roleUser = Role.GUEST;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BleMainScreen(
+                  device: device,
+                ),
+              ),
+            );
+          } else if (lastValueG.length == 1 && lastValueG[0] == 0) {
+            Snackbar.show(
+              ScreenSnackbar.loginscreen,
+              "Login Failed",
+              success: false,
+            );
+          }
+
+          /// handshake
+          if (lastValueG.length > 1) {
+            log("LENGTH HANDSHAKE : ${lastValueG.length}");
+            valueHandshake = lastValueG;
+          }
+          if (mounted) {
+            setState(() {});
+          }
+        }
+      });
       // _lastValueSubscription.cancel();
     } catch (e) {
       Snackbar.show(

@@ -109,7 +109,7 @@ class _StorageScreenState extends State<StorageScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 1));
     if (isConnected) {
       try {
         _services = await device.discoverServices();
@@ -176,6 +176,7 @@ class _StorageScreenState extends State<StorageScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
+      key: Snackbar.snackBarKeyStorageScreen,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Storage'),

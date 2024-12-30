@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:ble_test/utils/converter/bytes_convert.dart';
+import 'package:flutter/material.dart';
 
 class StatusConverter {
   static List<dynamic> convertBatteryStatus(List<int> bytes) {
@@ -10,10 +11,10 @@ class StatusConverter {
     // [9]
 
     bool statusBool = bytes[0] == 1;
-    int volt1Int =
-        BytesConvert.bytesToInt32(bytes.sublist(1, 5), isBigEndian: false);
-    int volt2Int =
-        BytesConvert.bytesToInt32(bytes.sublist(5, 9), isBigEndian: false);
+    double volt1Int = BytesConvert.bytesToFloatorDouble(bytes.sublist(1, 5),
+        isBigEndian: false);
+    double volt2Int = BytesConvert.bytesToFloatorDouble(bytes.sublist(5, 9),
+        isBigEndian: false);
 
     log("status : $statusBool");
     log("battery status : $volt1Int");

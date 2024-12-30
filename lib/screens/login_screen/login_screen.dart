@@ -46,8 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final PageController _pageController = PageController();
 
   List<String> pageListPumpDetail = [
-    'Mac Address',
     "Id",
+    "Mac Address",
     "Scan",
   ];
 
@@ -66,12 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDimisable: true,
     );
 
-    idTxtController.addListener(_onTextChanged);
+    macAddressTxtConroller.addListener(() {
+      _onTextChanged(macAddressTxtConroller);
+    });
     _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
       if (state) {
-        pd.show(message: "Scanning...");
+        // pd.show(message: "Scanning...");
       } else {
-        pd.hide();
+        // pd.hide();
       }
       if (mounted) {
         setState(() {});
@@ -103,6 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // connect to device
     bool konek = await device.connectAndUpdateStream().catchError(
       (e) {
+        pd.hide();
         log("FAILED CONNECT login screen");
         Snackbar.show(
             ScreenSnackbar.loginscreen, prettyException("Connect Error:", e),
@@ -114,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // init discover services
     // it can be notify(subscribe) and listen lastvalue
     log("SUCCESS CONNECT login screen $isConnected");
-    pd.show(message: "Login process . . .");
+    // pd.show(message: "Login process . . .");
     Future.delayed(const Duration(seconds: 4, milliseconds: 500));
 
     // listen for connection state
@@ -200,63 +203,63 @@ class _LoginScreenState extends State<LoginScreen> {
       if (_lastValueSubscription != null) {
         _lastValueSubscription!.cancel();
       }
-      // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
-      _lastValueSubscription = c.lastValueStream.listen(
+      lastValueSubscription = c.lastValueStream.listen(
         (value) {
           log("is notifying ga nih : ${c.isNotifying}");
-          if (c.properties.notify && isLoginScreen) {
-            _value = value;
-            log("_VALUE : $_value");
-
-            /// this is for login
-            if (_value.length == 1 && _value[0] == 1) {
-              pd.hide();
-              if (userRoleTxtController.text == "admin") {
-                roleUser = Role.ADMIN;
-              } else if (userRoleTxtController.text == "operator") {
-                roleUser = Role.OPERATOR;
-              } else if (userRoleTxtController.text == "guest") {
-                roleUser = Role.GUEST;
-              }
-              isLoginScreen = false;
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BleMainScreen(
-                    device: device,
-                  ),
-                ),
-              ).then((value) {
-                userRoleTxtController.clear();
-                passwordTxtController.clear();
-                macAddressTxtConroller.clear();
-                idTxtController.clear();
-              });
-            } else if (_value.length == 1 && _value[0] == 0) {
-              Snackbar.show(
-                ScreenSnackbar.loginscreen,
-                "Login Failed",
-                success: false,
-              );
-            }
-
-            /// handshake
-            if (_value.length == 16) {
-              log("LENGTH HANDSHAKE : ${_value.length}");
-              valueHandshake = _value;
-            }
-            if (_value.length != 16 && _value.length != 1) {
-              log("MAYBE FALSE CONNECT CHECK THE CONNECTION");
-            }
-            if (mounted) {
-              setState(() {});
-            }
-          }
         },
         cancelOnError: true,
       );
-      // _lastValueSubscription.cancel();
+      lastValueSubscription!.onData((data) {
+        if (c.properties.notify && isLoginScreen) {
+          lastValueG = data;
+          log("_VALUE : $lastValueG");
+
+          /// this is for login
+          if (lastValueG.length == 1 && lastValueG[0] == 1) {
+            pd.hide();
+            if (userRoleTxtController.text == "admin") {
+              roleUser = Role.ADMIN;
+            } else if (userRoleTxtController.text == "operator") {
+              roleUser = Role.OPERATOR;
+            } else if (userRoleTxtController.text == "guest") {
+              roleUser = Role.GUEST;
+            }
+            isLoginScreen = false;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BleMainScreen(
+                  device: device,
+                ),
+              ),
+            ).then((value) {
+              userRoleTxtController.clear();
+              passwordTxtController.clear();
+              macAddressTxtConroller.clear();
+              idTxtController.clear();
+            });
+          } else if (lastValueG.length == 1 && lastValueG[0] == 0) {
+            Snackbar.show(
+              ScreenSnackbar.loginscreen,
+              "Login Failed",
+              success: false,
+            );
+          }
+
+          /// handshake
+          if (lastValueG.length == 16) {
+            log("LENGTH HANDSHAKE : ${lastValueG.length}");
+            valueHandshake = lastValueG;
+          }
+          if (lastValueG.length != 16 && lastValueG.length != 1) {
+            log("MAYBE FALSE CONNECT CHECK THE CONNECTION");
+          }
+          if (mounted) {
+            setState(() {});
+          }
+        }
+      });
     } catch (e) {
       Snackbar.show(
           ScreenSnackbar.loginscreen, prettyException("Last Value Error:", e),
@@ -265,9 +268,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _onTextChanged() {
-    String text =
-        idTxtController.text.replaceAll(":", ""); // Remove existing colons
+  void _onTextChanged(TextEditingController controller) {
+    String text = controller.text.replaceAll(":", ""); // Remove existing colons
     String formattedText = "";
 
     // Add colon after every 2 characters
@@ -279,13 +281,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // Prevent unnecessary updates (cursor position fixes)
-    if (formattedText != idTxtController.text) {
-      final cursorPosition = idTxtController.selection.baseOffset;
-      idTxtController.value = idTxtController.value.copyWith(
+    if (formattedText != controller.text) {
+      final cursorPosition = controller.selection.baseOffset;
+      controller.value = controller.value.copyWith(
         text: formattedText,
         selection: TextSelection.collapsed(
             offset: cursorPosition +
-                (formattedText.length - idTxtController.text.length)),
+                (formattedText.length - controller.text.length)),
       );
     }
   }
@@ -342,6 +344,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_scanResultsSubscription != null) {
       _scanResultsSubscription!.cancel();
     }
+    pd.show(message: "Login process . . .");
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
         log("SCAN RESULT : ${result}");
@@ -349,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
         log("name : ${result.device.advName}");
         log("remote id : ${result.device.remoteId}");
         if (idTxtController.text.isNotEmpty) {
-          if (result.device.remoteId.toString().toUpperCase() ==
+          if (result.device.advName.toString().toUpperCase() ==
               idTxtController.text.toUpperCase()) {
             log("Target Device by id found");
             FlutterBluePlus.stopScan(); // Stop scanning
@@ -363,7 +366,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         if (macAddressTxtConroller.text.isNotEmpty) {
-          if (result.device.advName.toUpperCase() ==
+          if (result.device.remoteId.toString().toUpperCase() ==
               macAddressTxtConroller.text.toUpperCase()) {
             log("Target Device by name found");
             FlutterBluePlus.stopScan();
@@ -377,18 +380,6 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     });
-
-    await Future.delayed(const Duration(seconds: 10));
-    if (isFoundbyId == false && idTxtController.text.isNotEmpty) {
-      Snackbar.show(ScreenSnackbar.loginscreen, "Target Device Not Found by Id",
-          success: false);
-    }
-    if (isFoundbyMacAddress == false &&
-        macAddressTxtConroller.text.isNotEmpty) {
-      Snackbar.show(
-          ScreenSnackbar.loginscreen, "Target Device Not Found by Mac Address",
-          success: false);
-    }
   }
 
   @override
@@ -410,7 +401,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       size: 30,
                     ),
                     Text(
-                      "BIMA-BLE",
+                      "BLE-TOPPI",
                       style: GoogleFonts.readexPro(
                           fontSize: 35, fontWeight: FontWeight.bold),
                     ),
@@ -493,7 +484,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Padding(
                   padding:
                       const EdgeInsets.only(left: 20.0, right: 20, bottom: 5),
-                  child: Text("Choose a way to log in",
+                  child: Text("Choose a way to login",
                       style: GoogleFonts.readexPro()),
                 ),
               ),
@@ -560,67 +551,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextFormField(
                             style: GoogleFonts.readexPro(),
                             cursorColor: Colors.transparent,
-                            controller: macAddressTxtConroller,
-                            decoration: const InputDecoration(
-                              labelText: "Mac Address",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              if (userRoleTxtController.text.isNotEmpty &&
-                                  passwordTxtController.text.isNotEmpty) {
-                                if (macAddressTxtConroller.text.isNotEmpty) {
-                                  searchForDevices();
-                                }
-                              } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
-                                    success: false);
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(top: 0),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade600,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              width: MediaQuery.of(context).size.width,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Login with Mac Address",
-                                    style: GoogleFonts.readexPro(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextFormField(
-                            style: GoogleFonts.readexPro(),
-                            cursorColor: Colors.transparent,
                             controller: idTxtController,
                             decoration: const InputDecoration(
                               labelText: "Id",
@@ -663,6 +593,68 @@ class _LoginScreenState extends State<LoginScreen> {
                                 children: [
                                   Text(
                                     "Login With Search Id",
+                                    style: GoogleFonts.readexPro(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        /// mac address
+                        children: [
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          TextFormField(
+                            style: GoogleFonts.readexPro(),
+                            cursorColor: Colors.transparent,
+                            controller: macAddressTxtConroller,
+                            decoration: const InputDecoration(
+                              labelText: "Mac Address",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              if (userRoleTxtController.text.isNotEmpty &&
+                                  passwordTxtController.text.isNotEmpty) {
+                                if (macAddressTxtConroller.text.isNotEmpty) {
+                                  searchForDevices();
+                                }
+                              } else {
+                                Snackbar.show(ScreenSnackbar.loginscreen,
+                                    "Please fill all form before login",
+                                    success: false);
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade600,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              width: MediaQuery.of(context).size.width,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Login with Mac Address",
                                     style: GoogleFonts.readexPro(
                                       fontSize: 18,
                                       color: Colors.white,

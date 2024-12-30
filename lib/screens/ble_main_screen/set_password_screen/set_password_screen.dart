@@ -72,7 +72,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 1));
     if (isConnected) {
       try {
         _services = await device.discoverServices();

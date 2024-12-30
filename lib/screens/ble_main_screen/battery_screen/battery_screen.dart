@@ -173,6 +173,7 @@ class _BatteryScreenState extends State<BatteryScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
+      key: Snackbar.snackBarCapture,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Battery'),
