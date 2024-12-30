@@ -159,6 +159,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                   isGetTime = false;
                   int timeInt = BytesConvert.bytesToInt32(
                     _value,
+                    isBigEndian: false,
                   );
                   timeTxt = DateTime.fromMillisecondsSinceEpoch(timeInt * 1000)
                       .toString();

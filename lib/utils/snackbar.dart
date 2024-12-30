@@ -24,7 +24,7 @@ enum ScreenSnackbar {
 
   /// for new login
   loginscreen,
-  scanscreen,
+  searchscreen,
 }
 
 class Snackbar {
@@ -45,7 +45,7 @@ class Snackbar {
   static final snackBarSetPassword = GlobalKey<ScaffoldMessengerState>();
   static final snackBarDeviceSettings = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyLoginScreen = GlobalKey<ScaffoldMessengerState>();
-  static final snackBarKeyScanScreen = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeySearchScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyFileScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyStorageScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyDeviceScreen = GlobalKey<ScaffoldMessengerState>();
@@ -83,8 +83,8 @@ class Snackbar {
         return snackBarDeviceSettings;
       case ScreenSnackbar.loginscreen:
         return snackBarKeyLoginScreen;
-      case ScreenSnackbar.scanscreen:
-        return snackBarKeyScanScreen;
+      case ScreenSnackbar.searchscreen:
+        return snackBarKeySearchScreen;
       case ScreenSnackbar.filescreen:
         return snackBarKeyFileScreen;
       case ScreenSnackbar.storagescreen:

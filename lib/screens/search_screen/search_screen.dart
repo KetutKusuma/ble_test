@@ -60,12 +60,15 @@ class _SearchScreenState extends State<SearchScreen> {
         SimpleFontelicoProgressDialog(context: context, barrierDimisable: true);
 
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
-      _scanResults = results;
+      if (isSearchScreen) {
+        _scanResults = results;
+      }
       if (mounted) {
         setState(() {});
       }
     }, onError: (e) {
-      Snackbar.show(ScreenSnackbar.scan, prettyException("Scan Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.searchscreen, prettyException("Scan Error:", e),
           success: false);
     });
 
@@ -77,6 +80,7 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     _scanResults.clear();
     _systemDevices.clear();
+    onScanPressed();
   }
 
   @override
@@ -91,7 +95,9 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       // `withServices` is required on iOS for privacy purposes, ignored on android.
       var withServices = [Guid("180f")]; // Battery Level Service
-      _systemDevices = await FlutterBluePlus.systemDevices(withServices);
+      if (isSearchScreen) {
+        _systemDevices = await FlutterBluePlus.systemDevices(withServices);
+      }
       log("system devices resultnya : $_systemDevices, ${_systemDevices.length}, ${_systemDevices[0].advName}");
     } catch (e) {
       // ini biasanya bisa diabaikans
@@ -104,8 +110,8 @@ class _SearchScreenState extends State<SearchScreen> {
       if (e.toString() ==
           "RangeError (index): Invalid value: Valid value range is empty: 0") {
       } else {
-        Snackbar.show(
-            ScreenSnackbar.scan, prettyException("Start Scan Error:", e),
+        Snackbar.show(ScreenSnackbar.searchscreen,
+            prettyException("Start Scan Error:", e),
             success: false);
       }
     }
@@ -118,7 +124,8 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       FlutterBluePlus.stopScan();
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.scan, prettyException("Stop Scan Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.searchscreen, prettyException("Stop Scan Error:", e),
           success: false);
     }
   }
@@ -129,7 +136,8 @@ class _SearchScreenState extends State<SearchScreen> {
     log("remote id : ${device.remoteId}");
     bool konek = await device.connectAndUpdateStream().catchError((e) {
       log("FAILED CONNECT search screen");
-      Snackbar.show(ScreenSnackbar.scan, prettyException("Connect Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.searchscreen, prettyException("Connect Error:", e),
           success: false);
     });
     log("SUCCESS CONNECT search screen : $konek");
@@ -164,7 +172,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } else {
       pd.hide();
       Snackbar.show(
-          ScreenSnackbar.loginscreen, "Login Failed! Value handshake is empty",
+          ScreenSnackbar.searchscreen, "Login Failed! Value handshake is empty",
           success: false);
     }
   }
@@ -196,7 +204,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _services = await device.discoverServices();
       initSubscription(device);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.loginscreen,
+      Snackbar.show(ScreenSnackbar.searchscreen,
           prettyException("Discover Services Error:", e),
           success: false);
       log(e.toString());
@@ -246,7 +254,7 @@ class _SearchScreenState extends State<SearchScreen> {
             });
           } else if (lastValueG.length == 1 && lastValueG[0] == 0) {
             Snackbar.show(
-              ScreenSnackbar.loginscreen,
+              ScreenSnackbar.searchscreen,
               "Login Failed",
               success: false,
             );
@@ -265,7 +273,7 @@ class _SearchScreenState extends State<SearchScreen> {
       // _lastValueSubscription.cancel();
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.loginscreen, prettyException("Last Value Error:", e),
+          ScreenSnackbar.searchscreen, prettyException("Last Value Error:", e),
           success: false);
       log(e.toString());
     }
@@ -304,7 +312,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.loginscreen, prettyException("Subscribe Error:", e),
+          ScreenSnackbar.searchscreen, prettyException("Subscribe Error:", e),
           success: false);
       log("notify set error : $e");
     }
@@ -343,13 +351,7 @@ class _SearchScreenState extends State<SearchScreen> {
         .map(
           (d) => SystemDeviceTile(
             device: d,
-            onOpen: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                // builder: (context) => BleMainScreen(device: d),
-                builder: (context) => LoginHandshakeScreen(device: d),
-                // settings: const RouteSettings(name: '/DeviceScreen'),
-              ),
-            ),
+            onOpen: () => onConnectPressed(d),
             onConnect: () => onConnectPressed(d),
           ),
         )
@@ -377,7 +379,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyScan,
+      key: Snackbar.snackBarKeySearchScreen,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Scan Devices'),
