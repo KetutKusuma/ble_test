@@ -205,6 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
         (value) {
           log("is notifying ga nih : ${c.isNotifying}");
           if (c.properties.notify && isLoginScreen) {
+            isLoginScreen = false;
             _value = value;
             log("_VALUE : $_value");
 
@@ -228,6 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ).then((value) {
+                isLoginScreen = false;
                 userRoleTxtController.clear();
                 passwordTxtController.clear();
                 macAddressTxtConroller.clear();
@@ -682,6 +684,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: () async {
                               if (userRoleTxtController.text.isNotEmpty &&
                                   passwordTxtController.text.isNotEmpty) {
+                                isLoginScreen = false;
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -691,6 +694,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ).then((value) {
+                                  isLoginScreen = true;
                                   userRoleTxtController.clear();
                                   passwordTxtController.clear();
                                 });

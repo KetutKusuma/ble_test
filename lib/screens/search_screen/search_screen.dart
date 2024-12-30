@@ -228,6 +228,7 @@ class _SearchScreenState extends State<SearchScreen> {
               } else if (userRole == "guest") {
                 roleUser = Role.GUEST;
               }
+              isSearchScreen = false;
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -235,7 +236,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     device: device,
                   ),
                 ),
-              );
+              ).then((value) {
+                isSearchScreen = true;
+              });
             } else if (_value.length == 1 && _value[0] == 0) {
               Snackbar.show(
                 ScreenSnackbar.loginscreen,
