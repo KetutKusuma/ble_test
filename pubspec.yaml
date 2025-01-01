@@ -43,6 +43,7 @@ dependencies:
   pull_to_refresh: ^2.0.0
   google_fonts: ^4.0.4
   simple_fontellico_progress_dialog: ^0.3.0
+  package_info_plus: ^4.2.0
 
 dev_dependencies:
   flutter_test:

@@ -134,7 +134,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 // log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
 
-                log("VALUE : $_value, ${_value.length}");
+                // log("VALUE : $_value, ${_value.length}");
 
                 /// this is for receive image
                 // if (isCaptureTransmit) {}
@@ -192,23 +192,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     } else {
                       log("sampai add transmit temp");
                       // jika sama maka tambah saja
-                      captureResultTransmitTemp.add(captureTransmitResult);
-                      helperLastValue();
-                    }
-                    // } else {
-                    //   // lakukan perbaikan
-                    //   captureResultTransmitTemp.add(captureTransmitResult);
-                    //   log("got error when capture transmit result number : ${captureTransmitResult[0]} error : ${captureTransmitResult[1]}");
-                    //   List<int> list = utf8.encode(
-                    //       "capture_transmit!${captureTransmitResult[0]}");
-                    //   Uint8List bytes = Uint8List.fromList(list);
-                    //   BLEUtils.funcWrite(
-                    //       bytes,
-                    //       "Success Capture Transmit fixing ${captureTransmitResult[0]}",
-                    //       device);
-                    // }
 
-                    // log("captureTransmitResult : $captureTransmitResult");
+                      // tapi di cek jika hasilnya error atau cuma dapat 2 data saja
+                      if (captureTransmitResult.length == 2) {
+                        log("errornya adalah  : ${captureTransmitResult[1]}");
+                        captureResultTransmitTemp.add(captureTransmitResult);
+                        // lakukan pengambilan secara manual
+                        List<int> list = utf8.encode(
+                            "capture_transmit!${captureTransmitResult[0]}");
+                        Uint8List bytes = Uint8List.fromList(list);
+                        BLEUtils.funcWrite(
+                          bytes,
+                          "Success Capture Transmit fixing ${captureTransmitResult[0]}",
+                          device,
+                        );
+                      }
+                      // jika tidak maka tambah dan lakukan helper last value
+                      else {
+                        captureResultTransmitTemp.add(captureTransmitResult);
+                        helperLastValue();
+                      }
+                    }
                   } catch (e) {
                     log("error when get squance chunck : $e");
                   }
@@ -341,12 +345,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             size: 40,
                           )
                         : isCaptureDone && totalChunkData.isEmpty
-                            ? SizedBox(
+                            ? const SizedBox(
                                 height: 30,
                                 width: 30,
-                                child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: const CircularProgressIndicator()))
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
                             : GestureDetector(
                                 onTap: () {
                                   _showZoomableImageDialog(
@@ -376,6 +382,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     ),
                     onPressed: () async {
                       try {
+                        isCaptureDone = true;
+                        setState(() {});
+
+                        // diatas tes
                         totalChunkData.clear();
                         captureResultTransmitTemp.clear();
                         captureResult.clear();

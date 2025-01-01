@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -60,8 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isFoundbyMacAddress = false;
   static int firstInt = 0;
 
+  // version app
+  String versionApp = "1.0.0";
+
   @override
   void initState() {
+    getAppInfo();
     // TODO: implement initState
     super.initState();
     pd = SimpleFontelicoProgressDialog(
@@ -114,6 +119,11 @@ class _LoginScreenState extends State<LoginScreen> {
     macAddressTxtConroller.clear();
     idTxtController.clear();
     valueHandshake.clear();
+  }
+
+  void getAppInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    versionApp = packageInfo.version;
   }
 
   /// #2
@@ -250,6 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ).then((value) {
+              firstInt = 0;
               isLoginScreen = true;
               userRoleTxtController.clear();
               passwordTxtController.clear();
@@ -700,6 +711,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ).then((value) {
+                                  firstInt = 0;
                                   isLoginScreen = true;
                                   userRoleTxtController.clear();
                                   passwordTxtController.clear();
@@ -741,7 +753,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-              )
+              ),
+              SliverFillRemaining(
+                hasScrollBody:
+                    false, // Ensures it stretches to fill the remaining space
+                child: Column(
+                  mainAxisAlignment:
+                      MainAxisAlignment.end, // Aligns the bottom section
+                  children: [
+                    Text(
+                      "v$versionApp",
+                      style: GoogleFonts.readexPro(
+                        fontSize: 15,
+                        color: Colors.black45,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    )
+                  ],
+                ),
+              ),
             ],
           ),
         ),
