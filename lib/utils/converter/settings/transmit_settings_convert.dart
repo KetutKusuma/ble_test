@@ -9,15 +9,15 @@ class TransmitSettingsConvert {
     }
 
     bool statusBool = bytes[0] == 1;
-    bool destinationEnable = bytes[1] == 1;
-    String destinationId = convertDestinationID(bytes.sublist(2, 27));
+    List<bool> destinationEnable = convertTransmitDestinationEnable(bytes[1])
+        .map((value) => value == 1)
+        .toList();
+    ;
+    List<String> destinationId = convertDestinationID(bytes.sublist(2, 27));
     // int transmitScheduleInt =
     //     BytesConvert.bytesToInt16(bytes.sublist(27, 37), isBigEndian: false);
-    String transmitScheduleInt = convertTransmitSchedule(bytes.sublist(27, 37));
-
-    if (bytes.sublist(2, 27).every((element) => element == 0)) {
-      destinationId = '-';
-    }
+    List<int> transmitScheduleInt =
+        convertTransmitSchedule(bytes.sublist(27, 37));
 
     log("status : $statusBool");
     log("destination enable : $destinationEnable");
@@ -27,7 +27,7 @@ class TransmitSettingsConvert {
     return [statusBool, destinationEnable, destinationId, transmitScheduleInt];
   }
 
-  static String convertDestinationID(List<int> bytes) {
+  static List<String> convertDestinationID(List<int> bytes) {
     List<String> formattedChunks = [];
     for (int i = 0; i < bytes.length; i += 5) {
       List<int> chunk = bytes.sublist(i, i + 5); // Get a chunk of 5
@@ -40,16 +40,34 @@ class TransmitSettingsConvert {
     }
 
     // Join all formatted chunks with a comma
-    String result = formattedChunks.join('\n');
-    return result;
+    return formattedChunks;
   }
 
-  static String convertTransmitSchedule(List<int> bytes) {
+  static List<int> convertTransmitSchedule(List<int> bytes) {
     List<int> listResultInt = [];
     for (int i = 0; i < bytes.length; i += 2) {
       List<int> chunk = bytes.sublist(i, i + 2);
-      listResultInt.add(BytesConvert.bytesToInt16(chunk, isBigEndian: false));
+      int rees = BytesConvert.bytesToInt16(chunk, isBigEndian: false);
+      listResultInt.add(rees ~/ 60);
     }
-    return listResultInt.toString();
+    return listResultInt;
+  }
+
+  static List<int> convertTransmitDestinationEnable(int value) {
+    // Convert to binary string
+    String binaryString = value.toRadixString(2);
+
+    // Pad to 8 bits (if necessary)
+    binaryString = binaryString.padLeft(8, '0');
+
+    // Convert to a list of integers
+    List<int> binaryArray = binaryString.split('').map(int.parse).toList();
+
+    List<int> resultReverse = binaryArray.reversed.toList();
+
+    /// get the 5 first
+    List<int> result = resultReverse.sublist(0, 5);
+
+    return result;
   }
 }

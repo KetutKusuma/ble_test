@@ -40,36 +40,17 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      destinationEnableTxt = '-',
-      destinationIdTxt = '-',
-      transmitScheduleTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
-  TextEditingController controller = TextEditingController();
   bool isTransmitSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
 
-  // untuk para destination
-  // enable
-
-  String? destinationEnableIndex; // ini untuk formfield
-  bool? destinationEnableIndexBoolStatus; // ini untuk formfield
-  bool isDestinationEnableStatus = false;
-  String? resultDestinationEnable;
-
   /// destination id
-  String? destinationIdIndex; // ini untuk formfield
-  String? destinationNewIdText; // ini untuk formfield
-  bool isDestinationIdStatus = false;
-  String? resultDestinationId;
   TextEditingController destinationIDTxtController = TextEditingController();
 
   /// transmit schedule
-  String? transmitScheduleIndex; // ini untuk formfield
-  String? transmitScheduleIntString; // ini untuk formfield
-  bool isTransmitScheduleStatus = false;
-  String? resultTransmitSchedule;
   TextEditingController transmitScheduleTxtController = TextEditingController();
+
+  List<dynamic> result = [];
 
   @override
   void initState() {
@@ -108,9 +89,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 TextSelection.fromPosition(TextPosition(
                     offset: transmitScheduleTxtController
                         .text.length)); // Memastikan cursor di akhir
-          } else if (value > 65535) {
+          } else if (value > 24) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
-            transmitScheduleTxtController.text = '65535';
+            transmitScheduleTxtController.text = '24';
             transmitScheduleTxtController.selection =
                 TextSelection.fromPosition(TextPosition(
                     offset: transmitScheduleTxtController
@@ -222,50 +203,19 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
                 // this is for get raw admin
                 if (_value.length > 35) {
-                  List<dynamic> result =
+                  // return of convert transmit
+                  // status bool [0]
+                  // destination enable list<bool> [1]
+                  // destination id list<string> [2]
+                  // transmit schedule list<int> [3]
+                  result =
                       TransmitSettingsConvert.convertTransmitSettings(_value);
                   _progressDialog.hide();
-
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      destinationEnableTxt = result[1].toString();
-                      destinationIdTxt = result[2].toString();
-                      transmitScheduleTxt = result[3].toString();
-                    });
-                  }
-                }
-                // destination enable
-                if (isDestinationEnableStatus) {
-                  isDestinationEnableStatus = false;
-                  resultDestinationEnable = (_value[0] == 1).toString();
                 }
 
-                // destination id
-                if (isDestinationIdStatus) {
-                  isDestinationIdStatus = false;
-                  resultDestinationId = String.fromCharCodes(_value);
-                }
-                // transmit schedule
-                if (isTransmitScheduleStatus) {
-                  isTransmitScheduleStatus = false;
-                  resultTransmitSchedule =
-                      BytesConvert.bytesToInt16(_value, isBigEndian: false)
-                          .toString();
-                }
                 // this is for set
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "destination_enable") {
-                      destinationEnableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "destination_id") {
-                      destinationIdTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "transmit_schedule") {
-                      transmitScheduleTxt = _setSettings.value;
-                    }
-                    // if(_setSettings.setSettings == )
-
                     Snackbar.show(ScreenSnackbar.transmitsettings,
                         "Success ${_setSettings.setSettings}",
                         success: true);
@@ -294,123 +244,174 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     }
   }
 
-  final List<Map<String, dynamic>> dataMapIndex = [
-    {"title": "1", "value": 1},
-    {"title": "2", "value": 2},
-    {"title": "3", "value": 3},
-    {"title": "4", "value": 4},
-    {"title": "5", "value": 5},
-  ];
+  Future<String?> showSetupTransmitDialog(
+      BuildContext context, int number) async {
+    bool? selectedChoice; // Tracks the selected choice
 
-  Future<Map?> _showSelectionPopup(
-      BuildContext context, List<Map<String, dynamic>> dataMap) async {
-    Map? result = await showDialog<Map<String, dynamic>>(
+    return await showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select an Option'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: dataMap.map((item) {
-              return ListTile(
-                title: Text(item['title']),
-                onTap: () {
-                  Navigator.of(context).pop(item); // Return the selected item
-                },
-              );
-            }).toList(),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
           ),
-        );
-      },
-    );
-    return result;
-  }
-
-  Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
-    bool? selectedValue = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return SimpleDialog(
-          title: Text(msg),
-          children: [
-            SimpleDialogOption(
-              onPressed: () {
-                Navigator.pop(context, true); // Return true
-              },
-              child: const Text('True'),
+          titlePadding:
+              const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
+          title: Text(
+            "Setup Destination $number",
+            style: GoogleFonts.readexPro(
+              fontWeight: FontWeight.w500,
             ),
-            SimpleDialogOption(
-              onPressed: () {
-                Navigator.pop(context, false); // Return false
-              },
-              child: const Text('False'),
-            ),
-          ],
-        );
-      },
-    );
+          ),
+          content: SizedBox(
+            height: 200,
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  children: [
+                    // for destination ID
+                    TextFormField(
+                      style: GoogleFonts.readexPro(),
+                      controller: destinationIDTxtController,
+                      decoration: const InputDecoration(
+                        labelText: "Enter Destination ID",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                      ),
+                      keyboardType: TextInputType.text,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^[a-zA-Z0-9:]*$')),
+                        LengthLimitingTextInputFormatter(14),
 
-    return selectedValue;
-  }
+                        // FilteringTextInputFormatter
+                        //     .digitsOnly
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 7,
+                    ),
 
-  Future<String?> _showInputDialog(
-    TextEditingController controller,
-    String title, {
-    String? label = '',
-    TextInputType? keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-    int? lengthTextNeed = 0,
-  }) async {
-    String? input = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter $title"),
-          content: Form(
-            child: TextFormField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: "Enter $label",
-                border: const OutlineInputBorder(),
-              ),
-              keyboardType: keyboardType,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
-                }
-                return null;
+                    // for transmit schedule
+                    TextFormField(
+                      style: GoogleFonts.readexPro(),
+                      controller: transmitScheduleTxtController,
+                      decoration: const InputDecoration(
+                        labelText: "Enter Transmit Schedule",
+                        hintText: "1-24",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+
+                    // for destination enable
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Destination Enable",
+                            style: GoogleFonts.readexPro(),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => selectedChoice = true),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: selectedChoice == true
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'True',
+                                      style: GoogleFonts.readexPro(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => selectedChoice = false),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: selectedChoice == false
+                                          ? Colors.red
+                                          : Colors.grey,
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'False',
+                                      style: GoogleFonts.readexPro(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
               },
-              inputFormatters: inputFormatters,
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                controller.clear();
+                // Save logic here
+                if (selectedChoice != null &&
+                    destinationIDTxtController.text.isNotEmpty &&
+                    transmitScheduleTxtController.text.isNotEmpty) {
+                  String destinationId = destinationIDTxtController.text;
+                  int transmitSchedule =
+                      int.parse(transmitScheduleTxtController.text) * 60;
+                  Navigator.of(context).pop(
+                      "transmit=$number;$selectedChoice;$destinationId;$transmitSchedule");
+                }
               },
-              child: const Text("Cancel"),
+              child: Text(
+                'Update',
+                style: GoogleFonts.readexPro(),
+              ),
             ),
             TextButton(
               onPressed: () {
-                if (lengthTextNeed != 0 &&
-                    lengthTextNeed! < controller.text.length) {
-                  Navigator.pop(context, controller.text);
-                  controller.clear();
-                }
-                if (lengthTextNeed == 0) {
-                  Navigator.pop(context, controller.text);
-                  controller.clear();
-                } else {}
+                destinationIDTxtController.clear();
+                transmitScheduleTxtController.clear();
+                Navigator.of(context).pop();
               },
-              child: const Text("OK"),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.readexPro(),
+              ),
             ),
           ],
         );
       },
     );
-
-    return input;
   }
 
   @override
@@ -448,37 +449,17 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           onRefresh: onRefresh,
           child: CustomScrollView(
             slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  children: [
-                    // Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Destination Enable",
-                      data: destinationEnableTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.check_circle_outline_rounded,
-                      ),
-                    ),
-                    // for search in destination enable
-                    // DESTINATION ENABLE
-                    Column(
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return Column(
                       children: [
                         Container(
-                          width: MediaQuery.of(context).size.width,
                           margin: const EdgeInsets.only(
-                              top: 5, left: 20, right: 10),
+                              top: 15, left: 10, right: 10),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
+                              horizontal: 15, vertical: 10),
+                          width: MediaQuery.of(context).size.width,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
@@ -488,870 +469,152 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                             ),
                           ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text(
+                                "Destination ${index + 1}",
+                                style: GoogleFonts.readexPro(
+                                    fontSize: 18, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(
+                                height: 8,
+                              ),
                               Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Map? input = await _showSelectionPopup(
-                                                context, dataMapIndex)
-                                            .then((value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              destinationEnableIndex =
-                                                  value['title'];
-                                            });
-                                          }
-                                        });
-                                        if (input != null) {
-                                          destinationEnableIndex =
-                                              input['title'];
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          destinationEnableIndex ?? "Index",
-                                          style: GoogleFonts.readexPro(
-                                            color:
-                                                destinationEnableIndex == null
-                                                    ? Colors.grey
-                                                    : Colors.black,
-                                          ),
-                                        ),
-                                      ),
+                                    child: Text(
+                                      "Destination ID : ",
+                                      style: GoogleFonts.readexPro(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                   ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
                                   Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        if (destinationEnableIndex != null) {
-                                          isDestinationEnableStatus = true;
-                                          List<int> list = utf8.encode(
-                                              "destination_enable?$destinationEnableIndex");
-                                          Uint8List bytes =
-                                              Uint8List.fromList(list);
-                                          _setSettings.setSettings =
-                                              "get destination enable";
-                                          BLEUtils.funcWrite(
-                                            bytes,
-                                            "Success Get Destination Enable!",
-                                            device,
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Colors
-                                                .lightBlueAccent.shade700),
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
                                         child: Text(
-                                          "Search",
+                                          result[2][index],
                                           style: GoogleFonts.readexPro(
-                                            color: Colors.white,
-                                          ),
-                                          textAlign: TextAlign.center,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              resultDestinationEnable == null
-                                  ? const SizedBox()
-                                  : Container(
-                                      width: MediaQuery.of(context).size.width,
-                                      margin: const EdgeInsets.only(
-                                          right: 10, top: 3),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: Colors.transparent,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        "result : $resultDestinationEnable",
-                                        style: GoogleFonts.readexPro(
-                                          color: Colors.black,
-                                        ),
-                                      ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Destination Enable : ",
+                                    style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  Text(
+                                    result[1][index].toString(),
+                                    style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      "Transmit Schedule : ",
+                                      style: GoogleFonts.readexPro(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
                                     ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      result[3][index].toString(),
+                                      textAlign: TextAlign.right,
+                                      style: GoogleFonts.readexPro(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
-                        // ini untuk set destination enable
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.only(
-                              top: 5, left: 20, right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Map? input = await _showSelectionPopup(
-                                                context, dataMapIndex)
-                                            .then((value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              destinationEnableIndex =
-                                                  value['title'];
-                                            });
-                                          }
-                                        });
-                                        if (input != null) {
-                                          destinationEnableIndex =
-                                              input['title'];
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          destinationEnableIndex ?? "Index",
-                                          style: GoogleFonts.readexPro(
-                                            color:
-                                                destinationEnableIndex == null
-                                                    ? Colors.grey
-                                                    : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                        GestureDetector(
+                          onTap: () async {
+                            String? result =
+                                await showSetupTransmitDialog(context, index);
+                            if (result != null) {
+                              // do your magic
+                              List<int> list = utf8.encode(result);
+                              Uint8List bytes = Uint8List.fromList(list);
+                              await BLEUtils.funcWrite(
+                                bytes,
+                                "Transmit Set Success !!",
+                                device,
+                              );
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(
+                                left: 10, right: 10, top: 5),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                                color: Colors.blue.shade600,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    spreadRadius: 1,
+                                    blurRadius: 1,
+                                    offset: const Offset(
+                                        0, 1), // changes position of shadow
                                   ),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        bool? input =
-                                            await _showTrueFalseDialog(
-                                          context,
-                                          "Destination Enable",
-                                        );
-                                        if (input != null) {
-                                          destinationEnableIndexBoolStatus =
-                                              input;
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          (destinationEnableIndexBoolStatus ??
-                                                  "Status")
-                                              .toString(),
-                                          style: GoogleFonts.readexPro(
-                                            fontSize: 13,
-                                            color:
-                                                destinationEnableIndexBoolStatus ==
-                                                        null
-                                                    ? Colors.grey
-                                                    : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  if (destinationEnableIndex != null) {
-                                    isDestinationEnableStatus = true;
-                                    List<int> list = utf8.encode(
-                                        "destination_enable=$destinationEnableIndex;$destinationEnableIndexBoolStatus");
-                                    Uint8List bytes = Uint8List.fromList(list);
-                                    _setSettings.setSettings =
-                                        "destination_enable";
-                                    _setSettings.value =
-                                        destinationEnableIndexBoolStatus
-                                            .toString();
-                                    BLEUtils.funcWrite(
-                                      bytes,
-                                      "Success Set Destination Enable!",
-                                      device,
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  margin:
-                                      const EdgeInsets.only(right: 10, top: 10),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 10),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.lightBlueAccent.shade700),
-                                  child: Text(
-                                    "Set Enable Destination",
-                                    style: GoogleFonts.readexPro(
-                                      color: Colors.white,
-                                    ),
-                                    textAlign: TextAlign.center,
+                                ]),
+                            width: MediaQuery.of(context).size.width,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.update,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Text(
+                                  "Update Destination ${index + 1}",
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
-                    ),
-
-                    // DESTINATION ID
-                    SettingsContainer(
-                      title: "Destination ID",
-                      data: destinationIdTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.perm_device_info_outlined,
-                      ),
-                    ),
-                    // for destination id
-                    Column(
-                      children: [
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.only(
-                              top: 5, left: 20, right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Map? input = await _showSelectionPopup(
-                                                context, dataMapIndex)
-                                            .then((value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              destinationIdIndex =
-                                                  value['title'];
-                                            });
-                                          }
-                                        });
-                                        if (input != null) {
-                                          destinationIdIndex = input['title'];
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          destinationIdIndex ?? "Index",
-                                          style: GoogleFonts.readexPro(
-                                            color: destinationIdIndex == null
-                                                ? Colors.grey
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        if (destinationIdIndex != null) {
-                                          isDestinationIdStatus = true;
-                                          List<int> list = utf8.encode(
-                                              "destination_id_string?$destinationIdIndex");
-                                          Uint8List bytes =
-                                              Uint8List.fromList(list);
-                                          _setSettings.setSettings =
-                                              "Get Destination ID";
-
-                                          BLEUtils.funcWrite(
-                                            bytes,
-                                            "Success Search Destination ID",
-                                            device,
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Colors
-                                                .lightBlueAccent.shade700),
-                                        child: Text(
-                                          "Search",
-                                          style: GoogleFonts.readexPro(
-                                            color: Colors.white,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              resultDestinationId == null
-                                  ? const SizedBox()
-                                  : Container(
-                                      width: MediaQuery.of(context).size.width,
-                                      margin: const EdgeInsets.only(
-                                          right: 10, top: 3),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: Colors.transparent,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        "result : $resultDestinationId",
-                                        style: GoogleFonts.readexPro(
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                            ],
-                          ),
-                        ),
-                        // for set destination ID
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.only(
-                              top: 5, left: 20, right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Map? input = await _showSelectionPopup(
-                                                context, dataMapIndex)
-                                            .then((value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              destinationIdIndex =
-                                                  value['title'];
-                                            });
-                                          }
-                                        });
-                                        if (input != null) {
-                                          destinationIdIndex = input['title'];
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          destinationIdIndex ?? "Index",
-                                          style: GoogleFonts.readexPro(
-                                            color: destinationIdIndex == null
-                                                ? Colors.grey
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        String? input = await _showInputDialog(
-                                          destinationIDTxtController,
-                                          "Destination ID",
-                                          label: 'Destination ID',
-                                          keyboardType: TextInputType.text,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter.allow(
-                                                RegExp(r'^[a-zA-Z0-9:]*$')),
-                                            LengthLimitingTextInputFormatter(
-                                                14),
-
-                                            // FilteringTextInputFormatter
-                                            //     .digitsOnly
-                                          ],
-                                          lengthTextNeed: 12,
-                                        );
-
-                                        if (input != null) {
-                                          destinationNewIdText = input;
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          (destinationNewIdText ?? "New Id")
-                                              .toString(),
-                                          style: GoogleFonts.readexPro(
-                                            fontSize: 13,
-                                            color: destinationNewIdText == null
-                                                ? Colors.grey
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              // this is button for set destination id
-                              GestureDetector(
-                                onTap: () {
-                                  if (destinationIdIndex != null) {
-                                    log("MAMAKE");
-                                    resultDestinationId = null;
-                                    log("mama set destination id : ${"destination_id_string=$destinationIdIndex;$destinationNewIdText"}");
-                                    List<int> list = utf8.encode(
-                                        "destination_id_string=$destinationIdIndex;$destinationNewIdText");
-                                    Uint8List bytes = Uint8List.fromList(list);
-                                    _setSettings.setSettings =
-                                        "destination_id_string";
-                                    _setSettings.value =
-                                        destinationEnableIndexBoolStatus
-                                            .toString();
-                                    BLEUtils.funcWrite(
-                                      bytes,
-                                      "Success Set Destination Id String!",
-                                      device,
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  margin:
-                                      const EdgeInsets.only(right: 10, top: 10),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 10),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.lightBlueAccent.shade700),
-                                  child: Text(
-                                    "Set Destination Id",
-                                    style: GoogleFonts.readexPro(
-                                      color: Colors.white,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SettingsContainer(
-                      title: "Transmit Schedule",
-                      data: transmitScheduleTxt,
-                      onTap: () async {},
-                      icon: const Icon(
-                        Icons.calendar_today_outlined,
-                      ),
-                    ),
-                    // for transmit schedule
-                    Column(
-                      children: [
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.only(
-                              top: 5, left: 20, right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Map? input = await _showSelectionPopup(
-                                                context, dataMapIndex)
-                                            .then((value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              transmitScheduleIndex =
-                                                  value['title'];
-                                            });
-                                          }
-                                        });
-                                        if (input != null) {
-                                          transmitScheduleIndex =
-                                              input['title'];
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          transmitScheduleIndex ?? "Index",
-                                          style: GoogleFonts.readexPro(
-                                            color: transmitScheduleIndex == null
-                                                ? Colors.grey
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        if (transmitScheduleIndex != null) {
-                                          isTransmitScheduleStatus = true;
-                                          List<int> list = utf8.encode(
-                                              "transmit_schedule?$transmitScheduleIndex");
-                                          Uint8List bytes =
-                                              Uint8List.fromList(list);
-                                          BLEUtils.funcWrite(
-                                            bytes,
-                                            "Success Get Transmit Schedule $transmitScheduleIndex",
-                                            device,
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Colors
-                                                .lightBlueAccent.shade700),
-                                        child: Text(
-                                          "Search",
-                                          style: GoogleFonts.readexPro(
-                                            color: Colors.white,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              resultTransmitSchedule == null
-                                  ? const SizedBox()
-                                  : Container(
-                                      width: MediaQuery.of(context).size.width,
-                                      margin: const EdgeInsets.only(
-                                          right: 10, top: 3),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: Colors.transparent,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        "result : $resultTransmitSchedule",
-                                        style: GoogleFonts.readexPro(
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                            ],
-                          ),
-                        ),
-                        // for set transmit schedule
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.only(
-                              top: 5, left: 20, right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Map? input = await _showSelectionPopup(
-                                                context, dataMapIndex)
-                                            .then((value) {
-                                          if (value != null) {
-                                            setState(() {
-                                              transmitScheduleIndex =
-                                                  value['title'];
-                                            });
-                                          }
-                                        });
-                                        if (input != null) {
-                                          transmitScheduleIndex =
-                                              input['title'];
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          transmitScheduleIndex ?? "Index",
-                                          style: GoogleFonts.readexPro(
-                                            color: transmitScheduleIndex == null
-                                                ? Colors.grey
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        String? input = await _showInputDialog(
-                                          transmitScheduleTxtController,
-                                          "Transmit Schedule",
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly
-                                          ],
-                                          keyboardType: TextInputType.number,
-                                        );
-                                        if (input != null) {
-                                          transmitScheduleIntString = input;
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(right: 10),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          (transmitScheduleIntString ??
-                                                  "Minutes")
-                                              .toString(),
-                                          style: GoogleFonts.readexPro(
-                                            fontSize: 13,
-                                            color: transmitScheduleIntString ==
-                                                    null
-                                                ? Colors.grey
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  if (transmitScheduleIntString != null) {
-                                    // isTransmitScheduleStatus = true;
-                                    log("papa : ${"transmit_schedule=$transmitScheduleIndex;$transmitScheduleIntString"}");
-                                    List<int> list = utf8.encode(
-                                        "transmit_schedule=$transmitScheduleIndex;$transmitScheduleIntString");
-                                    Uint8List bytes = Uint8List.fromList(list);
-                                    _setSettings.setSettings =
-                                        "transmit_schedule";
-                                    _setSettings.value =
-                                        destinationEnableIndexBoolStatus
-                                            .toString();
-                                    BLEUtils.funcWrite(
-                                      bytes,
-                                      "Success Set Transmit Schedule!",
-                                      device,
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  margin:
-                                      const EdgeInsets.only(right: 10, top: 10),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 10),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.lightBlueAccent.shade700),
-                                  child: Text(
-                                    "Set Transmit Schedule",
-                                    style: GoogleFonts.readexPro(
-                                      color: Colors.white,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  },
+                  childCount: result.isEmpty ? 0 : result[1].length,
                 ),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 20),
               )
             ],
           ),
