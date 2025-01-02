@@ -107,7 +107,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 1000));
     if (isConnected) {
       try {
         _services = await device.discoverServices();
@@ -253,6 +253,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         //     break;
         //   }
       } else {
+        log("sudah masuk lengkap");
         for (int i = 0; i < captureResultTransmitTemp.length - 1; i++) {
           List<dynamic> outer = captureResultTransmitTemp[i];
           // Add the first sublist of each outer list to the result
@@ -275,17 +276,22 @@ class _CaptureScreenState extends State<CaptureScreen> {
       context: context,
       builder: (context) {
         return Dialog(
-          child: InteractiveViewer(
-            scaleFactor: 300,
-            clipBehavior: Clip.none,
-            boundaryMargin: const EdgeInsets.all(20),
-            minScale: 0.5,
-            maxScale: 3.0,
-            child: Image.memory(
-              imageBytes,
-              fit: BoxFit.contain,
-            ),
-          ),
+          insetPadding: const EdgeInsets.all(0),
+          backgroundColor: Colors.transparent,
+          child: LayoutBuilder(builder: (context, constraints) {
+            return InteractiveViewer(
+              scaleFactor: 400,
+              clipBehavior: Clip.none,
+              boundaryMargin: const EdgeInsets.all(20),
+              minScale: 1,
+              maxScale: 3.0,
+              child: Image.memory(
+                imageBytes,
+                fit: BoxFit.cover,
+                width: MediaQuery.of(context).size.width,
+              ),
+            );
+          }),
         );
       },
     );
@@ -326,14 +332,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
             SliverFillRemaining(
               hasScrollBody: false,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Text("Value : $_value, ${_value.length}"),
                   Container(
                     margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 50),
-                    padding: const EdgeInsets.all(10),
+                        vertical: 10, horizontal: 10),
+                    padding: const EdgeInsets.all(5),
                     width: MediaQuery.of(context).size.width,
-                    height: 240,
+                    height: 290,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black26),
                       borderRadius: BorderRadius.circular(10),
@@ -360,11 +368,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                     Uint8List.fromList(totalChunkData),
                                   );
                                 },
-                                child: Center(
-                                  child: Image.memory(
-                                    Uint8List.fromList(totalChunkData),
-                                    fit: BoxFit.fitWidth,
-                                    scale: 1,
+                                child: FittedBox(
+                                  child: Center(
+                                    child: Image.memory(
+                                      Uint8List.fromList(totalChunkData),
+                                      fit: BoxFit.fill,
+                                      scale: 1,
+                                    ),
                                   ),
                                 ),
                               ),

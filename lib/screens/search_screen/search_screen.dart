@@ -134,14 +134,20 @@ class _SearchScreenState extends State<SearchScreen> {
     log("SCAN  DEVICE : $device");
     log("name : ${device.advName}");
     log("remote id : ${device.remoteId}");
+    pd.show(message: "Login process . . .");
     bool konek = await device.connectAndUpdateStream().catchError((e) {
+      pd.hide();
       log("FAILED CONNECT search screen");
+
       Snackbar.show(
           ScreenSnackbar.searchscreen, prettyException("Connect Error:", e),
           success: false);
+      if (e != null) {
+        return false;
+      }
+      return true;
     });
     log("SUCCESS CONNECT search screen : $konek");
-    pd.show(message: "Login process . . .");
     Future.delayed(const Duration(seconds: 4, milliseconds: 500));
 
     // listen for connection state

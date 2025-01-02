@@ -23,6 +23,7 @@ import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class BleMainScreen extends StatefulWidget {
@@ -47,6 +48,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
   List<BluetoothService> _services = [];
   List<int> _value = [];
   bool isLogout = false;
+
+  final storage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -519,13 +522,17 @@ class _BleMainScreenState extends State<BleMainScreen> {
                 ),
                 GestureDetector(
                   onTap: () async {
+                    await storage.deleteAll();
+
                     if (isConnected) {
                       List<int> list = utf8.encode("logout!");
                       Uint8List bytes = Uint8List.fromList(list);
                       BLEUtils.funcWrite(bytes, "Logout success", device);
                       // ini harusnya dengan disconnect juga
                       onDisconnectPressed();
-                      Navigator.pop(context);
+                      if (mounted) {
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                      }
                     } else {
                       Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
                       await Future.delayed(const Duration(seconds: 2));

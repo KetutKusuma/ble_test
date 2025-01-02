@@ -13,9 +13,11 @@ import 'package:ble_test/utils/snackbar.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -64,6 +66,13 @@ class _LoginScreenState extends State<LoginScreen> {
   // version app
   String versionApp = "1.0.0";
 
+  // eye
+  bool isObscureText = true;
+  bool rememberMe = false;
+  final storage = const FlutterSecureStorage();
+
+  final RefreshController _refreshController = RefreshController();
+
   @override
   void initState() {
     getAppInfo();
@@ -73,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDimisable: true,
     );
+    getRememberMe();
 
     macAddressTxtConroller.addListener(() {
       _onTextChanged(macAddressTxtConroller);
@@ -409,372 +419,459 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  /// ==== FOR REMEMBER ME =====
+  Future<void> rememberMeProcess(String username, String password) async {
+    if (rememberMe) {
+      try {
+        await storage.write(key: "username", value: username);
+        await storage.write(key: "password", value: password);
+      } catch (e) {
+        log("error write on secure storage : $e");
+      }
+    }
+  }
+
+  Future<void> getRememberMe() async {
+    try {
+      String? username = await storage.read(key: "username");
+      String? password = await storage.read(key: "password");
+      if (username != null && password != null) {
+        userRoleTxtController.text = username;
+        passwordTxtController.text = password;
+        rememberMe = true;
+      } else {
+        log("nothing found remember me");
+      }
+    } catch (e) {
+      log("error read on secure storage : $e");
+    }
+  }
+
+  // on refresh
+  Future<void> onRefresh() async {
+    await getRememberMe();
+    await Future.delayed(const Duration(milliseconds: 1500));
+    _refreshController.refreshCompleted();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyLoginScreen,
       child: Scaffold(
         body: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.10,
-                    ),
-                    const Icon(
-                      Icons.bluetooth_audio_rounded,
-                      size: 30,
-                    ),
-                    Text(
-                      "BLE-TOPPI",
-                      style: GoogleFonts.readexPro(
-                          fontSize: 35, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    )
-                  ],
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SmartRefresher(
+            controller: _refreshController,
+            onRefresh: onRefresh,
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Sign In",
-                        style: GoogleFonts.readexPro(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.10,
+                      ),
+                      const Icon(
+                        Icons.bluetooth_audio_rounded,
+                        size: 30,
                       ),
                       Text(
-                        "Login to your TOPPI device",
-                        style: GoogleFonts.readexPro(),
+                        "BLE-TOPPI",
+                        style: GoogleFonts.readexPro(
+                            fontSize: 35, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(
+                        height: 30,
                       )
                     ],
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                // hasScrollBody: false,
-                child: Center(
+                SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(
-                          height: 10,
+                        Text(
+                          "Sign In",
+                          style: GoogleFonts.readexPro(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        TextFormField(
+                        Text(
+                          "Login to your TOPPI device",
                           style: GoogleFonts.readexPro(),
-                          controller: userRoleTxtController,
-                          decoration: const InputDecoration(
-                            labelText: "Username",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  // hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 20),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          TextFormField(
+                            style: GoogleFonts.readexPro(),
+                            controller: userRoleTxtController,
+                            decoration: const InputDecoration(
+                              labelText: "Username",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          TextFormField(
+                            obscureText: isObscureText,
+                            style: GoogleFonts.readexPro(),
+                            cursorColor: Colors.transparent,
+                            controller: passwordTxtController,
+                            decoration: InputDecoration(
+                                labelText: "Password",
+                                border: const OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                                suffixIcon: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      isObscureText = !isObscureText;
+                                    });
+                                  },
+                                  child: Icon(
+                                    isObscureText
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                )),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            children: [
+                              Checkbox(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      5.0), // Set the radius here
+                                ),
+                                value: rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    rememberMe = value!;
+                                  });
+                                },
+                              ),
+                              Text(
+                                "Remember Me",
+                                style: GoogleFonts.readexPro(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(left: 20.0, right: 20, bottom: 5),
+                    child: Text("Choose a way to login",
+                        style: GoogleFonts.readexPro()),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  sliver: SliverGrid.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 3,
+                      childAspectRatio: 2.45,
+                    ),
+                    itemCount: pageListPumpDetail.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            indexPage = index;
+                            _pageController.jumpToPage(index);
+                            idTxtController.clear();
+                            macAddressTxtConroller.clear();
+
+                            setState(() {});
+                          },
+                          child: Card(
+                            elevation: 1.5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                10,
+                              ),
+                            ),
+                            color:
+                                indexPage == index ? Colors.blue : Colors.white,
+                            child: Center(
+                              child: Text(
+                                pageListPumpDetail[index],
+                                style: GoogleFonts.readexPro(
+                                  color: indexPage != index
+                                      ? Colors.blue
+                                      : Colors.white,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        TextFormField(
-                          style: GoogleFonts.readexPro(),
-                          cursorColor: Colors.transparent,
-                          controller: passwordTxtController,
-                          decoration: const InputDecoration(
-                            labelText: "Password",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
+                      );
+                    },
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Container(
+                    height: 200,
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: PageView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      controller: _pageController,
+                      children: [
+                        Column(
+                          // login use id
+                          children: [
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            TextFormField(
+                              style: GoogleFonts.readexPro(),
+                              cursorColor: Colors.transparent,
+                              controller: idTxtController,
+                              decoration: const InputDecoration(
+                                labelText: "Id",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                              ),
+                              inputFormatters: [],
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                if (userRoleTxtController.text.isNotEmpty &&
+                                    passwordTxtController.text.isNotEmpty) {
+                                  if (idTxtController.text.isNotEmpty) {
+                                    // save user name and password process
+                                    rememberMeProcess(
+                                        userRoleTxtController.text.trim(),
+                                        passwordTxtController.text.trim());
+                                    searchForDevices();
+                                  }
+                                } else {
+                                  Snackbar.show(ScreenSnackbar.loginscreen,
+                                      "Please fill all form before login",
+                                      success: false);
+                                }
+                              },
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade600,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                width: MediaQuery.of(context).size.width,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Login With Search Id",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(
-                          height: 10,
+                        Column(
+                          /// login use mac address
+                          children: [
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            TextFormField(
+                              style: GoogleFonts.readexPro(),
+                              cursorColor: Colors.transparent,
+                              controller: macAddressTxtConroller,
+                              decoration: const InputDecoration(
+                                labelText: "Mac Address",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                if (userRoleTxtController.text.isNotEmpty &&
+                                    passwordTxtController.text.isNotEmpty) {
+                                  if (macAddressTxtConroller.text.isNotEmpty) {
+                                    // save user name and password process
+                                    rememberMeProcess(
+                                        userRoleTxtController.text.trim(),
+                                        passwordTxtController.text.trim());
+
+                                    searchForDevices();
+                                  }
+                                } else {
+                                  Snackbar.show(ScreenSnackbar.loginscreen,
+                                      "Please fill all form before login",
+                                      success: false);
+                                }
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(top: 0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade600,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                width: MediaQuery.of(context).size.width,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Login with Mac Address",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        // login use scan
+                        Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                if (userRoleTxtController.text.isNotEmpty &&
+                                    passwordTxtController.text.isNotEmpty) {
+                                  // save user name and password process
+                                  rememberMeProcess(
+                                      userRoleTxtController.text.trim(),
+                                      passwordTxtController.text.trim());
+                                  isLoginScreen = false;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SearchScreen(
+                                        userRole: userRoleTxtController.text,
+                                        password: passwordTxtController.text,
+                                      ),
+                                    ),
+                                  ).then((value) {
+                                    firstInt = 0;
+                                    isLoginScreen = true;
+                                    userRoleTxtController.clear();
+                                    passwordTxtController.clear();
+                                  });
+                                } else {
+                                  Snackbar.show(ScreenSnackbar.loginscreen,
+                                      "Please fill all form before login",
+                                      success: false);
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade600,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                width: MediaQuery.of(context).size.width,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Login With Scan",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.only(left: 20.0, right: 20, bottom: 5),
-                  child: Text("Choose a way to login",
-                      style: GoogleFonts.readexPro()),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                sliver: SliverGrid.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 3,
-                    childAspectRatio: 2.45,
-                  ),
-                  itemCount: pageListPumpDetail.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          indexPage = index;
-                          _pageController.jumpToPage(index);
-                          idTxtController.clear();
-                          macAddressTxtConroller.clear();
-
-                          setState(() {});
-                        },
-                        child: Card(
-                          elevation: 1.5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              10,
-                            ),
-                          ),
-                          color:
-                              indexPage == index ? Colors.blue : Colors.white,
-                          child: Center(
-                            child: Text(
-                              pageListPumpDetail[index],
-                              style: GoogleFonts.readexPro(
-                                color: indexPage != index
-                                    ? Colors.blue
-                                    : Colors.white,
-                              ),
-                            ),
-                          ),
+                SliverFillRemaining(
+                  hasScrollBody:
+                      false, // Ensures it stretches to fill the remaining space
+                  child: Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Aligns the bottom section
+                    children: [
+                      Text(
+                        "v$versionApp",
+                        style: GoogleFonts.readexPro(
+                          fontSize: 15,
+                          color: Colors.black45,
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  height: 200,
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: PageView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    controller: _pageController,
-                    children: [
-                      Column(
-                        children: [
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextFormField(
-                            style: GoogleFonts.readexPro(),
-                            cursorColor: Colors.transparent,
-                            controller: idTxtController,
-                            decoration: const InputDecoration(
-                              labelText: "Id",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
-                              ),
-                            ),
-                            inputFormatters: [],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              if (userRoleTxtController.text.isNotEmpty &&
-                                  passwordTxtController.text.isNotEmpty) {
-                                if (idTxtController.text.isNotEmpty) {
-                                  searchForDevices();
-                                }
-                              } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
-                                    success: false);
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 0),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade600,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              width: MediaQuery.of(context).size.width,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Login With Search Id",
-                                    style: GoogleFonts.readexPro(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        /// mac address
-                        children: [
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          TextFormField(
-                            style: GoogleFonts.readexPro(),
-                            cursorColor: Colors.transparent,
-                            controller: macAddressTxtConroller,
-                            decoration: const InputDecoration(
-                              labelText: "Mac Address",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              if (userRoleTxtController.text.isNotEmpty &&
-                                  passwordTxtController.text.isNotEmpty) {
-                                if (macAddressTxtConroller.text.isNotEmpty) {
-                                  searchForDevices();
-                                }
-                              } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
-                                    success: false);
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(top: 0),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade600,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              width: MediaQuery.of(context).size.width,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Login with Mac Address",
-                                    style: GoogleFonts.readexPro(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // login use scan
-                      Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () async {
-                              if (userRoleTxtController.text.isNotEmpty &&
-                                  passwordTxtController.text.isNotEmpty) {
-                                isLoginScreen = false;
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SearchScreen(
-                                      userRole: userRoleTxtController.text,
-                                      password: passwordTxtController.text,
-                                    ),
-                                  ),
-                                ).then((value) {
-                                  firstInt = 0;
-                                  isLoginScreen = true;
-                                  userRoleTxtController.clear();
-                                  passwordTxtController.clear();
-                                });
-                              } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
-                                    success: false);
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade600,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              width: MediaQuery.of(context).size.width,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Login With Scan",
-                                    style: GoogleFonts.readexPro(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      const SizedBox(
+                        height: 10,
+                      )
                     ],
                   ),
                 ),
-              ),
-              SliverFillRemaining(
-                hasScrollBody:
-                    false, // Ensures it stretches to fill the remaining space
-                child: Column(
-                  mainAxisAlignment:
-                      MainAxisAlignment.end, // Aligns the bottom section
-                  children: [
-                    Text(
-                      "v$versionApp",
-                      style: GoogleFonts.readexPro(
-                        fontSize: 15,
-                        color: Colors.black45,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    )
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
