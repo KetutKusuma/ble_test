@@ -551,7 +551,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                               "get destination enable";
                                           BLEUtils.funcWrite(
                                             bytes,
-                                            "Success Destination Enable!",
+                                            "Success Get Destination Enable!",
                                             device,
                                           );
                                         }

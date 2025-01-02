@@ -11,8 +11,9 @@ class TransmitSettingsConvert {
     bool statusBool = bytes[0] == 1;
     bool destinationEnable = bytes[1] == 1;
     String destinationId = convertDestinationID(bytes.sublist(2, 27));
-    int transmitScheduleInt =
-        BytesConvert.bytesToInt16(bytes.sublist(27, 37), isBigEndian: false);
+    // int transmitScheduleInt =
+    //     BytesConvert.bytesToInt16(bytes.sublist(27, 37), isBigEndian: false);
+    String transmitScheduleInt = convertTransmitSchedule(bytes.sublist(27, 37));
 
     if (bytes.sublist(2, 27).every((element) => element == 0)) {
       destinationId = '-';
@@ -41,5 +42,14 @@ class TransmitSettingsConvert {
     // Join all formatted chunks with a comma
     String result = formattedChunks.join('\n');
     return result;
+  }
+
+  static String convertTransmitSchedule(List<int> bytes) {
+    List<int> listResultInt = [];
+    for (int i = 0; i < bytes.length; i += 2) {
+      List<int> chunk = bytes.sublist(i, i + 2);
+      listResultInt.add(BytesConvert.bytesToInt16(chunk, isBigEndian: false));
+    }
+    return listResultInt.toString();
   }
 }

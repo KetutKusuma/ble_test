@@ -279,9 +279,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       cameraJpgQualityTxt = result[10].toString();
                       roleTxt = result[11] == 0
                           ? "Undifined"
-                          : result[10] == 1
+                          : result[11] == 1
                               ? "Regular"
-                              : result[10] == 2
+                              : result[11] == 2
                                   ? "Gateway"
                                   : "Error";
                     });

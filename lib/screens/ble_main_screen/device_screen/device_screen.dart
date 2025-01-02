@@ -243,7 +243,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                             setSettings: "time",
-                            value: dateTimeNow.toString(),
+                            value: DateTime.fromMillisecondsSinceEpoch(
+                                    result * 1000)
+                                .toString(),
                           );
                           BLEUtils.funcWrite(bytes, "Success Set Time", device);
                         },
