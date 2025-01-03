@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -163,7 +164,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                     setState(() {
                       statusTxt = result[0].toString();
                       receiveEnableTxt = result[1].toString();
-                      receiveScheduleTxt = result[2].toString();
+                      receiveScheduleTxt = TimePickerHelper.formatTimeOfDay(
+                          TimePickerHelper.minutesToTimeOfDay(result[2]));
                       receiveIntervalTxt = result[3].toString();
                       receiveCountTxt = result[4].toString();
                       receiveTimeAdjust = result[5].toString();
@@ -366,19 +368,36 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       title: "Receive Schedule (minute)",
                       data: receiveScheduleTxt,
                       onTap: () async {
-                        String? input = await _showInputDialogInteger(
-                            receiveScheduleTxtController,
-                            "Receive Schedule",
-                            "minute");
-                        if (input != null) {
-                          List<int> list =
-                              utf8.encode("receive_schedule=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
+                        TimeOfDay? result = await TimePickerHelper.pickTime(
+                            context,
+                            receiveScheduleTxt != "-"
+                                ? TimePickerHelper.stringToTimeOfDay(
+                                    receiveScheduleTxt)
+                                : null);
+                        if (result != null) {
                           _setSettings = SetSettingsModel(
-                              setSettings: "receive_schedule", value: input);
+                            setSettings: "receive_schedule",
+                            value: TimePickerHelper.formatTimeOfDay(result),
+                          );
+                          List<int> list = utf8.encode(
+                              "receive_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
+                          Uint8List bytes = Uint8List.fromList(list);
                           BLEUtils.funcWrite(
                               bytes, "Success Set Receive Schedule", device);
                         }
+                        // String? input = await _showInputDialogInteger(
+                        //     receiveScheduleTxtController,
+                        //     "Receive Schedule",
+                        //     "minute");
+                        // if (input != null) {
+                        //   List<int> list =
+                        //       utf8.encode("receive_schedule=$input");
+                        //   Uint8List bytes = Uint8List.fromList(list);
+                        //   _setSettings = SetSettingsModel(
+                        //       setSettings: "receive_schedule", value: input);
+                        //   BLEUtils.funcWrite(
+                        //       bytes, "Success Set Receive Schedule", device);
+                        // }
                       },
                       icon: const Icon(
                         Icons.calendar_today_outlined,

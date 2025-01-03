@@ -14,7 +14,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-
 import '../../../constant/constant_color.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
@@ -83,6 +82,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   List<int> bits = [];
   bool isAdminSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
+
+  // for get enable
+  bool isGetEnable = false;
+  String enableTxt = "-";
 
   @override
   void initState() {
@@ -216,15 +219,31 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     }
   }
 
-  initGetRawAdmin() async {
+  Future initGetRawAdmin() async {
     try {
       if (isConnected) {
         List<int> list = utf8.encode("raw_admin?");
         Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
+        await BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
+        await Future.delayed(const Duration(milliseconds: 800));
+        initGetEnable();
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
+          success: false);
+    }
+  }
+
+  initGetEnable() async {
+    try {
+      if (isConnected) {
+        isGetEnable = true;
+        List<int> list = utf8.encode("enable?");
+        Uint8List bytes = Uint8List.fromList(list);
+        BLEUtils.funcWrite(bytes, "Success Get Enable", device);
+      }
+    } catch (e) {
+      Snackbar.show(ScreenSnackbar.adminsettings, "Error get enable : $e",
           success: false);
     }
   }
@@ -287,8 +306,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     });
                   }
                 }
+                // this is for get enable
+                if (_value.length == 1 && isGetEnable) {
+                  isGetEnable = false;
+                  if (_value[0] == 1) {
+                    enableTxt = "true";
+                  } else {
+                    enableTxt = "false";
+                  }
+                }
                 // this is for set
-                if (_value.length == 1) {
+                else if (_value.length == 1 && !isGetEnable) {
                   if (_value[0] == 1) {
                     if (_setSettings.setSettings == "id") {
                       idTxt = _setSettings.value;
@@ -918,68 +946,44 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(
-                      height: 5,
-                    ),
+
                     Visibility(
                       visible: featureB.contains(roleUser),
-                      child: GestureDetector(
+                      child: SettingsContainer(
+                        title: "Enable",
+                        data: enableTxt,
                         onTap: () async {
                           bool? input =
                               await _showTrueFalseDialog(context, "Enable");
                           if (input != null) {
-                            List<int> list = utf8.encode("enable?$input");
+                            List<int> list = utf8.encode("enable=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
+                            await BLEUtils.funcWrite(
                                 bytes, "Set Enable $input success", device);
+                            initGetEnable();
                           }
                         },
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade600,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          width: MediaQuery.of(context).size.width,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.check_circle_outline,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                "Enable",
-                                style: GoogleFonts.readexPro(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                        icon: const Icon(
+                          Icons.check_circle_outline_outlined,
                         ),
                       ),
                     ),
                     const SizedBox(
-                      height: 5,
+                      height: 8,
                     ),
 
                     /// RESET
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           List<int> list = utf8.encode("reset!");
                           Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes, "Reset success", device);
+                          await BLEUtils.funcWrite(
+                              bytes, "Reset success", device);
+                          await Future.delayed(
+                              const Duration(milliseconds: 500));
+                          onRefresh();
                         },
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),

@@ -5,6 +5,7 @@ import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/capture_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
+import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -184,12 +185,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                   if (mounted) {
                     setState(() {
                       statusTxt = result[0].toString();
-                      captureScheduleTxt = result[1].toString();
+                      captureScheduleTxt = TimePickerHelper.formatTimeOfDay(
+                          TimePickerHelper.minutesToTimeOfDay(result[1]));
                       captureIntervalTxt = result[2].toString();
                       captureCountTxt = result[3].toString();
                       captureRecentLimitTxt = (result[4]).toString();
                       spCaptureDateTxt = getDateSpecialCaptureDate(result[5]);
-                      spCaptureScheduleTxt = (result[6]).toString();
+                      spCaptureScheduleTxt = TimePickerHelper.formatTimeOfDay(
+                          TimePickerHelper.minutesToTimeOfDay(result[6]));
                       spCaptrueIntervalTxt = result[7].toString();
                       spCaptureCountTxt = result[8].toString();
                     });
@@ -426,23 +429,35 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Capture Schedule",
-                      description: "(Start minute of a day)",
+                      description: "(Start capture of a day)",
                       data: captureScheduleTxt,
                       onTap: () async {
-                        if (isConnected) {
-                          String? input = await _showInputDialog(
-                              controller, "Capture Schedule",
-                              label: "what minute of a day");
-                          if (input != null) {
-                            _setSettings.setSettings = "capture_schedule";
-                            _setSettings.value = input;
-                            List<int> list =
-                                utf8.encode("capture_schedule=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Capture Schedule", device);
-                          }
+                        TimeOfDay? result =
+                            await TimePickerHelper.pickTime(context, null);
+                        if (result != null) {
+                          _setSettings.setSettings = "capture_schedule";
+                          _setSettings.value =
+                              TimePickerHelper.formatTimeOfDay(result);
+                          List<int> list = utf8.encode(
+                              "capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(
+                              bytes, "Success Set Capture Schedule", device);
                         }
+                        // if (isConnected) {
+                        //   String? input = await _showInputDialog(
+                        //       controller, "Capture Schedule",
+                        //       label: "what minute of a day");
+                        //   if (input != null) {
+                        //     _setSettings.setSettings = "capture_schedule";
+                        //     _setSettings.value = input;
+                        //     List<int> list =
+                        //         utf8.encode("capture_schedule=$input");
+                        //     Uint8List bytes = Uint8List.fromList(list);
+                        //     BLEUtils.funcWrite(
+                        //         bytes, "Success Set Capture Schedule", device);
+                        //   }
+                        // }
                       },
                       icon: const Icon(
                         Icons.calendar_month_outlined,
@@ -609,24 +624,36 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
 
                     SettingsContainer(
                       title: "Special Capture Schedule",
-                      description: "(Start minute of the special day)",
+                      description: "(Start capture of the special day)",
                       data: spCaptureScheduleTxt,
                       onTap: () async {
-                        if (isConnected) {
-                          String? input = await _showInputDialog(
-                              controller, "Special Capture Schedule",
-                              label: "start minute");
-                          if (input != null) {
-                            _setSettings.setSettings =
-                                "special_capture_schedule";
-                            _setSettings.value = input;
-                            List<int> list =
-                                utf8.encode("special_capture_schedule=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(bytes,
-                                "Success Set Special Capture Schedule", device);
-                          }
+                        TimeOfDay? result =
+                            await TimePickerHelper.pickTime(context, null);
+                        if (result != null) {
+                          _setSettings.setSettings = "special_capture_schedule";
+                          _setSettings.value =
+                              TimePickerHelper.formatTimeOfDay(result);
+                          List<int> list = utf8.encode(
+                              "special_capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(bytes,
+                              "Success Set Special Capture Schedule", device);
                         }
+                        // if (isConnected) {
+                        //   String? input = await _showInputDialog(
+                        //       controller, "Special Capture Schedule",
+                        //       label: "start minute");
+                        //   if (input != null) {
+                        //     _setSettings.setSettings =
+                        //         "special_capture_schedule";
+                        //     _setSettings.value = input;
+                        //     List<int> list =
+                        //         utf8.encode("special_capture_schedule=$input");
+                        //     Uint8List bytes = Uint8List.fromList(list);
+                        //     BLEUtils.funcWrite(bytes,
+                        //         "Success Set Special Capture Schedule", device);
+                        //   }
+                        // }
                       },
                       icon: const Icon(
                         Icons.calendar_month_sharp,

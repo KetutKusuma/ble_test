@@ -161,7 +161,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     _value,
                     isBigEndian: false,
                   );
-                  timeTxt = DateTime.fromMillisecondsSinceEpoch(timeInt * 1000)
+                  timeTxt = DateTime.fromMillisecondsSinceEpoch(
+                          (timeInt + 946684800) * 1000)
+                      .subtract(const Duration(hours: 8))
                       .toString();
                 }
 
@@ -234,18 +236,27 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           DateTime subtraction =
                               DateTime.utc(2000, 1, 1, 0, 0, 0);
                           log("datetime fo subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
-                          DateTime dateTimeNow = DateTime.now();
+                          DateTime dateTimeNow = DateTime.now()
+                              .toUtc()
+                              .add(const Duration(hours: 8));
                           int result =
                               (dateTimeNow.millisecondsSinceEpoch ~/ 1000) -
                                   (subtraction.millisecondsSinceEpoch ~/ 1000);
                           log("result now $result");
                           List<int> list = utf8.encode("time=$result");
                           Uint8List bytes = Uint8List.fromList(list);
+
+                          String dateTimeNowFormatted =
+                              dateTimeNow.toIso8601String().split('.').first;
+                          String displayDateTimeNow =
+                              dateTimeNowFormatted.replaceFirst('T', ' ');
+
                           _setSettings = SetSettingsModel(
                             setSettings: "time",
-                            value: DateTime.fromMillisecondsSinceEpoch(
-                                    result * 1000)
-                                .toString(),
+                            // ini hasil pengurangna atau result
+                            // value: DateTime.fromMillisecondsSinceEpoch(
+                            //         result * 1000)
+                            value: displayDateTimeNow,
                           );
                           BLEUtils.funcWrite(bytes, "Success Set Time", device);
                         },

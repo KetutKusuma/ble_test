@@ -14,7 +14,8 @@ class UploadSettingsConverter {
     bool uploadEnableBool = bytes[51] == 1;
     int uploadScheduleInt = BytesConvert.bytesToInt16(bytes.sublist(52, 62));
     int uploadUsingInt = BytesConvert.bytesToInt8([bytes[62]]);
-    int uploadInitialDelay = BytesConvert.bytesToInt16(bytes.sublist(63, 65));
+    int uploadInitialDelay =
+        BytesConvert.bytesToInt16(bytes.sublist(63, 65), isBigEndian: false);
     String wifiSsid = BytesConvert.bytesToString(bytes.sublist(65, 81));
     String wifiPassword = BytesConvert.bytesToString(bytes.sublist(81, 97));
     String modemApn = BytesConvert.bytesToString(bytes.sublist(97, 113));
