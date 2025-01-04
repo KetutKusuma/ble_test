@@ -4,14 +4,11 @@ import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/screens/ble_main_screen/battery_screen/battery_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/device_screen.dart';
-import 'package:ble_test/screens/ble_main_screen/file_screen/file_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/meta_data_settings_screen/meta_data_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/receive_settings_screen/receive_data_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/set_password_screen/set_password_screen.dart';
-import 'package:ble_test/screens/ble_main_screen/storage_screen/storage_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/transmit_settings_screen/transmit_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
 import 'package:ble_test/screens/capture_screen/capture_screen.dart';
@@ -440,47 +437,10 @@ class _BleMainScreenState extends State<BleMainScreen> {
                 //     CupertinoIcons.battery_charging,
                 //   ),
                 // ),
-                FeatureWidget(
-                  visible: featureB.contains(roleUser),
-                  title: "Storage",
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StorageScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.sd_storage_outlined,
-                  ),
-                ),
-                FeatureWidget(
-                  visible: featureB.contains(roleUser),
-                  title: "Files",
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FilesScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.insert_drive_file_outlined,
-                  ),
-                ),
+
                 FeatureWidget(
                   visible: featureC.contains(roleUser),
-                  title: "Device",
+                  title: "Device Status",
                   onTap: () {
                     if (isConnected) {
                       Navigator.push(
@@ -620,18 +580,27 @@ class FeatureWidget extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10.0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                icon,
-                const SizedBox(
-                  width: 8,
+                Row(
+                  children: [
+                    icon,
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Text(
+                      title,
+                      style: GoogleFonts.readexPro(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  title,
-                  style: GoogleFonts.readexPro(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 20,
+                )
               ],
             ),
           ),

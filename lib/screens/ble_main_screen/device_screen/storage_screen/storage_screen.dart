@@ -1,7 +1,9 @@
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/status/status.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -10,18 +12,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-import '../admin_settings_screen/admin_settings_screen.dart';
 
-class FilesScreen extends StatefulWidget {
+class StorageScreen extends StatefulWidget {
   final BluetoothDevice device;
 
-  const FilesScreen({super.key, required this.device});
+  const StorageScreen({super.key, required this.device});
 
   @override
-  State<FilesScreen> createState() => _FilesScreenState();
+  State<StorageScreen> createState() => _StorageScreenState();
 }
 
-class _FilesScreenState extends State<FilesScreen> {
+class _StorageScreenState extends State<StorageScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
@@ -31,16 +32,11 @@ class _FilesScreenState extends State<FilesScreen> {
   List<BluetoothService> _services = [];
   List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-",
-      dirNearTxt = "-",
-      dirNearUnsetTxt = "-",
-      dirImageTxt = "-",
-      dirImageUnsetTxt = "-",
-      dirLogTxt = "-";
+  String statusTxt = "-", getTotalBytesTxt = "-", getUsedBytesTxt = "-";
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
-  bool isFileScreen = true;
+  bool isStorageScreen = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
 
@@ -67,14 +63,14 @@ class _FilesScreenState extends State<FilesScreen> {
         }
       },
     );
-    initGetFiles();
+    initGetStorage();
     initDiscoverServices();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    isFileScreen = false;
+    isStorageScreen = false;
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
@@ -89,7 +85,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   onRefresh() async {
     try {
-      initGetFiles();
+      initGetStorage();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -97,15 +93,15 @@ class _FilesScreenState extends State<FilesScreen> {
     }
   }
 
-  initGetFiles() async {
+  initGetStorage() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("files?");
+        List<int> list = utf8.encode("storage?");
         Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Files", device);
+        BLEUtils.funcWrite(bytes, "Success Get storage", device);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings, "Error get files : $e",
+      Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
           success: false);
     }
   }
@@ -134,7 +130,7 @@ class _FilesScreenState extends State<FilesScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              if (characters.properties.notify && isFileScreen) {
+              if (characters.properties.notify && isStorageScreen) {
                 log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
                 if (mounted) {
@@ -143,19 +139,16 @@ class _FilesScreenState extends State<FilesScreen> {
                 log("VALUE : $_value, ${_value.length}");
 
                 // this is for get raw admin
-                if (_value.length >= 11) {
+                if (_value.length >= 9) {
                   List<dynamic> result =
-                      StatusConverter.convertFileStatus(_value);
+                      StatusConverter.convertStorageStatus(_value);
                   _progressDialog.hide();
 
                   if (mounted) {
                     setState(() {
                       statusTxt = result[0].toString();
-                      dirNearTxt = result[1].toString();
-                      dirNearUnsetTxt = result[2].toString();
-                      dirImageTxt = result[3].toString();
-                      dirImageUnsetTxt = result[4].toString();
-                      dirLogTxt = result[5].toString();
+                      getTotalBytesTxt = formatBytes(result[1]);
+                      getUsedBytesTxt = formatBytes(result[2]);
                     });
                   }
                 }
@@ -178,13 +171,28 @@ class _FilesScreenState extends State<FilesScreen> {
     }
   }
 
+  String formatBytes(int bytes) {
+    if (bytes >= 1024 * 1024) {
+      // Jika data lebih dari 1 MB, ubah ke MB
+      double mb = bytes / (1024 * 1024);
+      return '${mb.toStringAsFixed(2)} MB';
+    } else if (bytes >= 1024) {
+      // Jika data lebih dari 1 KB tapi kurang dari 1 MB, ubah ke KB
+      double kb = bytes / 1024;
+      return '${kb.toStringAsFixed(2)} KB';
+    } else {
+      // Jika data kurang dari 1 KB, biarkan dalam byte
+      return '${bytes} Bytes';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyFileScreen,
+      key: Snackbar.snackBarKeyStorageScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Files'),
+          title: const Text('Storage'),
           elevation: 0,
         ),
         body: SmartRefresher(
@@ -209,43 +217,21 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Near",
-                          data: dirNearTxt,
+                          title: "Total Bytes",
+                          data: getTotalBytesTxt,
                           onTap: () {},
                           icon: const Icon(
-                            Icons.folder_open,
+                            Icons.storage_rounded,
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Near Unsent",
-                          data: dirNearUnsetTxt,
-                          onTap: () {},
-                          icon: const Icon(Icons.folder),
-                        ),
-                        SettingsContainer(
-                          title: "Dir Image",
-                          data: dirImageTxt,
+                          title: "Used Bytes",
+                          data: getUsedBytesTxt,
                           onTap: () {},
                           icon: const Icon(
-                            Icons.folder_special_outlined,
+                            Icons.storage_outlined,
                           ),
                         ),
-                        SettingsContainer(
-                          title: "Dir Image Unset",
-                          data: dirImageUnsetTxt,
-                          onTap: () {},
-                          icon: const Icon(
-                            Icons.folder_special_rounded,
-                          ),
-                        ),
-                        SettingsContainer(
-                          title: "Dir Log",
-                          data: dirLogTxt,
-                          onTap: () {},
-                          icon: const Icon(
-                            Icons.snippet_folder_outlined,
-                          ),
-                        )
                       ],
                     ),
                   ),

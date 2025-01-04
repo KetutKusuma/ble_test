@@ -2,29 +2,26 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-
-import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/status/status.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import '../../admin_settings_screen/admin_settings_screen.dart';
 
-class StorageScreen extends StatefulWidget {
+class FilesScreen extends StatefulWidget {
   final BluetoothDevice device;
 
-  const StorageScreen({super.key, required this.device});
+  const FilesScreen({super.key, required this.device});
 
   @override
-  State<StorageScreen> createState() => _StorageScreenState();
+  State<FilesScreen> createState() => _FilesScreenState();
 }
 
-class _StorageScreenState extends State<StorageScreen> {
+class _FilesScreenState extends State<FilesScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
@@ -34,11 +31,16 @@ class _StorageScreenState extends State<StorageScreen> {
   List<BluetoothService> _services = [];
   List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-", getTotalBytesTxt = "-", getUsedBytesTxt = "-";
+  String statusTxt = "-",
+      dirNearTxt = "-",
+      dirNearUnsetTxt = "-",
+      dirImageTxt = "-",
+      dirImageUnsetTxt = "-",
+      dirLogTxt = "-";
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
-  bool isStorageScreen = true;
+  bool isFileScreen = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
 
@@ -65,14 +67,14 @@ class _StorageScreenState extends State<StorageScreen> {
         }
       },
     );
-    initGetStorage();
+    initGetFiles();
     initDiscoverServices();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    isStorageScreen = false;
+    isFileScreen = false;
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
@@ -87,7 +89,7 @@ class _StorageScreenState extends State<StorageScreen> {
 
   onRefresh() async {
     try {
-      initGetStorage();
+      initGetFiles();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -95,15 +97,15 @@ class _StorageScreenState extends State<StorageScreen> {
     }
   }
 
-  initGetStorage() async {
+  initGetFiles() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("storage?");
+        List<int> list = utf8.encode("files?");
         Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get storage", device);
+        BLEUtils.funcWrite(bytes, "Success Get Files", device);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
+      Snackbar.show(ScreenSnackbar.capturesettings, "Error get files : $e",
           success: false);
     }
   }
@@ -132,7 +134,7 @@ class _StorageScreenState extends State<StorageScreen> {
         for (var characters in service.characteristics) {
           _lastValueSubscription = characters.lastValueStream.listen(
             (value) {
-              if (characters.properties.notify && isStorageScreen) {
+              if (characters.properties.notify && isFileScreen) {
                 log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
                 if (mounted) {
@@ -141,16 +143,19 @@ class _StorageScreenState extends State<StorageScreen> {
                 log("VALUE : $_value, ${_value.length}");
 
                 // this is for get raw admin
-                if (_value.length >= 9) {
+                if (_value.length >= 11) {
                   List<dynamic> result =
-                      StatusConverter.convertStorageStatus(_value);
+                      StatusConverter.convertFileStatus(_value);
                   _progressDialog.hide();
 
                   if (mounted) {
                     setState(() {
                       statusTxt = result[0].toString();
-                      getTotalBytesTxt = result[1].toString();
-                      getUsedBytesTxt = result[2].toString();
+                      dirNearTxt = result[1].toString();
+                      dirNearUnsetTxt = result[2].toString();
+                      dirImageTxt = result[3].toString();
+                      dirImageUnsetTxt = result[4].toString();
+                      dirLogTxt = result[5].toString();
                     });
                   }
                 }
@@ -176,10 +181,10 @@ class _StorageScreenState extends State<StorageScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: Snackbar.snackBarKeyStorageScreen,
+      key: Snackbar.snackBarKeyFileScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Storage'),
+          title: const Text('Files'),
           elevation: 0,
         ),
         body: SmartRefresher(
@@ -204,21 +209,43 @@ class _StorageScreenState extends State<StorageScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Total Bytes",
-                          data: getTotalBytesTxt,
+                          title: "Dir Near",
+                          data: dirNearTxt,
                           onTap: () {},
                           icon: const Icon(
-                            Icons.storage_rounded,
+                            Icons.folder_open,
                           ),
                         ),
                         SettingsContainer(
-                          title: "Used Bytes",
-                          data: getUsedBytesTxt,
+                          title: "Dir Near Unsent",
+                          data: dirNearUnsetTxt,
+                          onTap: () {},
+                          icon: const Icon(Icons.folder),
+                        ),
+                        SettingsContainer(
+                          title: "Dir Image",
+                          data: dirImageTxt,
                           onTap: () {},
                           icon: const Icon(
-                            Icons.storage_outlined,
+                            Icons.folder_special_outlined,
                           ),
                         ),
+                        SettingsContainer(
+                          title: "Dir Image Unset",
+                          data: dirImageUnsetTxt,
+                          onTap: () {},
+                          icon: const Icon(
+                            Icons.folder_special_rounded,
+                          ),
+                        ),
+                        SettingsContainer(
+                          title: "Dir Log",
+                          data: dirLogTxt,
+                          onTap: () {},
+                          icon: const Icon(
+                            Icons.snippet_folder_outlined,
+                          ),
+                        )
                       ],
                     ),
                   ),

@@ -2,7 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/device_screen/file_screen/file_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/device_screen/storage_screen/storage_screen.dart';
 import 'package:ble_test/utils/converter/bytes_convert.dart';
+import 'package:ble_test/utils/converter/settings/device_settings_convert.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -10,6 +15,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../utils/ble.dart';
+import '../../../utils/enum/role.dart';
 import '../../../utils/snackbar.dart';
 import '../admin_settings_screen/admin_settings_screen.dart';
 
@@ -32,7 +38,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
   List<BluetoothService> _services = [];
   List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-", timeTxt = "-", firmwareTxt = "-", versionTxt = "-";
+  String statusTxt = "-",
+      timeTxt = "-",
+      firmwareTxt = "-",
+      versionTxt = "-",
+      temperatureTxt = "-",
+      battery1Txt = "-",
+      battery2Txt = "-",
+      critBattery1Counter = "-",
+      critBattery2Counter = "-";
 
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
@@ -66,7 +80,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
         }
       },
     );
-    initGetDevice();
+    initGetRawDeviceStatus();
     initDiscoverServices();
   }
 
@@ -88,7 +102,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   onRefresh() async {
     try {
-      initGetDevice();
+      initGetRawDeviceStatus();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -96,27 +110,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
   }
 
-  initGetDevice() async {
+  initGetRawDeviceStatus() async {
     try {
       List<int> list = [];
       Uint8List bytes = Uint8List(0);
       if (isConnected) {
-        list = utf8.encode("time?");
+        list = utf8.encode("raw_device_status?");
         bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Time", device);
+        BLEUtils.funcWrite(bytes, "Success Raw Device Status", device);
         isGetTime = true;
-
-        await Future.delayed(const Duration(seconds: 3));
-        list = utf8.encode("firmware?");
-        bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Firmware", device);
-        isGetFirmware = true;
-
-        await Future.delayed(const Duration(seconds: 3));
-        list = utf8.encode("version?");
-        bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Version", device);
-        isGetVersion = true;
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.devicescreen, "Error get raw admin : $e",
@@ -155,30 +157,23 @@ class _DeviceScreenState extends State<DeviceScreen> {
                   setState(() {});
                 }
                 log("VALUE : $_value, ${_value.length}");
-                if (isGetTime) {
-                  isGetTime = false;
-                  int timeInt = BytesConvert.bytesToInt32(
-                    _value,
-                    isBigEndian: false,
-                  );
-                  timeTxt = DateTime.fromMillisecondsSinceEpoch(
-                          (timeInt + 946684800) * 1000)
-                      .subtract(const Duration(hours: 8))
-                      .toString();
-                }
-
-                if (isGetFirmware) {
-                  isGetFirmware = false;
-                  firmwareTxt = BytesConvert.bytesToString(_value);
-                }
-
-                if (isGetVersion) {
-                  isGetVersion = false;
-                  versionTxt = BytesConvert.bytesToString(_value);
-                }
-
-                if (timeTxt != '-' && firmwareTxt != '-' && versionTxt != '-') {
+                if (_value.length > 40) {
                   _progressDialog.hide();
+                  List<dynamic> result =
+                      DeviceStatusConverter.converDeviceStatus(_value);
+                  if (mounted) {
+                    setState(() {
+                      statusTxt = result[0].toString();
+                      firmwareTxt = result[1].toString();
+                      versionTxt = result[2].toString();
+                      timeTxt = result[3].toString();
+                      temperatureTxt = result[4].toString();
+                      battery1Txt = result[5].toString();
+                      battery2Txt = result[6].toString();
+                      critBattery1Counter = result[7].toString();
+                      critBattery2Counter = result[8].toString();
+                    });
+                  }
                 }
 
                 log("value : ${value.length} && value[0] : ${value[0]}");
@@ -211,7 +206,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       key: Snackbar.snackBarKeyDeviceScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Device'),
+          title: const Text('Device Status'),
           elevation: 0,
         ),
         body: SmartRefresher(
@@ -220,97 +215,169 @@ class _DeviceScreenState extends State<DeviceScreen> {
           child: CustomScrollView(
             slivers: [
               SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Column(
-                    children: [
-                      SettingsContainer(
-                        title: "Time",
-                        data: timeTxt,
-                        onTap: () async {},
-                        icon: const Icon(
-                          CupertinoIcons.time,
-                        ),
+                hasScrollBody: false,
+                child: Column(
+                  children: [
+                    SettingsContainer(
+                      title: "Firmware",
+                      data: firmwareTxt,
+                      onTap: () {},
+                      icon: const Icon(
+                        Icons.memory_rounded,
                       ),
-                      GestureDetector(
-                        onTap: () async {
-                          DateTime subtraction =
-                              DateTime.utc(2000, 1, 1, 0, 0, 0);
-                          log("datetime fo subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
-                          DateTime dateTimeNow = DateTime.now()
-                              .toUtc()
-                              .add(const Duration(hours: 8));
-                          int result =
-                              (dateTimeNow.millisecondsSinceEpoch ~/ 1000) -
-                                  (subtraction.millisecondsSinceEpoch ~/ 1000);
-                          log("result now $result");
-                          List<int> list = utf8.encode("time=$result");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          String dateTimeNowFormatted =
-                              dateTimeNow.toIso8601String().split('.').first;
-                          String displayDateTimeNow =
-                              dateTimeNowFormatted.replaceFirst('T', ' ');
-
-                          _setSettings = SetSettingsModel(
-                            setSettings: "time",
-                            // ini hasil pengurangna atau result
-                            // value: DateTime.fromMillisecondsSinceEpoch(
-                            //         result * 1000)
-                            value: displayDateTimeNow,
+                    ),
+                    SettingsContainer(
+                      title: "Version",
+                      data: versionTxt,
+                      onTap: () {},
+                      icon: const Icon(
+                        Icons.settings_suggest_outlined,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Temperature",
+                      data: "$temperatureTxt °C",
+                      onTap: () {},
+                      icon: const Icon(
+                        Icons.thermostat,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Battery 1",
+                      data: "$battery1Txt volt",
+                      description: critBattery1Counter == "0"
+                          ? null
+                          : "(Critical Counter : $critBattery1Counter)",
+                      onTap: () {},
+                      icon: const Icon(
+                        Icons.battery_5_bar_outlined,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Battery 2",
+                      data: "$battery2Txt volt",
+                      description: critBattery2Counter == "0"
+                          ? null
+                          : "(Critical Counter : $critBattery2Counter)",
+                      onTap: () {},
+                      icon: const Icon(
+                        Icons.battery_full,
+                      ),
+                    ),
+                    FeatureWidget(
+                      visible: featureB.contains(roleUser),
+                      title: "Storage",
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  StorageScreen(device: device),
+                            ),
                           );
-                          BLEUtils.funcWrite(bytes, "Success Set Time", device);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade600,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          width: MediaQuery.of(context).size.width,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.check_circle_outline,
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.sd_storage_outlined,
+                      ),
+                    ),
+                    FeatureWidget(
+                      visible: featureB.contains(roleUser),
+                      title: "Files",
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FilesScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.insert_drive_file_outlined,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Time",
+                      data: timeTxt,
+                      onTap: () async {},
+                      icon: const Icon(
+                        CupertinoIcons.time,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        DateTime subtraction =
+                            DateTime.utc(2000, 1, 1, 0, 0, 0);
+                        log("datetime fo subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
+                        DateTime dateTimeNow = DateTime.now()
+                            .toUtc()
+                            .add(const Duration(hours: 8));
+                        int result =
+                            (dateTimeNow.millisecondsSinceEpoch ~/ 1000) -
+                                (subtraction.millisecondsSinceEpoch ~/ 1000);
+                        log("result now $result");
+                        List<int> list = utf8.encode("time=$result");
+                        Uint8List bytes = Uint8List.fromList(list);
+
+                        String dateTimeNowFormatted =
+                            dateTimeNow.toIso8601String().split('.').first;
+                        String displayDateTimeNow =
+                            dateTimeNowFormatted.replaceFirst('T', ' ');
+
+                        _setSettings = SetSettingsModel(
+                          setSettings: "time",
+                          // ini hasil pengurangna atau result
+                          // value: DateTime.fromMillisecondsSinceEpoch(
+                          //         result * 1000)
+                          value: displayDateTimeNow,
+                        );
+                        BLEUtils.funcWrite(bytes, "Success Set Time", device);
+                      },
+                      child: Container(
+                        margin:
+                            const EdgeInsets.only(left: 10, right: 10, top: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade600,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              "Set Time",
+                              style: GoogleFonts.readexPro(
+                                fontSize: 16,
                                 color: Colors.white,
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                "Set Time",
-                                style: GoogleFonts.readexPro(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      SettingsContainer(
-                        title: "Firmware",
-                        data: firmwareTxt,
-                        onTap: () {},
-                        icon: const Icon(
-                          Icons.memory_rounded,
-                        ),
-                      ),
-                      SettingsContainer(
-                        title: "Version",
-                        data: versionTxt,
-                        onTap: () {},
-                        icon: const Icon(
-                          Icons.settings_suggest_outlined,
-                        ),
-                      ),
-                    ],
-                  ))
+                    ),
+                  ],
+                ),
+              )
             ],
           ),
         ),
