@@ -297,6 +297,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
                     // for transmit schedule
                     TextFormField(
+                      readOnly: true,
                       onTap: () async {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
@@ -400,7 +401,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                           transmitScheduleTxtController.text));
 
                   Navigator.of(context).pop(
-                      "transmit=$number;$selectedChoice;$destinationId;$transmitSchedule");
+                      "transmit=${number + 1};$selectedChoice;$destinationId;$transmitSchedule");
+                  destinationIDTxtController.clear();
+                  transmitScheduleTxtController.clear();
                 }
               },
               child: Text(
@@ -550,7 +553,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                   ),
                                   Expanded(
                                     child: Text(
-                                      result[3][index].toString(),
+                                      TimePickerHelper.formatTimeOfDay(
+                                          TimePickerHelper.minutesToTimeOfDay(
+                                              result[3][index])),
                                       textAlign: TextAlign.right,
                                       style: GoogleFonts.readexPro(
                                           fontSize: 14,
@@ -575,6 +580,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                 "Transmit Set Success !!",
                                 device,
                               );
+                              onRefresh();
                             }
                           },
                           child: Container(

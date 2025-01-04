@@ -12,12 +12,12 @@ class TransmitSettingsConvert {
     List<bool> destinationEnable = convertTransmitDestinationEnable(bytes[1])
         .map((value) => value == 1)
         .toList();
-    ;
-    List<String> destinationId = convertDestinationID(bytes.sublist(2, 27));
+
+    List<String> destinationId = convertDestinationID(bytes.sublist(2, 42));
     // int transmitScheduleInt =
     //     BytesConvert.bytesToInt16(bytes.sublist(27, 37), isBigEndian: false);
     List<int> transmitScheduleInt =
-        convertTransmitSchedule(bytes.sublist(27, 37));
+        convertTransmitSchedule(bytes.sublist(42, 58));
 
     log("status : $statusBool");
     log("destination enable : $destinationEnable");
@@ -48,7 +48,7 @@ class TransmitSettingsConvert {
     for (int i = 0; i < bytes.length; i += 2) {
       List<int> chunk = bytes.sublist(i, i + 2);
       int rees = BytesConvert.bytesToInt16(chunk, isBigEndian: false);
-      listResultInt.add(rees ~/ 60);
+      listResultInt.add(rees);
     }
     return listResultInt;
   }
@@ -66,7 +66,7 @@ class TransmitSettingsConvert {
     List<int> resultReverse = binaryArray.reversed.toList();
 
     /// get the 5 first
-    List<int> result = resultReverse.sublist(0, 5);
+    List<int> result = resultReverse.sublist(0, 8);
 
     return result;
   }

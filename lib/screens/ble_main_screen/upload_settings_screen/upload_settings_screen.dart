@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import '../../../constant/constant_color.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
@@ -64,6 +66,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   // for progress dialog
   late SimpleFontelicoProgressDialog _progressDialog;
+
+  // ini untuk uplado schedule dan upload enbale
+  List<bool> uploadEnable = [];
+  List<int> uploadSchedule = [];
+  TextEditingController uploadScheduleTxtController = TextEditingController();
 
   @override
   void initState() {
@@ -196,8 +203,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       statusTxt = result[0].toString();
                       serverTxt = "${result[1]}";
                       portTxt = result[2].toString();
-                      uploadEnableTxt = result[3].toString();
-                      uploadScheduleTxt = result[4].toString();
+                      // upload enable dan upload schedule itu harusnya berupa list
+
+                      uploadEnable = result[3]; // List<bool> [8]
+                      uploadSchedule = result[4]; // List<int> [8]
                       uploadUsingTxt = result[5] == 0
                           ? "Wifi"
                           : result[5] == 1
@@ -370,6 +379,162 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     return result;
   }
 
+  Future<List<String>?> showSetupTransmitDialog(
+      BuildContext context, int number) async {
+    bool? selectedChoice; // Tracks the selected choice
+
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+          ),
+          titlePadding:
+              const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
+          title: Text(
+            "Setup Destination $number",
+            style: GoogleFonts.readexPro(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          content: SizedBox(
+            height: 200,
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  children: [
+                    // for transmit schedule
+                    TextFormField(
+                      readOnly: true,
+                      onTap: () async {
+                        TimeOfDay? result =
+                            await TimePickerHelper.pickTime(context, null);
+                        if (result != null) {
+                          uploadScheduleTxtController.text =
+                              TimePickerHelper.formatTimeOfDay(result);
+                        }
+                      },
+                      style: GoogleFonts.readexPro(),
+                      controller: uploadScheduleTxtController,
+                      decoration: const InputDecoration(
+                        labelText: "Enter Upload Schedule",
+                        hintText: "00.00-23.59",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+
+                    // for destination enable
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Upload Enable",
+                            style: GoogleFonts.readexPro(),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => selectedChoice = true),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: selectedChoice == true
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'True',
+                                      style: GoogleFonts.readexPro(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => selectedChoice = false),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: selectedChoice == false
+                                          ? Colors.red
+                                          : Colors.grey,
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'False',
+                                      style: GoogleFonts.readexPro(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Save logic here
+                if (selectedChoice != null &&
+                    uploadScheduleTxtController.text.isNotEmpty) {
+                  int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
+                      TimePickerHelper.stringToTimeOfDay(
+                          uploadScheduleTxtController.text));
+
+                  Navigator.of(context).pop([
+                    "upload_schedule=$number;$transmitSchedule",
+                    "upload_enable=$number;$selectedChoice",
+                  ]);
+                }
+              },
+              child: Text(
+                'Update',
+                style: GoogleFonts.readexPro(),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                uploadScheduleTxtController.clear();
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.readexPro(),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
@@ -405,8 +570,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
           onRefresh: onRefresh,
           child: CustomScrollView(
             slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
+              SliverToBoxAdapter(
+                // hasScrollBody: false,
                 child: Column(
                   children: [
                     // Text("VALUE : $_value"),
@@ -478,34 +643,166 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.podcasts_rounded,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Upload Enable",
-                      data: uploadEnableTxt,
-                      onTap: () async {
-                        try {
-                          bool? input = await _showTrueFalseDialog(
-                              context, "Upload Enable");
-                          if (input != null) {
-                            List<int> list =
-                                utf8.encode("upload_enable=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "upload_enable";
-                            _setSettings.value = input.toString();
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Upload Enable", device);
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.uploadsettings,
-                            "Error click on upload enable : $e",
-                            success: false,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.upload_file,
+
+                    // CustomScrollView(
+                    //   slivers: [
+
+                    //   ],
+                    // ),
+                  ],
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return Column(
+                    children: [
+                      Container(
+                        margin:
+                            const EdgeInsets.only(top: 15, left: 10, right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Upload Schedule dan Enable ${index + 1}",
+                              style: GoogleFonts.readexPro(
+                                  fontSize: 18, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Upload Enable: ",
+                                    style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        uploadEnable[index].toString(),
+                                        style: GoogleFonts.readexPro(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Upload Schedule : ",
+                                  style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                Text(
+                                  TimePickerHelper.formatTimeOfDay(
+                                      TimePickerHelper.minutesToTimeOfDay(
+                                          uploadSchedule[index])),
+                                  style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () async {
+                          List<String>? result =
+                              await showSetupTransmitDialog(context, index);
+                          if (result != null) {
+                            // do your magic
+                            List<int> list = utf8.encode(result[0]);
+                            Uint8List bytes = Uint8List.fromList(list);
+                            await BLEUtils.funcWrite(
+                              bytes,
+                              "Success Upload Schedule ${index + 1}",
+                              device,
+                            );
+                            List<int> list2 = utf8.encode(result[1]);
+                            Uint8List bytes2 = Uint8List.fromList(list2);
+                            await BLEUtils.funcWrite(
+                              bytes2,
+                              "Success Upload Enable ${index + 1}",
+                              device,
+                            );
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: Colors.blue.shade600,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.5),
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(
+                                      0, 1), // changes position of shadow
+                                ),
+                              ]),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.update,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Update Upload Enable & Schedule ${index + 1}",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+                    childCount: (uploadEnable.length == uploadSchedule.length)
+                        ? uploadEnable.length
+                        : 0),
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
                     SettingsContainer(
                       title: "Upload Using",
                       data: uploadUsingTxt,
@@ -623,7 +920,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.wifi_password_rounded,
                       ),
                     ),
-
                     Padding(
                       padding:
                           const EdgeInsets.only(left: 10.0, right: 10, top: 10),
