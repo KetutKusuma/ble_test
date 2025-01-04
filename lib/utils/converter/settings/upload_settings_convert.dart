@@ -14,7 +14,9 @@ class UploadSettingsConverter {
     // =======
     List<bool> uploadEnable =
         convertUploadEnable(bytes[51]).map((value) => value == 1).toList();
-    List<int> uploadSchedule = convertUploadSchedule(bytes.sublist(52, 68));
+    List<int> uploadSchedule = convertUploadSchedule(
+      bytes.sublist(52, 68),
+    );
     // =======
     int uploadUsingInt = BytesConvert.bytesToInt8([bytes[68]]);
     int uploadInitialDelay =
@@ -86,7 +88,7 @@ class UploadSettingsConverter {
     for (int i = 0; i < bytes.length; i += 2) {
       List<int> chunk = bytes.sublist(i, i + 2);
       int rees = BytesConvert.bytesToInt16(chunk, isBigEndian: false);
-      listResultInt.add(rees ~/ 60);
+      listResultInt.add(rees);
     }
     return listResultInt;
   }

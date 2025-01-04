@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_enable_schedule_settings_screen/upload_enable_schedule_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
@@ -45,8 +46,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   String statusTxt = '-',
       serverTxt = '-',
       portTxt = '-',
-      uploadEnableTxt = '-',
-      uploadScheduleTxt = '-',
       uploadUsingTxt = '-',
       uploadInitialDelayTxt = '-',
       wifiSsidTxt = '-',
@@ -228,10 +227,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       serverTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "port") {
                       portTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_enable") {
-                      uploadEnableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_schedule") {
-                      uploadScheduleTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "upload_using") {
                       uploadUsingTxt = _setSettings.value == "0"
                           ? "Wifi"
@@ -379,7 +374,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     return result;
   }
 
-  Future<List<String>?> showSetupTransmitDialog(
+  Future<List<String>?> showSetupUploadDialog(
       BuildContext context, int number) async {
     bool? selectedChoice; // Tracks the selected choice
 
@@ -652,13 +647,23 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                   ],
                 ),
               ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return Column(
-                    children: [
-                      Container(
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                UploadEnableScheduleSettingScreen(
+                                    device: device),
+                          ),
+                        );
+                      },
+                      child: Container(
                         margin:
-                            const EdgeInsets.only(top: 15, left: 10, right: 10),
+                            const EdgeInsets.only(top: 7, left: 10, right: 10),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 15, vertical: 10),
                         width: MediaQuery.of(context).size.width,
@@ -670,139 +675,47 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             width: 1,
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Upload Schedule dan Enable ${index + 1}",
-                              style: GoogleFonts.readexPro(
-                                  fontSize: 18, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Upload Enable: ",
-                                    style: GoogleFonts.readexPro(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Icon(CupertinoIcons.gear),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Settings Enable & Schedule",
+                                      style: GoogleFonts.readexPro(
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        uploadEnable[index].toString(),
-                                        style: GoogleFonts.readexPro(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400),
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                  ],
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 20,
                                   ),
                                 ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Upload Schedule : ",
-                                  style: GoogleFonts.readexPro(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                Text(
-                                  TimePickerHelper.formatTimeOfDay(
-                                      TimePickerHelper.minutesToTimeOfDay(
-                                          uploadSchedule[index])),
-                                  style: GoogleFonts.readexPro(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          List<String>? result =
-                              await showSetupTransmitDialog(context, index);
-                          if (result != null) {
-                            // do your magic
-                            List<int> list = utf8.encode(result[0]);
-                            Uint8List bytes = Uint8List.fromList(list);
-                            await BLEUtils.funcWrite(
-                              bytes,
-                              "Success Upload Schedule ${index + 1}",
-                              device,
-                            );
-                            List<int> list2 = utf8.encode(result[1]);
-                            Uint8List bytes2 = Uint8List.fromList(list2);
-                            await BLEUtils.funcWrite(
-                              bytes2,
-                              "Success Upload Enable ${index + 1}",
-                              device,
-                            );
-                          }
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                              color: Colors.blue.shade600,
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.5),
-                                  spreadRadius: 1,
-                                  blurRadius: 1,
-                                  offset: const Offset(
-                                      0, 1), // changes position of shadow
-                                ),
-                              ]),
-                          width: MediaQuery.of(context).size.width,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.update,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                "Update Upload Enable & Schedule ${index + 1}",
-                                style: GoogleFonts.readexPro(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                              )
                             ],
                           ),
                         ),
                       ),
-                    ],
-                  );
-                },
-                    childCount: (uploadEnable.length == uploadSchedule.length)
-                        ? uploadEnable.length
-                        : 0),
-              ),
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
+                    ),
                     SettingsContainer(
                       title: "Upload Using",
                       data: uploadUsingTxt,

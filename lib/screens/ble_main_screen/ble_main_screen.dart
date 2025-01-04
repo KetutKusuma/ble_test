@@ -421,25 +421,25 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     }
                   },
                 ),
-                FeatureWidget(
-                  visible: featureD.contains(roleUser),
-                  title: "Battery",
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BatteryScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                  icon: const Icon(
-                    CupertinoIcons.battery_charging,
-                  ),
-                ),
+                // FeatureWidget(
+                //   visible: featureD.contains(roleUser),
+                //   title: "Battery",
+                //   onTap: () {
+                //     if (isConnected) {
+                //       Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => BatteryScreen(device: device),
+                //         ),
+                //       );
+                //     } else {
+                //       Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                //     }
+                //   },
+                //   icon: const Icon(
+                //     CupertinoIcons.battery_charging,
+                //   ),
+                // ),
                 FeatureWidget(
                   visible: featureB.contains(roleUser),
                   title: "Storage",
