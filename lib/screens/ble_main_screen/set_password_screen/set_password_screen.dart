@@ -31,10 +31,15 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   List<int> _value = [];
 
   TextEditingController pwdNewTxtController = TextEditingController();
+  TextEditingController pwdNewConfirmTxtController = TextEditingController();
   TextEditingController pwdOldTxtController = TextEditingController();
 
   bool isSetPasswordScreen = true;
   bool isSetPasswordStart = false;
+
+  bool isObscureTextOldPassword = true;
+  bool isObsecureTextNewPasssword = true;
+  bool isObsecureTextConfirmPassword = true;
 
   @override
   void initState() {
@@ -151,12 +156,27 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         height: 10,
                       ),
                       TextFormField(
+                        style: GoogleFonts.readexPro(),
+                        obscureText: isObscureTextOldPassword,
                         controller: pwdOldTxtController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "Old Password",
-                          border: OutlineInputBorder(
+                          border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(
                               Radius.circular(10),
+                            ),
+                          ),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isObscureTextOldPassword =
+                                    !isObscureTextOldPassword;
+                              });
+                            },
+                            child: Icon(
+                              isObscureTextOldPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
                           ),
                         ),
@@ -165,13 +185,58 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         height: 10,
                       ),
                       TextFormField(
+                        style: GoogleFonts.readexPro(),
+                        obscureText: isObsecureTextNewPasssword,
                         cursorColor: Colors.transparent,
                         controller: pwdNewTxtController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "New Password",
-                          border: OutlineInputBorder(
+                          border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(
                               Radius.circular(10),
+                            ),
+                          ),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isObsecureTextNewPasssword =
+                                    !isObsecureTextNewPasssword;
+                              });
+                            },
+                            child: Icon(
+                              isObsecureTextNewPasssword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      TextFormField(
+                        style: GoogleFonts.readexPro(),
+                        obscureText: isObsecureTextConfirmPassword,
+                        cursorColor: Colors.transparent,
+                        controller: pwdNewConfirmTxtController,
+                        decoration: InputDecoration(
+                          labelText: "Confirm New Password",
+                          border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(10),
+                            ),
+                          ),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isObsecureTextConfirmPassword =
+                                    !isObsecureTextConfirmPassword;
+                              });
+                            },
+                            child: Icon(
+                              isObsecureTextConfirmPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
                           ),
                         ),
@@ -181,13 +246,32 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          isSetPasswordStart = true;
-                          List<int> list = utf8.encode(
-                              "set_password=${pwdOldTxtController.text};${pwdNewTxtController.text}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Set Password Command Success", device);
-                          // ini harusnya dengan disconnect juga
+                          if (pwdOldTxtController.text.isEmpty ||
+                              pwdNewTxtController.text.isEmpty ||
+                              pwdNewConfirmTxtController.text.isEmpty) {
+                            Snackbar.show(ScreenSnackbar.setpassword,
+                                "Password cannot be empty",
+                                success: false);
+                            return;
+                          } else {
+                            if (pwdNewTxtController.text !=
+                                pwdNewConfirmTxtController.text) {
+                              Snackbar.show(ScreenSnackbar.setpassword,
+                                  "New Password not match",
+                                  success: false);
+                              return;
+                            } else {
+                              isSetPasswordStart = true;
+                              List<int> list = utf8.encode(
+                                  "set_password=${pwdOldTxtController.text};${pwdNewTxtController.text}");
+                              Uint8List bytes = Uint8List.fromList(list);
+                              BLEUtils.funcWrite(
+                                bytes,
+                                "Set Password Command Success",
+                                device,
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 0),

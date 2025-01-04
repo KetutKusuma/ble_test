@@ -47,11 +47,11 @@ class StatusConverter {
     // [11]
 
     bool statusBool = bytes[0] == 1;
-    int dirNear = BytesConvert.bytesToInt16(bytes.sublist(1, 5));
-    int dirNearUnset = BytesConvert.bytesToInt16(bytes.sublist(5, 9));
-    int dirImage = BytesConvert.bytesToInt16(bytes.sublist(5, 9));
-    int dirImageUnset = BytesConvert.bytesToInt16(bytes.sublist(5, 9));
-    int dirLog = BytesConvert.bytesToInt16(bytes.sublist(5, 9));
+    int dirNear = BytesConvert.bytesToInt16(bytes.sublist(1, 3));
+    int dirNearUnset = BytesConvert.bytesToInt16(bytes.sublist(3, 5));
+    int dirImage = BytesConvert.bytesToInt16(bytes.sublist(5, 7));
+    int dirImageUnset = BytesConvert.bytesToInt16(bytes.sublist(7, 9));
+    int dirLog = BytesConvert.bytesToInt16(bytes.sublist(9, 11));
 
     log("status : $statusBool");
     log("dir near : $dirNear");

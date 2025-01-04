@@ -201,16 +201,16 @@ class _BatteryScreenState extends State<BatteryScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Volt1",
-                          data: volt1Txt,
+                          title: "Battery 1",
+                          data: "$volt1Txt Volt",
                           onTap: () {},
                           icon: const Icon(
                             CupertinoIcons.bolt_circle_fill,
                           ),
                         ),
                         SettingsContainer(
-                          title: "Volt2",
-                          data: volt2Txt,
+                          title: "Battery 2",
+                          data: "$volt2Txt Volt",
                           onTap: () {},
                           icon: const Icon(
                             CupertinoIcons.bolt_circle,

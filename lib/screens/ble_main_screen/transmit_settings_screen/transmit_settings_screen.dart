@@ -6,6 +6,7 @@ import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_set
 import 'package:ble_test/utils/converter/bytes_convert.dart';
 import 'package:ble_test/utils/converter/settings/transmit_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -296,11 +297,19 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
                     // for transmit schedule
                     TextFormField(
+                      onTap: () async {
+                        TimeOfDay? result =
+                            await TimePickerHelper.pickTime(context, null);
+                        if (result != null) {
+                          transmitScheduleTxtController.text =
+                              TimePickerHelper.formatTimeOfDay(result);
+                        }
+                      },
                       style: GoogleFonts.readexPro(),
                       controller: transmitScheduleTxtController,
                       decoration: const InputDecoration(
                         labelText: "Enter Transmit Schedule",
-                        hintText: "1-24",
+                        hintText: "00.00-23.59",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
@@ -386,8 +395,10 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                     destinationIDTxtController.text.isNotEmpty &&
                     transmitScheduleTxtController.text.isNotEmpty) {
                   String destinationId = destinationIDTxtController.text;
-                  int transmitSchedule =
-                      int.parse(transmitScheduleTxtController.text) * 60;
+                  int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
+                      TimePickerHelper.stringToTimeOfDay(
+                          transmitScheduleTxtController.text));
+
                   Navigator.of(context).pop(
                       "transmit=$number;$selectedChoice;$destinationId;$transmitSchedule");
                 }

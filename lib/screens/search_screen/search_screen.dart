@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
-import 'package:ble_test/screens/login_hanshake_screen/login_handshake_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
