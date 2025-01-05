@@ -465,7 +465,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Capture Interval",
-                      description: "(Repetition capture of a day)",
+                      description: "(Repetition capture of a day) (minutes)",
                       data: captureIntervalTxt,
                       onTap: () async {
                         if (isConnected) {
@@ -661,7 +661,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Special Capture Interval",
-                      description: "(Repetition capture of the special day)",
+                      description:
+                          "(Repetition capture of the special day) (minutes)",
                       data: spCaptrueIntervalTxt,
                       onTap: () async {
                         if (isConnected) {

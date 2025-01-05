@@ -220,7 +220,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                   children: [
                     SettingsContainer(
                       title: "Firmware",
-                      data: firmwareTxt,
+                      data: firmwareTxt.trim(),
                       onTap: () {},
                       icon: const Icon(
                         Icons.memory_rounded,
@@ -245,7 +245,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     SettingsContainer(
                       title: "Battery 1",
                       data: "$battery1Txt volt",
-                      description: critBattery1Counter == "0"
+                      description: critBattery1Counter == "0" ||
+                              critBattery1Counter == '-'
                           ? null
                           : "(Critical Counter : $critBattery1Counter)",
                       onTap: () {},
@@ -256,7 +257,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     SettingsContainer(
                       title: "Battery 2",
                       data: "$battery2Txt volt",
-                      description: critBattery2Counter == "0"
+                      description: critBattery2Counter == "0" ||
+                              critBattery2Counter == '-'
                           ? null
                           : "(Critical Counter : $critBattery2Counter)",
                       onTap: () {},

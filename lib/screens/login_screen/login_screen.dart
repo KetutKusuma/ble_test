@@ -17,7 +17,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -269,10 +268,8 @@ class _LoginScreenState extends State<LoginScreen> {
               firstInt = 0;
               isLoginScreen = true;
               indexPage = 0;
-              userRoleTxtController.clear();
-              passwordTxtController.clear();
-              macAddressTxtConroller.clear();
-              idTxtController.clear();
+              _pageController.jumpToPage(0);
+              // idTxtController.clear();
             });
           } else if (lastValueG.length == 1 && lastValueG[0] == 0) {
             Snackbar.show(
@@ -417,11 +414,18 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   /// ==== FOR REMEMBER ME =====
-  Future<void> rememberMeProcess(String username, String password) async {
+  Future<void> rememberMeProcess(String username, String password,
+      {String? id, String? macaddress}) async {
     if (rememberMe) {
       try {
         await storage.write(key: "username", value: username);
         await storage.write(key: "password", value: password);
+        if (id != null) {
+          await storage.write(key: "id", value: id);
+        }
+        if (macaddress != null) {
+          await storage.write(key: "macaddress", value: macaddress);
+        }
       } catch (e) {
         log("error write on secure storage : $e");
       }
@@ -432,9 +436,17 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       String? username = await storage.read(key: "username");
       String? password = await storage.read(key: "password");
+      String? id = await storage.read(key: "id");
+      String? macaddress = await storage.read(key: "macaddress");
       if (username != null && password != null) {
         userRoleTxtController.text = username;
         passwordTxtController.text = password;
+        if (id != null) {
+          idTxtController.text = id;
+        }
+        if (macaddress != null) {
+          macAddressTxtConroller.text = macaddress;
+        }
         rememberMe = true;
       } else {
         log("nothing found remember me");
@@ -598,8 +610,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: () {
                           indexPage = index;
                           _pageController.jumpToPage(index);
-                          idTxtController.clear();
-                          macAddressTxtConroller.clear();
+                          // if (index != 0) {
+                          //   idTxtController.clear();
+                          // }
+                          // if (index != 1) {
+                          //   macAddressTxtConroller.clear();
+                          // }
 
                           setState(() {});
                         },
@@ -660,6 +676,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(
                             height: 10,
                           ),
+                          // LOGIN WITH ID
                           GestureDetector(
                             onTap: () async {
                               if (userRoleTxtController.text.isNotEmpty &&
@@ -668,7 +685,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   // save user name and password process
                                   rememberMeProcess(
                                       userRoleTxtController.text.trim(),
-                                      passwordTxtController.text.trim());
+                                      passwordTxtController.text.trim(),
+                                      id: idTxtController.text.trim());
                                   searchForDevices();
                                 }
                               } else {
@@ -726,6 +744,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(
                             height: 10,
                           ),
+                          // LOGIN WITH MAC ADDRESS
                           GestureDetector(
                             onTap: () async {
                               if (userRoleTxtController.text.isNotEmpty &&
@@ -733,8 +752,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (macAddressTxtConroller.text.isNotEmpty) {
                                   // save user name and password process
                                   rememberMeProcess(
-                                      userRoleTxtController.text.trim(),
-                                      passwordTxtController.text.trim());
+                                    userRoleTxtController.text.trim(),
+                                    passwordTxtController.text.trim(),
+                                    macaddress: macAddressTxtConroller.text,
+                                  );
 
                                   searchForDevices();
                                 }
@@ -795,6 +816,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   firstInt = 0;
                                   isLoginScreen = true;
                                   indexPage = 0;
+                                  _pageController.jumpToPage(0);
                                   // userRoleTxtController.clear();
                                   // passwordTxtController.clear();
                                 });

@@ -1151,32 +1151,46 @@ class SettingsContainer extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              icon,
-              const SizedBox(
-                width: 10,
-              ),
               Expanded(
                 flex: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.readexPro(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      flex: 1,
+                      child: FittedBox(
+                        alignment: Alignment.centerLeft,
+                        fit: BoxFit.contain,
+                        child: icon,
                       ),
                     ),
-                    (description == null)
-                        ? const SizedBox()
-                        : Text(
-                            description ?? '',
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      flex: 8,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
                             style: GoogleFonts.readexPro(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
+                          (description == null)
+                              ? const SizedBox()
+                              : Text(
+                                  description ?? '',
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1187,7 +1201,7 @@ class SettingsContainer extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: Text(
                     data,
-                    style: const TextStyle(
+                    style: GoogleFonts.readexPro(
                       fontSize: 14,
                     ),
                   ),

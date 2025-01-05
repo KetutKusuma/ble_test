@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:ble_test/screens/login_screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'screens/bluetooth_off_screen.dart';
 import 'screens/scan_screen.dart';
@@ -58,6 +59,10 @@ class _FlutterBlueAppState extends State<FlutterBlueApp> {
         : BluetoothOffScreen(adapterState: _adapterState);
 
     return MaterialApp(
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color.fromARGB(255, 246, 246, 255),
+        textTheme: GoogleFonts.readexProTextTheme(),
+      ),
       debugShowCheckedModeBanner: false,
       color: Colors.lightBlue,
       home: screen,

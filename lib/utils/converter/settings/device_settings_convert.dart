@@ -33,6 +33,10 @@ class DeviceStatusConverter {
     int critBattery1Counter = BytesConvert.bytesToInt8([bytes[41]]);
     int critBattery2Counter = BytesConvert.bytesToInt8([bytes[42]]);
 
+    log("status : $statusBool");
+    log("firmware : $firmware mama");
+    log("version : $version papa");
+    log("time : $timeInt");
     log("temperature : $temperature");
     log("bytes : ${bytes.sublist(29, 33)}");
     log("time : $timeString");

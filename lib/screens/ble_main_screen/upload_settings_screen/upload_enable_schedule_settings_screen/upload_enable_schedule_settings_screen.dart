@@ -62,6 +62,8 @@ class _UploadEnableScheduleSettingScreenState
   List<int> uploadSchedule = [];
   TextEditingController uploadScheduleTxtController = TextEditingController();
 
+  bool? selectedChoice; // Tracks the selected choice
+
   @override
   void initState() {
     super.initState();
@@ -230,8 +232,6 @@ class _UploadEnableScheduleSettingScreenState
 
   Future<String?> showSetupUploadDialog(
       BuildContext context, int number) async {
-    bool? selectedChoice; // Tracks the selected choice
-
     return await showDialog(
       context: context,
       barrierDismissible: false,
@@ -476,6 +476,11 @@ class _UploadEnableScheduleSettingScreenState
                     ),
                     GestureDetector(
                       onTap: () async {
+                        selectedChoice = uploadEnable[index];
+                        uploadScheduleTxtController.text =
+                            TimePickerHelper.formatTimeOfDay(
+                                TimePickerHelper.minutesToTimeOfDay(
+                                    uploadSchedule[index]));
                         String? result =
                             await showSetupUploadDialog(context, index);
                         if (result != null) {

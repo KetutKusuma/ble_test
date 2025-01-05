@@ -209,7 +209,7 @@ class _FilesScreenState extends State<FilesScreen> {
                         //   ),
                         // ),
                         SettingsContainer(
-                          title: "Dir Near",
+                          title: "Image from Another Toppi",
                           data: dirNearTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -217,13 +217,13 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Near Unsent",
+                          title: "Image from Another Toppi Unsent",
                           data: dirNearUnsetTxt,
                           onTap: () {},
                           icon: const Icon(Icons.folder),
                         ),
                         SettingsContainer(
-                          title: "Dir Image",
+                          title: "Image This Toppi",
                           data: dirImageTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -231,7 +231,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Image Unsent",
+                          title: "Image This Toppi Unsent",
                           data: dirImageUnsetTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -239,7 +239,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Log",
+                          title: "Image Log",
                           data: dirLogTxt,
                           onTap: () {},
                           icon: const Icon(

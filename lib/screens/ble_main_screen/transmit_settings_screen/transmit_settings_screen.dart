@@ -52,6 +52,8 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   TextEditingController transmitScheduleTxtController = TextEditingController();
 
   List<dynamic> result = [];
+  // for choice true or false
+  bool? selectedChoice;
 
   @override
   void initState() {
@@ -247,7 +249,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   Future<String?> showSetupTransmitDialog(
       BuildContext context, int number) async {
-    bool? selectedChoice; // Tracks the selected choice
+    // Tracks the selected choice
 
     return await showDialog(
       context: context,
@@ -488,7 +490,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                               Text(
                                 "Destination ${index + 1}",
                                 style: GoogleFonts.readexPro(
-                                    fontSize: 18, fontWeight: FontWeight.w500),
+                                    fontSize: 16, fontWeight: FontWeight.w500),
                               ),
                               const SizedBox(
                                 height: 8,
@@ -569,11 +571,18 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                         ),
                         GestureDetector(
                           onTap: () async {
-                            String? result =
+                            destinationIDTxtController.text = result[2][index];
+                            transmitScheduleTxtController.text =
+                                TimePickerHelper.formatTimeOfDay(
+                                    TimePickerHelper.minutesToTimeOfDay(
+                                        result[3][index]));
+                            selectedChoice = result[1][index];
+
+                            String? resultPop =
                                 await showSetupTransmitDialog(context, index);
-                            if (result != null) {
+                            if (resultPop != null) {
                               // do your magic
-                              List<int> list = utf8.encode(result);
+                              List<int> list = utf8.encode(resultPop);
                               Uint8List bytes = Uint8List.fromList(list);
                               await BLEUtils.funcWrite(
                                 bytes,

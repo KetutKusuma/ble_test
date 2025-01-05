@@ -8,7 +8,9 @@ class BytesConvert {
   }
 
   static String bytesToString(List<int> bytes) {
-    return String.fromCharCodes(bytes);
+    String result =
+        String.fromCharCodes(bytes.where((element) => element != 0).toList());
+    return result;
   }
 
   static String bytesToStringUseUtf8(List<int> bytes) {

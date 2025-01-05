@@ -471,7 +471,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const Icon(
-                            Icons.camera_alt_outlined,
+                            CupertinoIcons.camera,
                             color: Colors.white,
                           ),
                           const SizedBox(
@@ -580,7 +580,7 @@ class FeatureWidget extends StatelessWidget {
         onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -595,24 +595,44 @@ class FeatureWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    icon,
-                    const SizedBox(
-                      width: 8,
-                    ),
-                    Text(
-                      title,
-                      style: GoogleFonts.readexPro(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
+                Expanded(
+                  flex: 4,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: FittedBox(
+                          alignment: Alignment.centerLeft,
+                          fit: BoxFit.contain,
+                          child: icon,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Expanded(
+                        flex: 8,
+                        child: Text(
+                          title,
+                          style: GoogleFonts.readexPro(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 20,
+                const Expanded(
+                  flex: 3,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 20,
+                    ),
+                  ),
                 )
               ],
             ),

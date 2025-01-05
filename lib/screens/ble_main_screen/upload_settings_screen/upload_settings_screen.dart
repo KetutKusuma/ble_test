@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_enable_schedule_settings_screen/upload_enable_schedule_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
@@ -742,7 +740,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Initial Delay (seconds)",
+                      title: "Upload Initial Delay",
+                      description: "(seconds)",
                       data: uploadInitialDelayTxt,
                       onTap: () async {
                         try {
@@ -775,129 +774,141 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.vertical_align_top_rounded,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Wifi SSID",
-                      data: wifiSsidTxt,
-                      onTap: () async {
-                        try {
-                          String? input = await _showInputDialog(
-                            controller,
-                            "Wifi SSID",
-                          );
-                          if (input != null) {
-                            List<int> list = utf8.encode("wifi_ssid=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "wifi_ssid";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Wifi SSID", device);
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.uploadsettings,
-                            "Error click on wifi ssid : $e",
-                            success: false,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.wifi_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Wifi Password",
-                      data: wifiPasswordTxt,
-                      onTap: () async {
-                        try {
-                          String? input = await _showInputDialog(
-                              controller, "Wifi Password");
-                          if (input != null) {
-                            List<int> list =
-                                utf8.encode("wifi_password=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "wifi_password";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Wifi Password", device);
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.uploadsettings,
-                            "Error click on wifi password : $e",
-                            success: false,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.wifi_password_rounded,
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(left: 10.0, right: 10, top: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                List<int> list = utf8.encode("wifi_connect!");
-                                Uint8List bytes = Uint8List.fromList(list);
-                                BLEUtils.funcWrite(
-                                    bytes, "Success Connect Wifi", device);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 10),
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.green.shade600),
-                                child: Text(
-                                  "Connect Wifi",
-                                  style: GoogleFonts.readexPro(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 15,
-                          ),
-                          Expanded(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                splashColor: Colors.black,
-                                onTap: () {
+                    (uploadUsingTxt != "Wifi")
+                        ? const SizedBox()
+                        : SettingsContainer(
+                            title: "Wifi SSID",
+                            data: wifiSsidTxt,
+                            onTap: () async {
+                              try {
+                                String? input = await _showInputDialog(
+                                  controller,
+                                  "Wifi SSID",
+                                );
+                                if (input != null) {
                                   List<int> list =
-                                      utf8.encode("wifi_disconnect!");
+                                      utf8.encode("wifi_ssid=$input");
                                   Uint8List bytes = Uint8List.fromList(list);
+                                  _setSettings.setSettings = "wifi_ssid";
+                                  _setSettings.value = input;
                                   BLEUtils.funcWrite(
-                                      bytes, "Success Disonnect Wifi", device);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 10),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey.shade600),
-                                  child: Text(
-                                    "Disconnect Wifi",
-                                    style: GoogleFonts.readexPro(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
+                                      bytes, "Success Set Wifi SSID", device);
+                                }
+                              } catch (e) {
+                                Snackbar.show(
+                                  ScreenSnackbar.uploadsettings,
+                                  "Error click on wifi ssid : $e",
+                                  success: false,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.wifi_rounded,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                    (uploadUsingTxt != "Wifi")
+                        ? const SizedBox()
+                        : SettingsContainer(
+                            title: "Wifi Password",
+                            data: wifiPasswordTxt,
+                            onTap: () async {
+                              try {
+                                String? input = await _showInputDialog(
+                                    controller, "Wifi Password");
+                                if (input != null) {
+                                  List<int> list =
+                                      utf8.encode("wifi_password=$input");
+                                  Uint8List bytes = Uint8List.fromList(list);
+                                  _setSettings.setSettings = "wifi_password";
+                                  _setSettings.value = input;
+                                  BLEUtils.funcWrite(bytes,
+                                      "Success Set Wifi Password", device);
+                                }
+                              } catch (e) {
+                                Snackbar.show(
+                                  ScreenSnackbar.uploadsettings,
+                                  "Error click on wifi password : $e",
+                                  success: false,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.wifi_password_rounded,
+                            ),
+                          ),
+                    (uploadUsingTxt != "Wifi")
+                        ? const SizedBox()
+                        : Padding(
+                            padding: const EdgeInsets.only(
+                                left: 10.0, right: 10, top: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      List<int> list =
+                                          utf8.encode("wifi_connect!");
+                                      Uint8List bytes =
+                                          Uint8List.fromList(list);
+                                      BLEUtils.funcWrite(bytes,
+                                          "Success Connect Wifi", device);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 10),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Colors.green.shade600),
+                                      child: Text(
+                                        "Connect Wifi",
+                                        style: GoogleFonts.readexPro(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 15,
+                                ),
+                                Expanded(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      splashColor: Colors.black,
+                                      onTap: () {
+                                        List<int> list =
+                                            utf8.encode("wifi_disconnect!");
+                                        Uint8List bytes =
+                                            Uint8List.fromList(list);
+                                        BLEUtils.funcWrite(bytes,
+                                            "Success Disonnect Wifi", device);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors.grey.shade600),
+                                        child: Text(
+                                          "Disconnect Wifi",
+                                          style: GoogleFonts.readexPro(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                     SettingsContainer(
                       title: "Modem APN",
                       data: modemApnTxt,
