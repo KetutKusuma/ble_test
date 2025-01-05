@@ -389,7 +389,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
           titlePadding:
               const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
-            "Setup Destination $number",
+            "Setup Destination ${number + 1}",
             style: GoogleFonts.readexPro(
               fontWeight: FontWeight.w500,
             ),

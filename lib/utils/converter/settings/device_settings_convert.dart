@@ -9,15 +9,16 @@ class DeviceStatusConverter {
     String version = BytesConvert.bytesToString(bytes.sublist(17, 25));
     int timeInt = BytesConvert.bytesToInt32(
       bytes.sublist(25, 29),
-      isBigEndian: false,
+      isBigEndian: true,
     );
     String timeString =
         DateTime.fromMillisecondsSinceEpoch((timeInt + 946684800) * 1000)
             .subtract(const Duration(hours: 8))
             .toString();
-    double temperature = BytesConvert.bytesToFloatorDouble(
+
+    double temperature = BytesConvert.bytesToFloatorDoubleV2(
         bytes.sublist(29, 33),
-        isBigEndian: true);
+        isBigEndian: false);
     double battery1 = BytesConvert.bytesToFloatorDouble(bytes.sublist(33, 37),
         isBigEndian: false);
     double battery2 = BytesConvert.bytesToFloatorDouble(bytes.sublist(37, 41),

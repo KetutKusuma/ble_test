@@ -265,19 +265,19 @@ class _BleMainScreenState extends State<BleMainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-          child: const Icon(CupertinoIcons.camera),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CaptureScreen(
-                  device: device,
-                ),
-              ),
-            );
-          }),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // floatingActionButton: FloatingActionButton(
+      //     child: const Icon(CupertinoIcons.camera),
+      //     onPressed: () {
+      //       Navigator.push(
+      //         context,
+      //         MaterialPageRoute(
+      //           builder: (context) => CaptureScreen(
+      //             device: device,
+      //           ),
+      //         ),
+      //       );
+      //     }),
       appBar: AppBar(
         title: const Text('Menu Settings'),
         centerTitle: true,
@@ -480,6 +480,45 @@ class _BleMainScreenState extends State<BleMainScreen> {
                 const SizedBox(
                   height: 15,
                 ),
+                // GestureDetector(
+                //   onTap: () async {
+                //     List<int> list = utf8.encode("reset!");
+                //     Uint8List bytes = Uint8List.fromList(list);
+                //     await BLEUtils.funcWrite(bytes, "Reset success", device);
+                //     await Future.delayed(const Duration(milliseconds: 500));
+                //   },
+                //   child: Container(
+                //     margin: const EdgeInsets.symmetric(horizontal: 10),
+                //     padding: const EdgeInsets.symmetric(
+                //         horizontal: 10, vertical: 10),
+                //     decoration: BoxDecoration(
+                //       color: Colors.amber.shade800,
+                //       borderRadius: BorderRadius.circular(10),
+                //     ),
+                //     width: MediaQuery.of(context).size.width,
+                //     child: Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       crossAxisAlignment: CrossAxisAlignment.center,
+                //       children: [
+                //         const Icon(
+                //           Icons.settings_backup_restore_rounded,
+                //           color: Colors.white,
+                //         ),
+                //         const SizedBox(
+                //           width: 5,
+                //         ),
+                //         Text(
+                //           "Reset",
+                //           style: GoogleFonts.readexPro(
+                //             fontSize: 16,
+                //             color: Colors.white,
+                //             fontWeight: FontWeight.w500,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
                 GestureDetector(
                   onTap: () async {
                     await storage.deleteAll();

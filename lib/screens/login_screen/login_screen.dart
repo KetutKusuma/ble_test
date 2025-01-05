@@ -809,8 +809,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ).then((value) {
                                     firstInt = 0;
                                     isLoginScreen = true;
-                                    userRoleTxtController.clear();
-                                    passwordTxtController.clear();
+                                    // userRoleTxtController.clear();
+                                    // passwordTxtController.clear();
                                   });
                                 } else {
                                   Snackbar.show(ScreenSnackbar.loginscreen,

@@ -12,6 +12,7 @@ import 'package:ble_test/widgets/system_device_tile.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../utils/ble.dart';
 import '../../utils/crypto/crypto.dart';
@@ -387,7 +388,10 @@ class _SearchScreenState extends State<SearchScreen> {
       key: Snackbar.snackBarKeySearchScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Scan Devices'),
+          title: Text(
+            'Scan Devices',
+            style: GoogleFonts.readexPro(),
+          ),
           elevation: 0,
         ),
         body: RefreshIndicator(

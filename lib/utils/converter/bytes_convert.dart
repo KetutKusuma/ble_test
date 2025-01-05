@@ -64,6 +64,23 @@ class BytesConvert {
     }
   }
 
+  static double bytesToFloatorDoubleV2(List<int> bytes,
+      {bool isBigEndian = true}) {
+    try {
+      // Convert the list to a ByteData object
+      ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
+
+      // Read the value as a 32-bit float
+      double value =
+          byteData.getFloat32(0, isBigEndian ? Endian.big : Endian.little);
+
+      return value;
+    } catch (e) {
+      log("error When convert bytes to float v2 : $e");
+      return 0.0;
+    }
+  }
+
   static List<int> bytesToBits(List<int> byteArray) {
     // Convert each byte into bits and flatten into a single list of integers
     return byteArray.expand((byte) {

@@ -231,7 +231,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Dir Image Unset",
+                          title: "Dir Image Unsent",
                           data: dirImageUnsetTxt,
                           onTap: () {},
                           icon: const Icon(

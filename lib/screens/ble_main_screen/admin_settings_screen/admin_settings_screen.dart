@@ -87,6 +87,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool isGetEnable = false;
   String enableTxt = "-";
 
+  // for get print to serial monitor
+  String printToSerialMonitorTxt = "-";
+
   @override
   void initState() {
     // TODO: implement initState
@@ -227,6 +230,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         await BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
         await Future.delayed(const Duration(milliseconds: 800));
         initGetEnable();
+        await Future.delayed(const Duration(milliseconds: 300));
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
@@ -289,18 +293,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       idTxt = result[1].toString();
                       voltCoef1Txt = result[2].toString();
                       voltCoef2Txt = result[3].toString();
-                      brightnessText = (result[4]).toString();
-                      contrastText = (result[5]).toString();
-                      saturationText = (result[6]).toString();
-                      specialEffectText = getSpecialEffectString(result[7]);
-                      hMirrorText = result[8].toString();
-                      vFlipText = result[9].toString();
-                      cameraJpgQualityTxt = result[10].toString();
-                      roleTxt = result[11] == 0
+                      printToSerialMonitorTxt = result[4].toString();
+                      brightnessText = (result[5]).toString();
+                      contrastText = (result[6]).toString();
+                      saturationText = (result[7]).toString();
+                      specialEffectText = getSpecialEffectString(result[8]);
+                      hMirrorText = result[9].toString();
+                      vFlipText = result[10].toString();
+                      cameraJpgQualityTxt = result[11].toString();
+                      roleTxt = result[12] == 0
                           ? "Undifined"
-                          : result[11] == 1
+                          : result[12] == 1
                               ? "Regular"
-                              : result[11] == 2
+                              : result[12] == 2
                                   ? "Gateway"
                                   : "Error";
                     });
@@ -315,6 +320,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     enableTxt = "false";
                   }
                 }
+
                 // this is for set
                 else if (_value.length == 1 && !isGetEnable) {
                   if (_value[0] == 1) {
@@ -358,6 +364,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                               : _setSettings.value == "2"
                                   ? "Gateway"
                                   : "Error";
+                    } else if (_setSettings.setSettings ==
+                        "print_to_serial_monitor") {
+                      printToSerialMonitorTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
                         "Success set ${_setSettings.setSettings}",
@@ -968,8 +977,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                     ),
+
+                    // FOR PRINT TO SERIAL MONITOR
+                    Visibility(
+                      visible: featureB.contains(roleUser),
+                      child: SettingsContainer(
+                        title: "Print to Serial Monitor",
+                        data: printToSerialMonitorTxt,
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Print to Serial Monitor");
+                          if (input != null) {
+                            List<int> list =
+                                utf8.encode("print_to_serial_monitor=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            _setSettings.setSettings =
+                                "print_to_serial_monitor";
+                            _setSettings.value = input.toString();
+                            await BLEUtils.funcWrite(
+                                bytes,
+                                "Set Print to Serial Monitor $input success",
+                                device);
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.print_outlined,
+                        ),
+                      ),
+                    ),
                     const SizedBox(
-                      height: 8,
+                      height: 10,
                     ),
 
                     /// RESET
@@ -1024,7 +1061,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
                         onTap: () async {
-                          List<int> list = utf8.encode("format!");
+                          List<int> list = utf8.encode("must_format!");
                           Uint8List bytes = Uint8List.fromList(list);
                           BLEUtils.funcWrite(
                               bytes, "Set Format success", device);

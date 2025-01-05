@@ -346,8 +346,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         if (input != null) {
                           // Ubah nilai boolean menjadi string "1" untuk true atau "0" untuk false
                           String encodedValue = input ? "1" : "0";
-                          List<int> list =
-                              utf8.encode("receive_enable=$encodedValue");
+                          List<int> list = utf8.encode(
+                              "receive_enable=${encodedValue == "1" ? true : false}");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                             setSettings: "receive_enable",
