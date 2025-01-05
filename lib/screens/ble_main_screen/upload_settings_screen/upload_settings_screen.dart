@@ -569,15 +569,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 // hasScrollBody: false,
                 child: Column(
                   children: [
-                    // Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                    ),
+                    // SettingsContainer(
+                    //   title: "Status",
+                    //   data: statusTxt,
+                    //   onTap: () {},
+                    //   icon: const Icon(
+                    //     CupertinoIcons.settings,
+                    //   ),
+                    // ),
                     SettingsContainer(
                       title: "Server",
                       data: serverTxt,

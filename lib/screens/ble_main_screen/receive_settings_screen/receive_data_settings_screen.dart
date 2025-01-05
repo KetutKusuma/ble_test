@@ -329,14 +329,14 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                 child: Column(
                   children: [
                     // Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                    ),
+                    // SettingsContainer(
+                    //   title: "Status",
+                    //   data: statusTxt,
+                    //   onTap: () {},
+                    //   icon: const Icon(
+                    //     CupertinoIcons.settings,
+                    //   ),
+                    // ),
                     SettingsContainer(
                       title: "Receive Enable",
                       data: receiveEnableTxt,

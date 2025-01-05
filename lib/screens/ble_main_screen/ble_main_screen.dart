@@ -264,134 +264,46 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      // floatingActionButton: FloatingActionButton(
-      //     child: const Icon(CupertinoIcons.camera),
-      //     onPressed: () {
-      //       Navigator.push(
-      //         context,
-      //         MaterialPageRoute(
-      //           builder: (context) => CaptureScreen(
-      //             device: device,
-      //           ),
-      //         ),
-      //       );
-      //     }),
-      appBar: AppBar(
-        title: const Text('Menu Settings'),
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        // actions: [
-        //   Row(
-        //     children: [
-        //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-        //       TextButton(
-        //         onPressed: _isConnecting
-        //             ? onCancelPressed
-        //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-        //         child: Text(
-        //           _isConnecting
-        //               ? "CANCEL"
-        //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-        //           style: Theme.of(context)
-        //               .primaryTextTheme
-        //               .labelLarge
-        //               ?.copyWith(color: Colors.white),
-        //         ),
-        //       )
-        //     ],
-        //   ),
-        // ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Column(
-              children: [
-                FeatureWidget(
-                  visible: featureD.contains(roleUser),
-                  title: "Admin Settings",
-                  icon: const Icon(Icons.admin_panel_settings_outlined),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminSettingsScreen(
-                            device: device,
-                          ),
-                        ));
-                  },
-                ),
-                FeatureWidget(
-                  visible: featureB.contains(roleUser),
-                  title: "Capture Settings",
-                  icon: const Icon(Icons.camera_alt_outlined),
-                  onTap: () {
-                    if (isConnected) {
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Menu Settings'),
+          centerTitle: true,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+        ),
+        body: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  FeatureWidget(
+                    visible: featureD.contains(roleUser),
+                    title: "Admin Settings",
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    onTap: () {
                       Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CaptureSettingsScreen(
-                            device: device,
-                          ),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                ),
-                FeatureWidget(
-                  visible: featureB.contains(roleUser),
-                  title: "Receive Settings",
-                  icon: const Icon(Icons.download_outlined),
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ReceiveDataSettingsScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                ),
-                FeatureWidget(
-                  visible: featureB.contains(roleUser),
-                  title: "Transmit Settings",
-                  icon: const Icon(CupertinoIcons.paperplane),
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              TransmitSettingsScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                ),
-                Visibility(
-                  visible: featureB.contains(roleUser),
-                  child: FeatureWidget(
-                    title: "Upload Settings",
-                    icon: const Icon(Icons.upload_outlined),
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AdminSettingsScreen(
+                              device: device,
+                            ),
+                          ));
+                    },
+                  ),
+                  FeatureWidget(
+                    visible: featureB.contains(roleUser),
+                    title: "Capture Settings",
+                    icon: const Icon(Icons.camera_alt_outlined),
                     onTap: () {
                       if (isConnected) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                UploadSettingsScreen(device: device),
+                            builder: (context) => CaptureSettingsScreen(
+                              device: device,
+                            ),
                           ),
                         );
                       } else {
@@ -399,186 +311,248 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       }
                     },
                   ),
-                ),
-                FeatureWidget(
-                  visible: featureB.contains(roleUser),
-                  title: "Meta Data Settings",
-                  icon: const Icon(Icons.code),
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              MetaDataSettingsScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                ),
-                // FeatureWidget(
-                //   visible: featureD.contains(roleUser),
-                //   title: "Battery",
-                //   onTap: () {
-                //     if (isConnected) {
-                //       Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //           builder: (context) => BatteryScreen(device: device),
-                //         ),
-                //       );
-                //     } else {
-                //       Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                //     }
-                //   },
-                //   icon: const Icon(
-                //     CupertinoIcons.battery_charging,
-                //   ),
-                // ),
-
-                FeatureWidget(
-                  visible: featureC.contains(roleUser),
-                  title: "Device Status",
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DeviceScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                  icon: const Icon(
-                    CupertinoIcons.device_phone_portrait,
-                  ),
-                ),
-                FeatureWidget(
-                  visible: featureC.contains(roleUser),
-                  title: "Set Password",
-                  onTap: () {
-                    if (isConnected) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              SetPasswordScreen(device: device),
-                        ),
-                      );
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.lock_outlined,
-                  ),
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                // GestureDetector(
-                //   onTap: () async {
-                //     List<int> list = utf8.encode("reset!");
-                //     Uint8List bytes = Uint8List.fromList(list);
-                //     await BLEUtils.funcWrite(bytes, "Reset success", device);
-                //     await Future.delayed(const Duration(milliseconds: 500));
-                //   },
-                //   child: Container(
-                //     margin: const EdgeInsets.symmetric(horizontal: 10),
-                //     padding: const EdgeInsets.symmetric(
-                //         horizontal: 10, vertical: 10),
-                //     decoration: BoxDecoration(
-                //       color: Colors.amber.shade800,
-                //       borderRadius: BorderRadius.circular(10),
-                //     ),
-                //     width: MediaQuery.of(context).size.width,
-                //     child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       crossAxisAlignment: CrossAxisAlignment.center,
-                //       children: [
-                //         const Icon(
-                //           Icons.settings_backup_restore_rounded,
-                //           color: Colors.white,
-                //         ),
-                //         const SizedBox(
-                //           width: 5,
-                //         ),
-                //         Text(
-                //           "Reset",
-                //           style: GoogleFonts.readexPro(
-                //             fontSize: 16,
-                //             color: Colors.white,
-                //             fontWeight: FontWeight.w500,
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                GestureDetector(
-                  onTap: () async {
-                    await storage.deleteAll();
-
-                    if (isConnected) {
-                      List<int> list = utf8.encode("logout!");
-                      Uint8List bytes = Uint8List.fromList(list);
-                      BLEUtils.funcWrite(bytes, "Logout success", device);
-                      // ini harusnya dengan disconnect juga
-                      onDisconnectPressed();
-                      if (mounted) {
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                      }
-                    } else {
-                      Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      await Future.delayed(const Duration(seconds: 2));
-                      if (mounted) {
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                      }
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade800,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    width: MediaQuery.of(context).size.width,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.logout_outlined,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          "Logout",
-                          style: GoogleFonts.readexPro(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                  FeatureWidget(
+                    visible: featureB.contains(roleUser),
+                    title: "Receive Settings",
+                    icon: const Icon(Icons.download_outlined),
+                    onTap: () {
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ReceiveDataSettingsScreen(device: device),
                           ),
-                        ),
-                      ],
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
+                    },
+                  ),
+                  FeatureWidget(
+                    visible: featureB.contains(roleUser),
+                    title: "Transmit Settings",
+                    icon: const Icon(CupertinoIcons.paperplane),
+                    onTap: () {
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TransmitSettingsScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
+                    },
+                  ),
+                  Visibility(
+                    visible: featureB.contains(roleUser),
+                    child: FeatureWidget(
+                      title: "Upload Settings",
+                      icon: const Icon(Icons.upload_outlined),
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  UploadSettingsScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(
-                  height: 80,
-                )
-              ],
+                  FeatureWidget(
+                    visible: featureB.contains(roleUser),
+                    title: "Meta Data Settings",
+                    icon: const Icon(Icons.code),
+                    onTap: () {
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MetaDataSettingsScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
+                    },
+                  ),
+                  // FeatureWidget(
+                  //   visible: featureD.contains(roleUser),
+                  //   title: "Battery",
+                  //   onTap: () {
+                  //     if (isConnected) {
+                  //       Navigator.push(
+                  //         context,
+                  //         MaterialPageRoute(
+                  //           builder: (context) => BatteryScreen(device: device),
+                  //         ),
+                  //       );
+                  //     } else {
+                  //       Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                  //     }
+                  //   },
+                  //   icon: const Icon(
+                  //     CupertinoIcons.battery_charging,
+                  //   ),
+                  // ),
+
+                  FeatureWidget(
+                    visible: featureC.contains(roleUser),
+                    title: "Device Status",
+                    onTap: () {
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DeviceScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
+                    },
+                    icon: const Icon(
+                      CupertinoIcons.device_phone_portrait,
+                    ),
+                  ),
+                  FeatureWidget(
+                    visible: featureC.contains(roleUser),
+                    title: "Set Password",
+                    onTap: () {
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                SetPasswordScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.lock_outlined,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CaptureScreen(device: device),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.camera_alt_outlined,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            "Capture",
+                            style: GoogleFonts.readexPro(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      await storage.deleteAll();
+
+                      if (isConnected) {
+                        List<int> list = utf8.encode("logout!");
+                        Uint8List bytes = Uint8List.fromList(list);
+                        BLEUtils.funcWrite(bytes, "Logout success", device);
+                        // ini harusnya dengan disconnect juga
+                        onDisconnectPressed();
+                        if (mounted) {
+                          Navigator.popUntil(context, (route) => route.isFirst);
+                        }
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                        await Future.delayed(const Duration(seconds: 2));
+                        if (mounted) {
+                          Navigator.popUntil(context, (route) => route.isFirst);
+                        }
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade800,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.logout_outlined,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            "Logout",
+                            style: GoogleFonts.readexPro(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  )
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

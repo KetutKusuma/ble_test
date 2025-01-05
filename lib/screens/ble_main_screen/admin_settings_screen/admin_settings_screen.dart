@@ -681,19 +681,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       height: 10,
                     ),
 
-                    // Text("VALUE : $_value"),
-                    SettingsContainer(
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {
-                        // List<int> list = utf8.encode("?");
-                        // Uint8List bytes = Uint8List.fromList(list);
-                        // BLEUtils.funcWrite(bytes, "Success Get Raw Admin");
-                      },
-                    ),
+                    // SettingsContainer(
+                    //   icon: const Icon(
+                    //     CupertinoIcons.settings,
+                    //   ),
+                    //   title: "Status",
+                    //   data: statusTxt,
+                    //   onTap: () {
+                    //     // List<int> list = utf8.encode("?");
+                    //     // Uint8List bytes = Uint8List.fromList(list);
+                    //     // BLEUtils.funcWrite(bytes, "Success Get Raw Admin");
+                    //   },
+                    // ),
                     SettingsContainer(
                       icon: const Icon(Icons.person_outline),
                       title: "ID",

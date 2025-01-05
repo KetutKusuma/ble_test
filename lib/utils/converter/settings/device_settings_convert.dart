@@ -11,11 +11,18 @@ class DeviceStatusConverter {
       bytes.sublist(25, 29),
       isBigEndian: true,
     );
-    String timeString =
+
+    // == for time ==
+    String dateTimeFormatted =
         DateTime.fromMillisecondsSinceEpoch((timeInt + 946684800) * 1000)
             .subtract(const Duration(hours: 8))
-            .toString();
+            .toIso8601String()
+            .split('.')
+            .first;
 
+    String timeString = dateTimeFormatted.replaceFirst('T', ' ');
+
+    // == end for time ==
     double temperature = BytesConvert.bytesToFloatorDoubleV2(
         bytes.sublist(29, 33),
         isBigEndian: false);

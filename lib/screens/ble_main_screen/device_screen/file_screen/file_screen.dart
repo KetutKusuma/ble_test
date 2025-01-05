@@ -200,14 +200,14 @@ class _FilesScreenState extends State<FilesScreen> {
                         vertical: 5.0, horizontal: 0),
                     child: Column(
                       children: [
-                        SettingsContainer(
-                          title: "Status",
-                          data: statusTxt,
-                          onTap: () {},
-                          icon: const Icon(
-                            CupertinoIcons.settings,
-                          ),
-                        ),
+                        // SettingsContainer(
+                        //   title: "Status",
+                        //   data: statusTxt,
+                        //   onTap: () {},
+                        //   icon: const Icon(
+                        //     CupertinoIcons.settings,
+                        //   ),
+                        // ),
                         SettingsContainer(
                           title: "Dir Near",
                           data: dirNearTxt,

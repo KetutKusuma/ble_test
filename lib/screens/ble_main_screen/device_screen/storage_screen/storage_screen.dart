@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -208,14 +207,14 @@ class _StorageScreenState extends State<StorageScreen> {
                         vertical: 5.0, horizontal: 0),
                     child: Column(
                       children: [
-                        SettingsContainer(
-                          title: "Status",
-                          data: statusTxt,
-                          onTap: () {},
-                          icon: const Icon(
-                            CupertinoIcons.settings,
-                          ),
-                        ),
+                        // SettingsContainer(
+                        //   title: "Status",
+                        //   data: statusTxt,
+                        //   onTap: () {},
+                        //   icon: const Icon(
+                        //     CupertinoIcons.settings,
+                        //   ),
+                        // ),
                         SettingsContainer(
                           title: "Total Bytes",
                           data: getTotalBytesTxt,

@@ -419,14 +419,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                 child: Column(
                   children: [
                     // Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                    ),
+                    // SettingsContainer(
+                    //   title: "Status",
+                    //   data: statusTxt,
+                    //   onTap: () {},
+                    //   icon: const Icon(
+                    //     CupertinoIcons.settings,
+                    //   ),
+                    // ),
                     SettingsContainer(
                       title: "Capture Schedule",
                       description: "(Start capture of a day)",
