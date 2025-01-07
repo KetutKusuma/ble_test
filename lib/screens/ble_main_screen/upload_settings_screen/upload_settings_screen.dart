@@ -580,8 +580,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: serverTxt,
                       onTap: () async {
                         try {
+                          controller.text = serverTxt;
                           String? input =
-                              await _showInputDialog(controller, "Server");
+                              await _showInputDialog(controller, "Server")
+                                  .then((value) {
+                            controller.clear();
+                          });
                           if (input != null) {
                             List<int> list = utf8.encode("server=$input");
                             Uint8List bytes = Uint8List.fromList(list);

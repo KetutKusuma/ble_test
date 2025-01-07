@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:ffi';
-
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/capture/capture.dart';
@@ -13,8 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-
-import '../../utils/crc32.dart';
 
 class CaptureScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -176,10 +172,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     // check dulu numbersnya sama atau tidak dengan length captureResultTransmitTemp
                     // jika iya maka tambah
                     // jika tidak maka gantikan dengan nomer tersebut
-                    log("sudah sampai ygy");
+                    log("sudah sampai ygy capture transmit ke - ${captureTransmitResult[0]}");
                     log("adek : ${captureResultTransmitTemp.length} == ${captureTransmitResult[0]}");
                     if (captureResultTransmitTemp.length !=
                         captureTransmitResult[0]) {
+                      log("masuk error");
+                      log("process cek jika temp length != captureResult ke ${captureResultTransmitTemp[0]}");
                       // log("sampai transmit temp tidak sama dengan capture[0] ${captureResultTransmitTemp.length} / numbers : ${captureTransmitResult[0]}");
                       // jika tidak sama maka gantikan
                       // remove
@@ -235,9 +233,33 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
+  // List<int> helperForCheckIfErrorExist() {
+  //   int totalChuckMust = captureResult[2];
+  //   log("total chuck must : $totalChuckMust");
+
+  //   if(captureResultTransmitTemp.length != totalChuckMust) {
+  //     // lakukan pengecekan jika ada data yang kurang
+  //     captureResultTransmitTemp.
+  //   }
+  // }
+
   void helperLastValue() {
+    // check jika ada data captureTranmitResultTempnya yg
+    // kurang dari total chunk
+    // dan juga check jika ada data yang
+    // error (ini data List<dynamic> panjangnya 2)
     try {
+      /// ini untuk check saja
+      List<int> firstElements = captureResultTransmitTemp.map((sublist) {
+        if (sublist is List && sublist.isNotEmpty) {
+          return sublist[0] as int; // Cast to int
+        }
+        return 0; // Default value if sublist is empty or invalid
+      }).toList();
+
+      log("elements first : $firstElements");
       log("helper start ...");
+      log("captureResultTransmitTemp : ${captureResultTransmitTemp.length} != ${captureResult[2]}");
       // check jika length temp sama dengan total chunck
       if (captureResultTransmitTemp.length != captureResult[2]) {
         // check jika squence number sama dengan urutan pada temp
@@ -254,20 +276,23 @@ class _CaptureScreenState extends State<CaptureScreen> {
         //   }
       } else {
         log("sudah masuk lengkap");
-        for (int i = 0; i < captureResultTransmitTemp.length - 1; i++) {
-          List<dynamic> outer = captureResultTransmitTemp[i];
-          // Add the first sublist of each outer list to the result
-          totalChunkData.addAll(outer[2]);
-        }
-        // log("total chunk : $totalChunkData");
-        if (mounted) {
-          setState(() {
-            isCaptureDone = true;
-          });
-        }
       }
     } catch (e) {
       log("error when helper last value : $e");
+    }
+  }
+
+  helperInsertToChuckData() {
+    for (int i = 0; i < captureResultTransmitTemp.length - 1; i++) {
+      List<dynamic> outer = captureResultTransmitTemp[i];
+      // Add the first sublist of each outer list to the result
+      totalChunkData.addAll(outer[2]);
+    }
+    // log("total chunk : $totalChunkData");
+    if (mounted) {
+      setState(() {
+        isCaptureDone = true;
+      });
     }
   }
 
@@ -299,6 +324,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // log("isCapture = $isCaptureDone");
     return ScaffoldMessenger(
       key: Snackbar.snackBarCapture,
       child: Scaffold(
@@ -399,6 +425,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         totalChunkData.clear();
                         captureResultTransmitTemp.clear();
                         captureResult.clear();
+                        await Future.delayed(const Duration(milliseconds: 300));
                         List<int> list = utf8.encode("capture!500");
                         Uint8List bytes = Uint8List.fromList(list);
                         BLEUtils.funcWrite(bytes, "Success Capture!", device);

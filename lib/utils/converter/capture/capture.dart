@@ -18,6 +18,7 @@ class CaptureConverter {
     // log("MASUK CONVERTER SEQUENCE CAPTURE");
     int chuckSquenceNumber =
         BytesConvert.bytesToInt16(bytes.sublist(0, 2), isBigEndian: true);
+    log("chuck squence number : $chuckSquenceNumber");
     int lengthInt = byteData.getUint16(2, Endian.big);
     // -- FOR CHUNK DATA --
 
@@ -45,9 +46,9 @@ class CaptureConverter {
         chuckSquenceNumber,
         error,
       ];
+    } else {
+      return [chuckSquenceNumber, lengthInt, chunkData, crc32];
     }
-
-    return [chuckSquenceNumber, lengthInt, chunkData, crc32];
   }
 
   static List<dynamic> convertManifestCapture(List<int> bytes) {

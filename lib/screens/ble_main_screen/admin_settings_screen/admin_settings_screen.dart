@@ -698,6 +698,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       title: "ID",
                       data: idTxt,
                       onTap: () async {
+                        idTxtController.text = idTxt;
                         String? input = await _showInputDialog(
                           idTxtController,
                           "New ID",
@@ -1194,10 +1195,12 @@ class SettingsContainer extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(
+                width: 10,
+              ),
               Expanded(
                 flex: 3,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
+                child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     data,
