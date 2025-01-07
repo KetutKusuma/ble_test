@@ -57,6 +57,25 @@ class _CaptureScreenState extends State<CaptureScreen> {
   final ValueNotifier<bool> isCaptureCommandNotifier =
       ValueNotifier<bool>(false);
 
+  // for count down
+  int countdown = 2; // Start countdown from 2 seconds
+  Timer? timer;
+
+  void startCountdown() {
+    log("start count down ....");
+    timer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+      if (countdown > 0) {
+        setState(() {
+          countdown--;
+        });
+      } else {
+        timer.cancel(); // Stop the timer
+        // Optionally perform an action here
+        print("Countdown completed!");
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +110,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   void dispose() {
+    if (timer != null) {
+      timer!.cancel();
+    }
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
@@ -174,19 +196,24 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     // jika tidak maka gantikan dengan nomer tersebut
                     log("sudah sampai ygy capture transmit ke - ${captureTransmitResult[0]}");
                     log("adek : ${captureResultTransmitTemp.length} == ${captureTransmitResult[0]}");
+
                     if (captureResultTransmitTemp.length !=
                         captureTransmitResult[0]) {
                       log("masuk error");
-                      log("process cek jika temp length != captureResult ke ${captureResultTransmitTemp[0]}");
+                      // log("process cek jika temp length != captureResult ke ${captureResultTransmitTemp[0]}");
                       // log("sampai transmit temp tidak sama dengan capture[0] ${captureResultTransmitTemp.length} / numbers : ${captureTransmitResult[0]}");
                       // jika tidak sama maka gantikan
                       // remove
+                      // !HOLD check jika data ada atau tidak kalau ada remove
+                      // !HOLD kalau tidak insert sesuai dengan data tersebut
+                      // !HOLD if()
+                      // log("hasil perbaikan result transmit : $captureResultTransmitTemp");
+
                       captureResultTransmitTemp
                           .removeAt(captureTransmitResult[0]);
                       // insert new
                       captureResultTransmitTemp.insert(
                           captureTransmitResult[0], captureTransmitResult);
-                      helperLastValue();
                     } else {
                       log("sampai add transmit temp");
                       // jika sama maka tambah saja
@@ -208,8 +235,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
                       // jika tidak maka tambah dan lakukan helper last value
                       else {
                         captureResultTransmitTemp.add(captureTransmitResult);
-                        helperLastValue();
+                        if (captureResultTransmitTemp.length ==
+                            captureResult[2]) {
+                          helperInsertToChuckData();
+                        }
+                        setState(() {
+                          isCaptureDone = true;
+                        });
+                        log("countdownnya disini berapa $countdown");
                       }
+                    }
+
+                    // test
+                    if (captureResultTransmitTemp.length ==
+                        captureTransmitResult[0]) {
+                      if (captureResultTransmitTemp.length ==
+                          captureResult[2]) {
+                        helperInsertToChuckData();
+                      }
+                      setState(() {
+                        isCaptureDone = true;
+                      });
                     }
                   } catch (e) {
                     log("error when get squance chunck : $e");
@@ -233,17 +279,23 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
-  // List<int> helperForCheckIfErrorExist() {
-  //   int totalChuckMust = captureResult[2];
-  //   log("total chuck must : $totalChuckMust");
+  List<int> helperForCheckIfErrorExist(List<List<dynamic>> value) {
+    int totalChuckMust = captureResult[2];
+    log("total chuck must : $totalChuckMust");
+    List<int> existingIndexes = value.map((e) => e[0] as int).toList();
+    // Cari angka yang hilang
+    List<int> missingIndexes = List.generate(totalChuckMust, (i) => i)
+        .where((i) => !existingIndexes.contains(i))
+        .toList();
 
-  //   if(captureResultTransmitTemp.length != totalChuckMust) {
-  //     // lakukan pengecekan jika ada data yang kurang
-  //     captureResultTransmitTemp.
-  //   }
-  // }
+    if (missingIndexes.isNotEmpty) {
+      return missingIndexes;
+    } else {
+      return [];
+    }
+  }
 
-  void helperLastValue() {
+  void helperLastValue() async {
     // check jika ada data captureTranmitResultTempnya yg
     // kurang dari total chunk
     // dan juga check jika ada data yang
@@ -258,24 +310,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
       }).toList();
 
       log("elements first : $firstElements");
-      log("helper start ...");
       log("captureResultTransmitTemp : ${captureResultTransmitTemp.length} != ${captureResult[2]}");
       // check jika length temp sama dengan total chunck
-      if (captureResultTransmitTemp.length != captureResult[2]) {
-        // check jika squence number sama dengan urutan pada temp
-        log("tidak sama");
-        // for (int i = 0; i < captureResultTransmitTemp.length - 1; i++) {
-        //   if (captureResultTransmitTemp[i][0] != i) {
-        //     // jika tidak sama maka akan disort ulang
-        //     captureResultTransmitTemp.sort(
-        //       (a, b) => a[0].compareTo(
-        //         b[0],
-        //       ),
-        //     );
-        //     break;
-        //   }
-      } else {
+      if (captureResult[2] != firstElements.length) {
+        List<int> listMissingorError =
+            helperForCheckIfErrorExist(captureResultTransmitTemp);
+        if (listMissingorError.isNotEmpty) {
+          for (var indexError in listMissingorError) {
+            await Future.delayed(const Duration(milliseconds: 200));
+            log("missing or error index on - $indexError");
+            List<int> list = utf8.encode("capture_transmit!$indexError");
+            Uint8List bytes = Uint8List.fromList(list);
+            BLEUtils.funcWrite(
+              bytes,
+              "Success Capture Transmit fixing $indexError",
+              device,
+            );
+          }
+        }
+      } else if (captureResult[2] == firstElements.length) {
         log("sudah masuk lengkap");
+        helperInsertToChuckData();
       }
     } catch (e) {
       log("error when helper last value : $e");
@@ -429,6 +484,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         List<int> list = utf8.encode("capture!500");
                         Uint8List bytes = Uint8List.fromList(list);
                         BLEUtils.funcWrite(bytes, "Success Capture!", device);
+
+                        await Future.delayed(const Duration(seconds: 6));
+                        helperLastValue();
                       } catch (e) {
                         Snackbar.show(
                             ScreenSnackbar.capture, "Error Capture! : $e",
