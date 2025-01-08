@@ -57,6 +57,25 @@ class _CaptureScreenState extends State<CaptureScreen> {
   final ValueNotifier<bool> isCaptureCommandNotifier =
       ValueNotifier<bool>(false);
 
+  // for count down
+  int countdown = 2; // Start countdown from 2 seconds
+  Timer? timer;
+
+  void startCountdown() {
+    log("start count down ....");
+    timer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+      if (countdown > 0) {
+        setState(() {
+          countdown--;
+        });
+      } else {
+        timer.cancel(); // Stop the timer
+        // Optionally perform an action here
+        print("Countdown completed!");
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +110,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   void dispose() {
+    if (timer != null) {
+      timer!.cancel();
+    }
     if (_lastValueSubscription != null) {
       _lastValueSubscription!.cancel();
     }
@@ -220,6 +242,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         setState(() {
                           isCaptureDone = true;
                         });
+                        log("countdownnya disini berapa $countdown");
                       }
                     }
 

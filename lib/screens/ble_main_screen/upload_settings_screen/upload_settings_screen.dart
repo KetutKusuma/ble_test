@@ -579,20 +579,20 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       title: "Server",
                       data: serverTxt,
                       onTap: () async {
+                        log("masokkk");
                         try {
                           controller.text = serverTxt;
                           String? input =
-                              await _showInputDialog(controller, "Server")
-                                  .then((value) {
-                            controller.clear();
-                          });
+                              await _showInputDialog(controller, "Server");
+                          log("input : $input");
                           if (input != null) {
                             List<int> list = utf8.encode("server=$input");
                             Uint8List bytes = Uint8List.fromList(list);
                             _setSettings.setSettings = "server";
                             _setSettings.value = input;
-                            BLEUtils.funcWrite(
+                            await BLEUtils.funcWrite(
                                 bytes, "Success Set Server", device);
+                            controller.clear();
                           }
                         } catch (e) {
                           Snackbar.show(

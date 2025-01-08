@@ -980,7 +980,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
                     // FOR PRINT TO SERIAL MONITOR
                     Visibility(
-                      visible: featureB.contains(roleUser),
+                      visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         title: "Print to Serial Monitor",
                         data: printToSerialMonitorTxt,
