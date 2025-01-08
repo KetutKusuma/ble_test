@@ -193,6 +193,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                       // jika tidak sama maka gantikan
                       // remove
                       // ? =========================
+                      log("masuk perbaikan missing : ${helperCheckMissingData(captureResultTransmitTemp)}");
                       if (helperCheckMissingData(captureResultTransmitTemp)
                           .contains(captureTransmitResult[0])) {
                         log("masuk perbaikan jika ada missing");
@@ -253,15 +254,31 @@ class _CaptureScreenState extends State<CaptureScreen> {
         .add(captureResultTransmitTemp); // Emit updated list to the stream
 
     // Reset debounce timer
-    Duration dura = const Duration(milliseconds: 500);
+    Duration dura = const Duration(milliseconds: 2000);
     debounceTimer?.cancel();
     debounceTimer = Timer(dura, () {
       log("data sudah tidak dapat selama ${dura.inMilliseconds} miliseconds");
-      helperInsertToChuckData();
+      List<int> listMissingorError =
+          helperIfErrorOrMissingExist(captureResultTransmitTemp);
+      log("list missing error : $listMissingorError");
+      if (listMissingorError.isNotEmpty) {
+        for (var indexError in listMissingorError) {
+          log("missing or error index on - $indexError");
+          List<int> list = utf8.encode("capture_transmit!$indexError");
+          Uint8List bytes = Uint8List.fromList(list);
+          BLEUtils.funcWrite(
+            bytes,
+            "Success Capture Transmit fixing $indexError",
+            device,
+          );
+        }
+      } else {
+        helperInsertToChuckData();
+      }
     });
   }
 
-  List<int> helperForCheckIfErrorExist(List<List<dynamic>> value) {
+  List<int> helperIfErrorOrMissingExist(List<List<dynamic>> value) {
     // check jika length temp sama dengan total chunck
     int totalChuckMust = captureResult[2];
     log("total chuck must : $totalChuckMust");
