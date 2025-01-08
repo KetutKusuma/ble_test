@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/capture/capture.dart';
+import 'package:ble_test/utils/crc32.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
@@ -50,12 +51,21 @@ class _CaptureScreenState extends State<CaptureScreen> {
   bool isCaptureTransmit = false;
 
   List<dynamic> captureResult = [];
-  List<List<dynamic>> captureResultTransmitTemp = [];
+
   List<int> totalChunkData = [];
   bool isCaptureDone = false;
 
   final ValueNotifier<bool> isCaptureCommandNotifier =
       ValueNotifier<bool>(false);
+
+  // new trick for capture
+  List<List<dynamic>> captureResultTransmitTemp = []; // ini pasti dipakai
+
+  Stream<List<List<dynamic>>> get streamCaptureTransmitTemp =>
+      _captureTransmitStreamController.stream;
+  final StreamController<List<List<dynamic>>> _captureTransmitStreamController =
+      StreamController<List<List<dynamic>>>.broadcast();
+  Timer? debounceTimer;
 
   @override
   void initState() {
@@ -177,62 +187,34 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
                     if (captureResultTransmitTemp.length !=
                         captureTransmitResult[0]) {
-                      log("masuk error");
+                      log("masuk perbaikan");
                       // log("process cek jika temp length != captureResult ke ${captureResultTransmitTemp[0]}");
                       // log("sampai transmit temp tidak sama dengan capture[0] ${captureResultTransmitTemp.length} / numbers : ${captureTransmitResult[0]}");
                       // jika tidak sama maka gantikan
                       // remove
-                      // !HOLD check jika data ada atau tidak kalau ada remove
-                      // !HOLD kalau tidak insert sesuai dengan data tersebut
-                      // !HOLD if()
-                      // log("hasil perbaikan result transmit : $captureResultTransmitTemp");
-
-                      captureResultTransmitTemp
-                          .removeAt(captureTransmitResult[0]);
-                      // insert new
-                      captureResultTransmitTemp.insert(
-                          captureTransmitResult[0], captureTransmitResult);
+                      // ? =========================
+                      if (helperCheckMissingData(captureResultTransmitTemp)
+                          .contains(captureTransmitResult[0])) {
+                        log("masuk perbaikan jika ada missing");
+                        // cek jika data captureTransmit[0] (chunck number) ada pada data yg missing
+                        // maka lakukan insert
+                        captureResultTransmitTemp.insert(
+                            captureTransmitResult[0], captureTransmitResult);
+                        addData(captureTransmitResult);
+                      } else {
+                        log("masuk perbaikan jika ada error");
+                        // jika tidak maka lakukan remove pada index tersebut
+                        // lalu insert
+                        captureResultTransmitTemp
+                            .removeAt(captureTransmitResult[0]);
+                        captureResultTransmitTemp.insert(
+                            captureTransmitResult[0], captureTransmitResult);
+                        addData(captureTransmitResult);
+                      }
                     } else {
-                      log("sampai add transmit temp");
-                      // jika sama maka tambah saja
-
-                      // tapi di cek jika hasilnya error atau cuma dapat 2 data saja
-                      if (captureTransmitResult.length == 2) {
-                        log("errornya adalah  : ${captureTransmitResult[1]}");
-                        captureResultTransmitTemp.add(captureTransmitResult);
-                        // lakukan pengambilan secara manual
-                        List<int> list = utf8.encode(
-                            "capture_transmit!${captureTransmitResult[0]}");
-                        Uint8List bytes = Uint8List.fromList(list);
-                        BLEUtils.funcWrite(
-                          bytes,
-                          "Success Capture Transmit fixing ${captureTransmitResult[0]}",
-                          device,
-                        );
-                      }
-                      // jika tidak maka tambah dan lakukan helper last value
-                      else {
-                        captureResultTransmitTemp.add(captureTransmitResult);
-                        if (captureResultTransmitTemp.length ==
-                            captureResult[2]) {
-                          helperInsertToChuckData();
-                        }
-                        setState(() {
-                          isCaptureDone = true;
-                        });
-                      }
-                    }
-
-                    // test
-                    if (captureResultTransmitTemp.length ==
-                        captureTransmitResult[0]) {
-                      if (captureResultTransmitTemp.length ==
-                          captureResult[2]) {
-                        helperInsertToChuckData();
-                      }
-                      setState(() {
-                        isCaptureDone = true;
-                      });
+                      // insert new
+                      captureResultTransmitTemp.add(captureTransmitResult);
+                      addData(captureTransmitResult);
                     }
                   } catch (e) {
                     log("error when get squance chunck : $e");
@@ -256,62 +238,58 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
+  /// stream capture transmit temp ini test
+  void addData(List<dynamic> data) {
+    List<int> firstElements = captureResultTransmitTemp.map((sublist) {
+      // ignore: unnecessary_type_check
+      if (sublist is List && sublist.isNotEmpty) {
+        return sublist[0] as int; // Cast to int
+      }
+      return 0; // Default value if sublist is empty or invalid
+    }).toList();
+
+    log("elements first : $firstElements");
+    _captureTransmitStreamController
+        .add(captureResultTransmitTemp); // Emit updated list to the stream
+
+    // Reset debounce timer
+    Duration dura = const Duration(milliseconds: 500);
+    debounceTimer?.cancel();
+    debounceTimer = Timer(dura, () {
+      log("data sudah tidak dapat selama ${dura.inMilliseconds} miliseconds");
+      helperInsertToChuckData();
+    });
+  }
+
   List<int> helperForCheckIfErrorExist(List<List<dynamic>> value) {
+    // check jika length temp sama dengan total chunck
     int totalChuckMust = captureResult[2];
     log("total chuck must : $totalChuckMust");
+    if (totalChuckMust == value.length) {
+      /// lakukan pengecekan jika terjadi error
+      List<int> numbers = value
+          .where((sublist) => sublist.length == 2)
+          .map((sublist) => sublist[0] as int)
+          .toList();
+
+      return numbers;
+    } else {
+      List<int> missingIndexes = helperCheckMissingData(value);
+
+      return missingIndexes;
+    }
+  }
+
+  List<int> helperCheckMissingData(List<List<dynamic>> value) {
+    int totalChuckMust = captureResult[2];
+    log("total chuck must : $totalChuckMust");
+    // jika tidak cari
     List<int> existingIndexes = value.map((e) => e[0] as int).toList();
     // Cari angka yang hilang
     List<int> missingIndexes = List.generate(totalChuckMust, (i) => i)
         .where((i) => !existingIndexes.contains(i))
         .toList();
-
-    if (missingIndexes.isNotEmpty) {
-      return missingIndexes;
-    } else {
-      return [];
-    }
-  }
-
-  void helperLastValue() async {
-    // check jika ada data captureTranmitResultTempnya yg
-    // kurang dari total chunk
-    // dan juga check jika ada data yang
-    // error (ini data List<dynamic> panjangnya 2)
-    try {
-      /// ini untuk check saja
-      List<int> firstElements = captureResultTransmitTemp.map((sublist) {
-        if (sublist is List && sublist.isNotEmpty) {
-          return sublist[0] as int; // Cast to int
-        }
-        return 0; // Default value if sublist is empty or invalid
-      }).toList();
-
-      log("elements first : $firstElements");
-      log("captureResultTransmitTemp : ${captureResultTransmitTemp.length} != ${captureResult[2]}");
-      // check jika length temp sama dengan total chunck
-      if (captureResult[2] != firstElements.length) {
-        List<int> listMissingorError =
-            helperForCheckIfErrorExist(captureResultTransmitTemp);
-        if (listMissingorError.isNotEmpty) {
-          for (var indexError in listMissingorError) {
-            await Future.delayed(const Duration(milliseconds: 200));
-            log("missing or error index on - $indexError");
-            List<int> list = utf8.encode("capture_transmit!$indexError");
-            Uint8List bytes = Uint8List.fromList(list);
-            BLEUtils.funcWrite(
-              bytes,
-              "Success Capture Transmit fixing $indexError",
-              device,
-            );
-          }
-        }
-      } else if (captureResult[2] == firstElements.length) {
-        log("sudah masuk lengkap");
-        helperInsertToChuckData();
-      }
-    } catch (e) {
-      log("error when helper last value : $e");
-    }
+    return missingIndexes;
   }
 
   helperInsertToChuckData() {
@@ -320,6 +298,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
       // Add the first sublist of each outer list to the result
       totalChunkData.addAll(outer[2]);
     }
+    // cuma untuk ngecek
+    int captureResultCrc32 = captureResult[3];
+    int totalChunkCrc32 = CRC32.compute(totalChunkData);
+    log("(totalChunkCrc3) $totalChunkCrc32 == $captureResultCrc32 (captureResultCrc32)");
+
     // log("total chunk : $totalChunkData");
     if (mounted) {
       setState(() {
@@ -463,7 +446,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         BLEUtils.funcWrite(bytes, "Success Capture!", device);
 
                         await Future.delayed(const Duration(seconds: 6));
-                        helperLastValue();
                       } catch (e) {
                         Snackbar.show(
                             ScreenSnackbar.capture, "Error Capture! : $e",
