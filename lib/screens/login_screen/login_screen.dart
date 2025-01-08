@@ -124,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
     macAddressTxtConroller.clear();
     idTxtController.clear();
     valueHandshake.clear();
+    indexPage = 0;
   }
 
   void getAppInfo() async {
@@ -604,6 +605,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   itemCount: pageListPumpDetail.length,
                   itemBuilder: (context, index) {
+                    // log("index page : $indexPage , index : $index");
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: GestureDetector(

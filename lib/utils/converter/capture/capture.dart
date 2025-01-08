@@ -6,6 +6,8 @@ import 'package:ble_test/utils/crc32.dart';
 
 import '../bytes_convert.dart';
 
+// List<int> mama = [];
+
 class CaptureConverter {
   static List<dynamic> convertSquenceCapture(
       List<int> bytes, int lengthByteChunk) {
@@ -23,6 +25,9 @@ class CaptureConverter {
     // -- FOR CHUNK DATA --
 
     List<int> chunkData = bytes.sublist(4, lengthInt + 4);
+    // mama.addAll(bytes.sublist(4, 500 - 4));
+    // log("papa : ${base64.encode(mama)}");
+    // List<int> chunkData = bytes.sublist(4, 500);
 
     // List<int> sublistCrc32 = bytes.sublist(lengthInt + 4, lengthInt + 8);
     int crc32 = byteData.getUint32((lengthInt + 4), Endian.big);

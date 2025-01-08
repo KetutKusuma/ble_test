@@ -254,7 +254,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         .add(captureResultTransmitTemp); // Emit updated list to the stream
 
     // Reset debounce timer
-    Duration dura = const Duration(milliseconds: 2000);
+    Duration dura = const Duration(milliseconds: 1000);
     debounceTimer?.cancel();
     debounceTimer = Timer(dura, () {
       log("data sudah tidak dapat selama ${dura.inMilliseconds} miliseconds");
@@ -280,7 +280,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   List<int> helperIfErrorOrMissingExist(List<List<dynamic>> value) {
     // check jika length temp sama dengan total chunck
-    int totalChuckMust = captureResult[2];
+    int? totalChuckMust = 0;
+    if (captureResult[2] != null) {
+      totalChuckMust = captureResult[2];
+    } else {
+      return [];
+    }
     log("total chuck must : $totalChuckMust");
     if (totalChuckMust == value.length) {
       /// lakukan pengecekan jika terjadi error
@@ -315,6 +320,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       // Add the first sublist of each outer list to the result
       totalChunkData.addAll(outer[2]);
     }
+    // log("MAMA : \n${base64Encode(totalChunkData)}");
     // cuma untuk ngecek
     int captureResultCrc32 = captureResult[3];
     int totalChunkCrc32 = CRC32.compute(totalChunkData);
@@ -357,127 +363,137 @@ class _CaptureScreenState extends State<CaptureScreen> {
   @override
   Widget build(BuildContext context) {
     // log("isCapture = $isCaptureDone");
-    return ScaffoldMessenger(
-      key: Snackbar.snackBarCapture,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Capture Screen"),
-          elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
-        ),
-        body: CustomScrollView(
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Text("Value : $_value, ${_value.length}"),
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 10),
-                    padding: const EdgeInsets.all(5),
-                    width: MediaQuery.of(context).size.width,
-                    height: 290,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black26),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: !isCaptureDone && totalChunkData.isEmpty
-                        ? const Icon(
-                            CupertinoIcons.photo,
-                            color: Colors.black45,
-                            size: 40,
-                          )
-                        : isCaptureDone && totalChunkData.isEmpty
-                            ? const SizedBox(
-                                height: 30,
-                                width: 30,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            : GestureDetector(
-                                onTap: () {
-                                  _showZoomableImageDialog(
-                                    context,
-                                    Uint8List.fromList(totalChunkData),
-                                  );
-                                },
-                                child: FittedBox(
-                                  child: Center(
-                                    child: Image.memory(
+    return WillPopScope(
+      onWillPop: () async {
+        if (isCaptureDone) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      child: ScaffoldMessenger(
+        key: Snackbar.snackBarCapture,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text("Capture Screen"),
+            elevation: 0,
+            // actions: [
+            //   Row(
+            //     children: [
+            //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
+            //       TextButton(
+            //         onPressed: _isConnecting
+            //             ? onCancelPressed
+            //             : (isConnected ? onDisconnectPressed : onConnectPressed),
+            //         child: Text(
+            //           _isConnecting
+            //               ? "CANCEL"
+            //               : (isConnected ? "DISCONNECT" : "CONNECT"),
+            //           style: Theme.of(context)
+            //               .primaryTextTheme
+            //               .labelLarge
+            //               ?.copyWith(color: Colors.white),
+            //         ),
+            //       )
+            //     ],
+            //   ),
+            // ],
+          ),
+          body: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Text("Value : $_value, ${_value.length}"),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 10),
+                      padding: const EdgeInsets.all(5),
+                      width: MediaQuery.of(context).size.width,
+                      height: 290,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black26),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: !isCaptureDone && totalChunkData.isEmpty
+                          ? const Icon(
+                              CupertinoIcons.photo,
+                              color: Colors.black45,
+                              size: 40,
+                            )
+                          : isCaptureDone && totalChunkData.isEmpty
+                              ? const SizedBox(
+                                  height: 30,
+                                  width: 30,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : GestureDetector(
+                                  onTap: () {
+                                    _showZoomableImageDialog(
+                                      context,
                                       Uint8List.fromList(totalChunkData),
-                                      fit: BoxFit.fill,
-                                      scale: 1,
+                                    );
+                                  },
+                                  child: FittedBox(
+                                    child: Center(
+                                      child: Image.memory(
+                                        Uint8List.fromList(totalChunkData),
+                                        fit: BoxFit.fill,
+                                        scale: 1,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                  ),
+                    ),
 
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 20),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(15), // Set the corner radius
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              15), // Set the corner radius
+                        ),
+                      ),
+                      onPressed: () async {
+                        try {
+                          isCaptureDone = true;
+                          setState(() {});
+
+                          // diatas tes
+                          totalChunkData.clear();
+                          captureResultTransmitTemp.clear();
+                          captureResult.clear();
+                          await Future.delayed(
+                              const Duration(milliseconds: 300));
+                          List<int> list = utf8.encode("capture!500");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(bytes, "Success Capture!", device);
+
+                          await Future.delayed(const Duration(seconds: 6));
+                        } catch (e) {
+                          Snackbar.show(
+                              ScreenSnackbar.capture, "Error Capture! : $e",
+                              success: false);
+                        }
+                      },
+                      child: const Icon(
+                        Icons.camera,
+                        size: 35,
                       ),
                     ),
-                    onPressed: () async {
-                      try {
-                        isCaptureDone = true;
-                        setState(() {});
-
-                        // diatas tes
-                        totalChunkData.clear();
-                        captureResultTransmitTemp.clear();
-                        captureResult.clear();
-                        await Future.delayed(const Duration(milliseconds: 300));
-                        List<int> list = utf8.encode("capture!500");
-                        Uint8List bytes = Uint8List.fromList(list);
-                        BLEUtils.funcWrite(bytes, "Success Capture!", device);
-
-                        await Future.delayed(const Duration(seconds: 6));
-                      } catch (e) {
-                        Snackbar.show(
-                            ScreenSnackbar.capture, "Error Capture! : $e",
-                            success: false);
-                      }
-                    },
-                    child: const Icon(
-                      Icons.camera,
-                      size: 35,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          ],
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
