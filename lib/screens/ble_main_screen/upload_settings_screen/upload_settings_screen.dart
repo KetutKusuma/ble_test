@@ -611,6 +611,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: portTxt,
                       onTap: () async {
                         try {
+                          portController.text = portTxt;
                           String? input = await _showInputDialog(
                             portController,
                             "Upload Port",
@@ -749,6 +750,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: uploadInitialDelayTxt,
                       onTap: () async {
                         try {
+                          controller.text = uploadInitialDelayTxt;
                           String? input = await _showInputDialog(
                               controller, "Upload Initial Delay",
                               inputFormatters: [
@@ -918,6 +920,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: modemApnTxt,
                       onTap: () async {
                         try {
+                          controller.text = modemApnTxt;
                           String? input =
                               await _showInputDialog(controller, "Modem APN");
                           if (input != null) {

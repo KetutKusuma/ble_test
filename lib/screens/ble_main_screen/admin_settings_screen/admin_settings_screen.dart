@@ -727,6 +727,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         title: "Volt Coef 1",
                         data: voltCoef1Txt,
                         onTap: () async {
+                          voltageCoefTxtController.text = voltCoef1Txt;
                           String? input = await _showInputDialogVoltage(
                               voltageCoefTxtController);
                           if (input != null) {
@@ -748,6 +749,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         title: "Volt Coef 2",
                         data: voltCoef2Txt,
                         onTap: () async {
+                          voltageCoefTxtController.text = voltCoef2Txt;
                           String? input = await _showInputDialogVoltage(
                               voltageCoefTxtController);
                           if (input != null) {
@@ -909,6 +911,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         title: "Camera Jpeg Quality",
                         data: cameraJpgQualityTxt,
                         onTap: () async {
+                          cameraJpegQualityController.text =
+                              cameraJpgQualityTxt;
                           String? input = await _showInputDialog(
                             cameraJpegQualityController,
                             "Camera Jpeg Quality",

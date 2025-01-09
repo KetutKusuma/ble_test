@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/meta_data_settings_convert.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -29,8 +25,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
   StreamSubscription<List<int>>? _lastValueSubscription;
@@ -101,8 +95,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         }
       }
     });
-    initGetRawMetaData();
     initDiscoverServices();
+    initGetRawMetaData();
   }
 
   @override
@@ -133,6 +127,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   initGetRawMetaData() async {
     try {
+      log("masuk ke init raw meta data");
       if (isConnected) {
         List<int> list = utf8.encode("raw_meta_data?");
         Uint8List bytes = Uint8List.fromList(list);
@@ -399,6 +394,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Meter SN",
                       data: meterSnTxt,
                       onTap: () async {
+                        meterSnTxtController.text = meterSnTxt;
                         String? input = await _showInputDialog(
                             meterSnTxtController, "Meter Sn");
                         if (input != null && input.isNotEmpty) {
@@ -418,6 +414,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Meter Seal",
                       data: meterSealTxt,
                       onTap: () async {
+                        meterSealTxtController.text = meterSealTxt;
                         String? input = await _showInputDialog(
                             meterSealTxtController, "Meter Seal");
                         if (input != null && input.isNotEmpty) {
@@ -437,6 +434,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Time UTC",
                       data: timeUTCTxt,
                       onTap: () async {
+                        timeUTCTxtController.text = timeUTCTxt;
                         String? input =
                             await _showInputDialogTimeUTC(timeUTCTxtController);
                         if (input != null) {
@@ -479,8 +477,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   Future onConnectPressed() async {
     try {
-      await device.connectAndUpdateStream();
       // initDiscoverServices();
+      await device.connectAndUpdateStream();
       Snackbar.show(ScreenSnackbar.metadatasettings, "Connect: Success",
           success: true);
     } catch (e) {

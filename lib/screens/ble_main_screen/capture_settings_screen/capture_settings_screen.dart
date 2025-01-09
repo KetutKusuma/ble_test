@@ -469,6 +469,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       data: captureIntervalTxt,
                       onTap: () async {
                         if (isConnected) {
+                          controller.text = captureIntervalTxt;
                           String? input = await _showInputDialog(
                               controller, "Capture Interval",
                               label: "repetition capture");
@@ -493,6 +494,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       data: captureCountTxt,
                       onTap: () async {
                         if (isConnected) {
+                          controller.text = captureCountTxt;
                           String? input = await _showInputDialog(
                               controller, "Capture Count",
                               label: "how many repetitions a day");
@@ -519,6 +521,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       data: captureRecentLimitTxt,
                       onTap: () async {
                         if (isConnected) {
+                          controller.text = captureRecentLimitTxt;
                           String? input = await _showInputDialog(
                             controller,
                             "Capture Recent Limit",
@@ -666,6 +669,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       data: spCaptrueIntervalTxt,
                       onTap: () async {
                         if (isConnected) {
+                          controller.text = spCaptrueIntervalTxt;
                           String? input = await _showInputDialog(
                               controller, "Special Capture Interval",
                               label: "repetition capture");
@@ -691,6 +695,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       data: spCaptureCountTxt,
                       onTap: () async {
                         if (isConnected) {
+                          controller.text = spCaptureCountTxt;
                           String? input = await _showInputDialog(
                             controller,
                             "Special Capture Count",

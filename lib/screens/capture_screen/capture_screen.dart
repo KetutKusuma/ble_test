@@ -140,7 +140,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 // log("is notifying ga nih : ${characters.isNotifying}");
                 _value = value;
 
-                // log("VALUE : $_value, ${_value.length}");
+                log("VALUE : $_value, ${_value.length}");
 
                 /// this is for receive image
                 // if (isCaptureTransmit) {}
@@ -281,10 +281,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
   List<int> helperIfErrorOrMissingExist(List<List<dynamic>> value) {
     // check jika length temp sama dengan total chunck
     int? totalChuckMust = 0;
-    if (captureResult[2] != null) {
-      totalChuckMust = captureResult[2];
-    } else {
-      return [];
+    if (captureResult.isNotEmpty) {
+      if (captureResult[2] != null) {
+        totalChuckMust = captureResult[2];
+      } else {
+        return [];
+      }
     }
     log("total chuck must : $totalChuckMust");
     if (totalChuckMust == value.length) {
@@ -365,7 +367,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     // log("isCapture = $isCaptureDone");
     return WillPopScope(
       onWillPop: () async {
-        if (isCaptureDone) {
+        if (!isCaptureDone) {
           return true;
         } else {
           return false;

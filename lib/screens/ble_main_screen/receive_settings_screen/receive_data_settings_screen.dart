@@ -368,12 +368,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       title: "Receive Schedule (minute)",
                       data: receiveScheduleTxt,
                       onTap: () async {
-                        TimeOfDay? result = await TimePickerHelper.pickTime(
-                            context,
-                            receiveScheduleTxt != "-"
-                                ? TimePickerHelper.stringToTimeOfDay(
-                                    receiveScheduleTxt)
-                                : null);
+                        TimeOfDay? result =
+                            await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
                           _setSettings = SetSettingsModel(
                             setSettings: "receive_schedule",
@@ -407,6 +403,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       title: "Receive Interval (minute)",
                       data: receiveIntervalTxt,
                       onTap: () async {
+                        receiveIntervalTxtController.text = receiveIntervalTxt;
                         String? input = await _showInputDialogInteger(
                             receiveIntervalTxtController,
                             "Receive Interval",
@@ -429,6 +426,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       title: "Receive Count",
                       data: receiveCountTxt,
                       onTap: () async {
+                        receiveCountTxtController.text = receiveCountTxt;
                         String? input = await _showInputDialogInteger(
                             receiveCountTxtController,
                             "Receive Count",
@@ -450,6 +448,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       title: "Receive Time Adjust (seconds)",
                       data: receiveTimeAdjust,
                       onTap: () async {
+                        receiveTimeAdjustTxtController.text = receiveTimeAdjust;
                         String? input = await _showInputDialogInteger(
                             receiveTimeAdjustTxtController,
                             "Receive Time Adjust",
