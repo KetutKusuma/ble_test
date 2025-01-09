@@ -186,11 +186,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   void _onTextChanged(TextEditingController textEditingController) {
-    String text = textEditingController.text
-        .replaceAll(":", ""); // Remove existing colons
+    // Step 1: Remove invalid characters (allow only a-f, A-F, and 0-9)
+    String text =
+        textEditingController.text.replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
+
+    // Step 2: Format the text with colons
     String formattedText = "";
 
-    // Add colon after every 2 characters
     for (int i = 0; i < text.length; i++) {
       formattedText += text[i];
       if ((i + 1) % 2 == 0 && i != text.length - 1) {
@@ -198,7 +200,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       }
     }
 
-    // Prevent unnecessary updates (cursor position fixes)
+    // Step 3: Prevent unnecessary updates and fix cursor position
     if (formattedText != textEditingController.text) {
       final cursorPosition = textEditingController.selection.baseOffset;
       textEditingController.value = textEditingController.value.copyWith(
