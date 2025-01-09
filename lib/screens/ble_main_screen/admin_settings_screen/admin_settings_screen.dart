@@ -703,10 +703,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           idTxtController,
                           "New ID",
                           label: 'New ID ',
-                          keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.text,
                           inputFormatters: [
                             LengthLimitingTextInputFormatter(14),
-                            FilteringTextInputFormatter.digitsOnly
+                            // FilteringTextInputFormatter
                           ],
                           lengthTextNeed: 12,
                         );

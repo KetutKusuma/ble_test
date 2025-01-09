@@ -26,8 +26,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
+
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
   StreamSubscription<List<int>>? _lastValueSubscription;
@@ -367,11 +366,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
     // log("isCapture = $isCaptureDone");
     return WillPopScope(
       onWillPop: () async {
-        if (!isCaptureDone) {
-          return true;
-        } else {
-          return false;
-        }
+        return true;
+        // if (isCaptureDone) {
+        //   return true;
+        // } else {
+        //   return false;
+        // }
       },
       child: ScaffoldMessenger(
         key: Snackbar.snackBarCapture,
