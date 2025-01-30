@@ -372,21 +372,11 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
                                           "Click handshake first before login",
                                           success: false);
                                     } else {
-                                      log("VALUE SEBELUM + : $_value");
-                                      log("SALT1 SEBELUM + : $SALT1");
-
-                                      // List<int> _value =
-
                                       List<int> forIV = _value + SALT1;
-                                      log("for iv : $forIV");
                                       List<int> forKey1 = _value + SALT2;
                                       List<int> forKey2 = _value + SALT3;
 
-                                      log("process iv");
                                       String iv = md5.convert(forIV).toString();
-                                      log("process key");
-                                      log("key1 ${md5.convert(forKey1).toString()}");
-                                      log("key2 ${md5.convert(forKey2).toString()}");
                                       String key =
                                           md5.convert(forKey1).toString() +
                                               md5.convert(forKey2).toString();
@@ -410,22 +400,6 @@ class _LoginHandshakeScreenState extends State<LoginHandshakeScreen> {
 
                                       await funcWrite(
                                           bytes, "Command login success");
-                                      // /// get characteristic write
-                                      // for (var service
-                                      //     in _device.servicesList) {
-                                      //   for (var element
-                                      //       in service.characteristics) {
-                                      //     // log("characteristic : $element");
-                                      //     if (element.properties.write) {
-                                      //       _value.clear();
-                                      //       await element.write(bytes);
-                                      //       // Snackbar.show(ScreenSnackbar.login,
-                                      //       //     "Login Success",
-                                      //       //     success: true);
-                                      //       break;
-                                      //     }
-                                      //   }
-                                      // }
                                     }
                                   } else {
                                     Snackbar.show(ScreenSnackbar.login,

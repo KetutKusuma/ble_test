@@ -5,8 +5,8 @@ import 'package:ble_test/utils/crc32.dart';
 import 'package:encrypt/encrypt.dart';
 
 class MessageNew {
-  static const int Request = 0;
-  static const int Response = 1;
+  static const int request = 0;
+  static const int response = 1;
 
   static bool allowAddParameter(List<int> buffer) {
     if (buffer.length >= 8) {
@@ -161,13 +161,10 @@ class MessageNew {
   }
 
   static bool addString(String data, List<int> buffer) {
-    log("mama");
     if (!allowAddParameter(buffer) || data.length > 255) {
       return false;
     }
-    log("masuk samapai start index");
     int startIndex = addParameter(data.length, buffer);
-    log("add paramater masuk sih");
     buffer.setRange(startIndex, startIndex + data.length, utf8.encode(data));
     return true;
   }
@@ -178,7 +175,6 @@ class MessageNew {
     buffer.addAll(List.filled(5, 0));
     buffer[startIndex] = status;
     int crc32 = _calculateCRC32(buffer.sublist(0, startIndex + 1));
-    print("CRC32 create end : $crc32");
     buffer.setRange(startIndex + 1, startIndex + 5, _uint32ToBytes(crc32));
     return base64Encode(_aesEncrypt(buffer, key, iv));
   }
@@ -187,13 +183,11 @@ class MessageNew {
       String data, List<int> key, List<int> iv, List<int> buffer) async {
     List<int> encryptedInput = base64Decode(data);
     buffer = _aesDecrypt(encryptedInput, key, iv);
-    print("decrypted : $buffer");
     if (buffer.length < 4 ||
         _calculateCRC32(buffer.sublist(0, buffer.length - 4)) !=
             _bytesToUint32(buffer, (buffer.length - 4))) {
       throw Exception("CRC32 mismatch or insufficient buffer size");
     } else {
-      print("parse succes!!!");
       return buffer;
     }
   }
@@ -231,7 +225,6 @@ class MessageNew {
         Encrypter(AES(Key(Uint8List.fromList(key)), mode: AESMode.cbc));
     List<int> result =
         encrypter.encryptBytes(data, iv: IV(Uint8List.fromList(iv))).bytes;
-    print("encrypt result : $result");
     return result;
   }
 
