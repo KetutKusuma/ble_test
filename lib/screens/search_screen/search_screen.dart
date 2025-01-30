@@ -353,6 +353,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   List<Widget> _buildSystemDeviceTiles(BuildContext context) {
+    _systemDevices.removeWhere((element) => element.platformName.isNotEmpty);
     return _systemDevices
         .map(
           (d) => SystemDeviceTile(
@@ -366,20 +367,17 @@ class _SearchScreenState extends State<SearchScreen> {
 
   List<Widget> _buildScanResultTiles(BuildContext context) {
     // log("resultnya : $_scanResults");
-    return _scanResults.map((r) {
-      // if (r.advertisementData.serviceData.isEmpty) {
-      //   return const SizedBox();
-      // } else {
-      //   return ScanResultTile(
-      //     result: r,
-      //     onTap: () => onConnectPressed(r.device),
-      //   );
-      // }
-      return ScanResultTile(
-        result: r,
-        onTap: () => onConnectPressed(r.device),
-      );
-    }).toList();
+    _scanResults.removeWhere((element) {
+      return element.device.platformName.isEmpty;
+    });
+    return _scanResults.map(
+      (r) {
+        return ScanResultTile(
+          result: r,
+          onTap: () => onConnectPressed(r.device),
+        );
+      },
+    ).toList();
   }
 
   @override
