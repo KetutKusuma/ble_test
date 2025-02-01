@@ -14,6 +14,7 @@ class CaptureSettingsConverter {
     int captureRecentLimitInt =
         BytesConvert.bytesToInt16(bytes.sublist(6, 8), isBigEndian: false);
     List<int> spCaptureDateInt = bytesToBits(bytes.sublist(8, 12));
+    log("sp capture date before : ${bytes.sublist(8, 12)}");
     int spCaptureScheduleInt =
         BytesConvert.bytesToInt16(bytes.sublist(12, 14), isBigEndian: false);
     int spCaptureIntervalInt =
@@ -35,7 +36,7 @@ class CaptureSettingsConverter {
       captureIntervalInt,
       captureCountInt,
       captureRecentLimitInt,
-      spCaptureDateInt,
+      spCaptureDateInt.reversed.toList(),
       spCaptureScheduleInt,
       spCaptureIntervalInt,
       spCaptureCountInt

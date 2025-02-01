@@ -78,29 +78,29 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         }
       },
     );
-    spCaptureDateTxtController.addListener(() {
-      final text = spCaptureDateTxtController.text;
-      if (text.isNotEmpty) {
-        final value = double.tryParse(text);
-        if (value != null) {
-          if (value <= 1 && text.length >= 31) {
-            // Otomatis set menjadi 0.5 jika kurang dari 0.5
-            spCaptureDateTxtController.text = '1';
-            spCaptureDateTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: spCaptureDateTxtController
-                        .text.length)); // Memastikan cursor di akhir
-          } else if (value >= 31) {
-            // Otomatis set menjadi 1.5 jika lebih dari 1.5
-            spCaptureDateTxtController.text = '31';
-            spCaptureDateTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: spCaptureDateTxtController
-                        .text.length)); // Memastikan cursor di akhir
-          }
-        }
-      }
-    });
+    // spCaptureDateTxtController.addListener(() {
+    //   final text = spCaptureDateTxtController.text;
+    //   if (text.isNotEmpty) {
+    //     final value = double.tryParse(text);
+    //     if (value != null) {
+    //       if (value <= 1 && text.length >= 31) {
+    //         // Otomatis set menjadi 0.5 jika kurang dari 0.5
+    //         spCaptureDateTxtController.text = '1';
+    //         spCaptureDateTxtController.selection = TextSelection.fromPosition(
+    //             TextPosition(
+    //                 offset: spCaptureDateTxtController
+    //                     .text.length)); // Memastikan cursor di akhir
+    //       } else if (value >= 31) {
+    //         // Otomatis set menjadi 1.5 jika lebih dari 1.5
+    //         spCaptureDateTxtController.text = '31';
+    //         spCaptureDateTxtController.selection = TextSelection.fromPosition(
+    //             TextPosition(
+    //                 offset: spCaptureDateTxtController
+    //                     .text.length)); // Memastikan cursor di akhir
+    //       }
+    //     }
+    //   }
+    // });
     initGetRawCapture();
     initDiscoverServices();
   }
@@ -345,11 +345,15 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          if (spCaptureDateTxtController.text.isNotEmpty) {
-                            Navigator.pop(context, {
-                              "date": spCaptureDateTxtController.text,
-                              "status": true,
-                            });
+                          int dataParse = int.parse(
+                              spCaptureDateTxtController.text.toString());
+                          if (dataParse >= 1 && dataParse <= 31) {
+                            if (spCaptureDateTxtController.text.isNotEmpty) {
+                              Navigator.pop(context, {
+                                "date": spCaptureDateTxtController.text,
+                                "status": true,
+                              });
+                            }
                           }
                         },
                         child: const Text("Active"),
@@ -359,11 +363,15 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          if (spCaptureDateTxtController.text.isNotEmpty) {
-                            Navigator.pop(context, {
-                              "date": spCaptureDateTxtController.text,
-                              "status": false,
-                            });
+                          int dataParse = int.parse(
+                              spCaptureDateTxtController.text.toString());
+                          if (dataParse >= 1 && dataParse <= 31) {
+                            if (spCaptureDateTxtController.text.isNotEmpty) {
+                              Navigator.pop(context, {
+                                "date": spCaptureDateTxtController.text,
+                                "status": false,
+                              });
+                            }
                           }
                         },
                         child: const Text("Unactive"),

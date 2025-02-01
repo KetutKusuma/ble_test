@@ -39,13 +39,15 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       modelMeterTxt = '-',
       meterSnTxt = '-',
       meterSealTxt = '-',
-      timeUTCTxt = '-';
+      timeUTCTxt = '-',
+      idPelangganTxt = '-';
   SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   TextEditingController modelMeterTxtController = TextEditingController();
   TextEditingController meterSnTxtController = TextEditingController();
   TextEditingController meterSealTxtController = TextEditingController();
   TextEditingController timeUTCTxtController = TextEditingController();
+  TextEditingController idPelangganTxtController = TextEditingController();
 
   bool isMetaDataSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
@@ -72,6 +74,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         }
       },
     );
+
     timeUTCTxtController.addListener(() {
       final text = timeUTCTxtController.text;
       if (text.isNotEmpty) {
@@ -173,17 +176,21 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
                 // this is for get raw admin
                 if (_value.length > 45) {
+                  log("masuk sini ?");
                   List<dynamic> result =
                       MetaDataSettingsConvert.convertMetaDataSettings(_value);
                   _progressDialog.hide();
 
                   if (mounted) {
                     setState(() {
-                      statusTxt = result[0].toString();
-                      modelMeterTxt = result[1].toString();
-                      meterSnTxt = result[2].toString();
-                      meterSealTxt = result[3].toString();
-                      timeUTCTxt = result[4].toString();
+                      if (result.isNotEmpty) {
+                        statusTxt = result[0].toString();
+                        modelMeterTxt = result[1].toString();
+                        meterSnTxt = result[2].toString();
+                        meterSealTxt = result[3].toString();
+                        timeUTCTxt = result[4].toString();
+                        idPelangganTxt = result[5].toString();
+                      }
                     });
                   }
                 }
@@ -198,6 +205,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       meterSealTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "time_utc") {
                       timeUTCTxt = _setSettings.value;
+                    } else if (_setSettings.setSettings == "meta_data_custom") {
+                      idPelangganTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.metadatasettings,
                         "Success set ${_setSettings.setSettings}",
@@ -228,20 +237,24 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   }
 
   Future<String?> _showInputDialog(
-      TextEditingController controller, String field) async {
+      TextEditingController controller, String field,
+      {List<TextInputFormatter>? addInputFormatters}) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
+        List<TextInputFormatter>? inputFormatters = [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
+        ];
+        if (addInputFormatters != null) {
+          inputFormatters.addAll(addInputFormatters);
+        }
         return AlertDialog(
           title: Text("Enter Value $field"),
           content: Form(
             child: TextFormField(
               controller: controller,
               keyboardType: TextInputType.text,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                    RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
-              ],
+              inputFormatters: inputFormatters,
               decoration: InputDecoration(
                 labelText: "Enter Valid $field",
                 border: const OutlineInputBorder(),
@@ -428,6 +441,27 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       },
                       icon: const Icon(
                         Icons.shield_outlined,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "ID Pelanggan",
+                      data: idPelangganTxt,
+                      onTap: () async {
+                        idPelangganTxtController.text = idPelangganTxt;
+                        String? input = await _showInputDialog(
+                            idPelangganTxtController, "Id Pelanggan");
+                        if (input != null && input.isNotEmpty) {
+                          List<int> list =
+                              utf8.encode("meta_data_custom=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "meta_data_custom", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Sukses Ubah ID Pelanggan", device);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.description_rounded,
                       ),
                     ),
                     SettingsContainer(
