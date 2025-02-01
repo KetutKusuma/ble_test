@@ -110,7 +110,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 if (isSetPasswordStart) {
                   if (_value.length == 1 && _value[0] == 1) {
                     Snackbar.show(
-                        ScreenSnackbar.setpassword, "Success Set New Passoword",
+                        ScreenSnackbar.setpassword, "Sukses ubah New Passoword",
                         success: true);
                   } else {
                     Snackbar.show(
@@ -139,7 +139,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       key: Snackbar.snackBarSetPassword,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Set Password"),
+          title: const Text("Ubah Password"),
           elevation: 0,
         ),
         body: CustomScrollView(
@@ -160,7 +160,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         obscureText: isObscureTextOldPassword,
                         controller: pwdOldTxtController,
                         decoration: InputDecoration(
-                          labelText: "Old Password",
+                          labelText: "Password Lama",
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(
                               Radius.circular(10),
@@ -190,7 +190,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         cursorColor: Colors.transparent,
                         controller: pwdNewTxtController,
                         decoration: InputDecoration(
-                          labelText: "New Password",
+                          labelText: "Password Baru",
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(
                               Radius.circular(10),
@@ -220,7 +220,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         cursorColor: Colors.transparent,
                         controller: pwdNewConfirmTxtController,
                         decoration: InputDecoration(
-                          labelText: "Confirm New Password",
+                          labelText: "Konfirmasi Password Baru",
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(
                               Radius.circular(10),
@@ -287,7 +287,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                "Set Password",
+                                "Ubah Password",
                                 style: GoogleFonts.readexPro(
                                   fontSize: 18,
                                   color: Colors.white,

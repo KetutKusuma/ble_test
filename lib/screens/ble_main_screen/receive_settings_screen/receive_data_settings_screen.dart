@@ -189,7 +189,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       receiveTimeAdjust = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.receivesettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Sukses ubah ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.receivesettings,
@@ -227,13 +227,13 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
               onPressed: () {
                 Navigator.pop(context, true); // Return true
               },
-              child: const Text('True'),
+              child: const Text('Ya'),
             ),
             SimpleDialogOption(
               onPressed: () {
                 Navigator.pop(context, false); // Return false
               },
-              child: const Text('False'),
+              child: const Text('Tidak'),
             ),
           ],
         );
@@ -249,7 +249,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $field"),
+          title: Text("Masukan data $field"),
           content: Form(
             child: TextFormField(
               controller: controller,
@@ -295,7 +295,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
       key: Snackbar.snackBarKeyReceiveSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Receive Settings'),
+          title: const Text('Pengaturan Penerimaan'),
           elevation: 0,
           // actions: [
           //   Row(
@@ -338,11 +338,11 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                     //   ),
                     // ),
                     SettingsContainer(
-                      title: "Receive Enable",
-                      data: receiveEnableTxt,
+                      title: "Izinkan Penerimaan",
+                      data: receiveEnableTxt == "true" ? "Ya" : "Tidak",
                       onTap: () async {
                         bool? input = await _showTrueFalseDialog(
-                            context, "Set Receive Enable");
+                            context, "Ubah Izin Penerimaan");
                         if (input != null) {
                           // Ubah nilai boolean menjadi string "1" untuk true atau "0" untuk false
                           String encodedValue = input ? "1" : "0";
@@ -355,7 +355,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                           );
                           BLEUtils.funcWrite(
                             bytes,
-                            "Success Set Receive Enable",
+                            "Sukses ubah Izin Penerimaan",
                             device,
                           );
                         }
@@ -365,7 +365,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Receive Schedule (minute)",
+                      title: "Jadwal Penerimaan (waktu)",
                       data: receiveScheduleTxt,
                       onTap: () async {
                         TimeOfDay? result =
@@ -379,11 +379,11 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                               "receive_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
                           Uint8List bytes = Uint8List.fromList(list);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Schedule", device);
+                              bytes, "Sukses ubah Jadwal Penerimaan", device);
                         }
                         // String? input = await _showInputDialogInteger(
                         //     receiveScheduleTxtController,
-                        //     "Receive Schedule",
+                        //     "Jadwal Penerimaan",
                         //     "minute");
                         // if (input != null) {
                         //   List<int> list =
@@ -392,7 +392,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         //   _setSettings = SetSettingsModel(
                         //       setSettings: "receive_schedule", value: input);
                         //   BLEUtils.funcWrite(
-                        //       bytes, "Success Set Receive Schedule", device);
+                        //       bytes, "Sukses ubah Jadwal Penerimaan", device);
                         // }
                       },
                       icon: const Icon(
@@ -400,44 +400,21 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Receive Interval (minute)",
-                      data: receiveIntervalTxt,
-                      onTap: () async {
-                        receiveIntervalTxtController.text = receiveIntervalTxt;
-                        String? input = await _showInputDialogInteger(
-                            receiveIntervalTxtController,
-                            "Receive Interval",
-                            "minute");
-                        if (input != null) {
-                          List<int> list =
-                              utf8.encode("receive_interval=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_interval", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Interval", device);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.trending_up_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Receive Count",
+                      title: "Jumlah Penerimaan",
                       data: receiveCountTxt,
                       onTap: () async {
                         receiveCountTxtController.text = receiveCountTxt;
                         String? input = await _showInputDialogInteger(
                             receiveCountTxtController,
-                            "Receive Count",
-                            "number");
+                            "Jumlah Penerimaan",
+                            "angka");
                         if (input != null) {
                           List<int> list = utf8.encode("receive_count=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "receive_count", value: input);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Count", device);
+                              bytes, "Sukses ubah Jumlah Penerimaan", device);
                         }
                       },
                       icon: const Icon(
@@ -445,14 +422,37 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Receive Time Adjust (seconds)",
+                      title: "Interval Penerimaan (menit)",
+                      data: receiveIntervalTxt,
+                      onTap: () async {
+                        receiveIntervalTxtController.text = receiveIntervalTxt;
+                        String? input = await _showInputDialogInteger(
+                            receiveIntervalTxtController,
+                            "Interval Penerimaan",
+                            "menit");
+                        if (input != null) {
+                          List<int> list =
+                              utf8.encode("receive_interval=$input");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          _setSettings = SetSettingsModel(
+                              setSettings: "receive_interval", value: input);
+                          BLEUtils.funcWrite(
+                              bytes, "Sukses ubah Interval Penerimaan", device);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.trending_up_rounded,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Penyesuaian Waktu Penerimaan (detik)",
                       data: receiveTimeAdjust,
                       onTap: () async {
                         receiveTimeAdjustTxtController.text = receiveTimeAdjust;
                         String? input = await _showInputDialogInteger(
                             receiveTimeAdjustTxtController,
-                            "Receive Time Adjust",
-                            "seconds");
+                            "Penyesuaian Waktu Penerimaan",
+                            "detik");
                         if (input != null) {
                           List<int> list =
                               utf8.encode("receive_time_adjust=$input");
@@ -460,7 +460,9 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                           _setSettings = SetSettingsModel(
                               setSettings: "receive_time_adjust", value: input);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Time Adjust", device);
+                              bytes,
+                              "Sukses ubah Penyesuaian Waktu Penerimaan",
+                              device);
                         }
                       },
                       icon: const Icon(

@@ -216,7 +216,7 @@ class _StorageScreenState extends State<StorageScreen> {
                         //   ),
                         // ),
                         SettingsContainer(
-                          title: "Total Bytes",
+                          title: "Total Penyimpanan",
                           data: getTotalBytesTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -224,7 +224,7 @@ class _StorageScreenState extends State<StorageScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Used Bytes",
+                          title: "Penyimpanan Digunakan",
                           data: getUsedBytesTxt,
                           onTap: () {},
                           icon: const Icon(

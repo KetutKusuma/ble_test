@@ -377,7 +377,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         key: Snackbar.snackBarCapture,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text("Capture Screen"),
+            title: const Text("Pengambilan Gambar"),
             elevation: 0,
             // actions: [
             //   Row(

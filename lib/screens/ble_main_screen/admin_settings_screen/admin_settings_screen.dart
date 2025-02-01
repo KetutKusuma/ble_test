@@ -59,7 +59,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   TextEditingController cameraJpegQualityController = TextEditingController();
 
   final List<Map<String, dynamic>> dataMapRole = [
-    {"title": "Undefiend", "value": 0},
+    {"title": "Tidak Terdefinisi", "value": 0},
     {"title": "Regular", "value": 1},
     {"title": "Gateway", "value": 2},
   ];
@@ -71,7 +71,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     {"title": "2", "value": 2},
   ];
   final List<Map<String, dynamic>> dataMapSpecialEffect = [
-    {"title": "No Effect", "value": 0},
+    {"title": "Tidak ada", "value": 0},
     {"title": "Negative", "value": 1},
     {"title": "Grayscale", "value": 2},
     {"title": "Red Tint", "value": 3},
@@ -304,7 +304,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       vFlipText = result[10].toString();
                       cameraJpgQualityTxt = result[11].toString();
                       roleTxt = result[12] == 0
-                          ? "Undifined"
+                          ? "Tidak Terdefinisi"
                           : result[12] == 1
                               ? "Regular"
                               : result[12] == 2
@@ -360,7 +360,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       cameraJpgQualityTxt = _setSettings.value;
                     } else if (_setSettings.setSettings == "role") {
                       roleTxt = _setSettings.value == "0"
-                          ? "Undifined"
+                          ? "Tidak Terdefinisi"
                           : _setSettings.value == "1"
                               ? "Regular"
                               : _setSettings.value == "2"
@@ -371,7 +371,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       printToSerialMonitorTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Sukses ubah ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.adminsettings,
@@ -413,7 +413,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   String getSpecialEffectString(int value) {
     switch (value) {
       case 0:
-        return "None";
+        return "Tidak Ada";
       case 1:
         return "Negative";
       case 2:
@@ -493,13 +493,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               onPressed: () {
                 Navigator.pop(context, true); // Return true
               },
-              child: const Text('True'),
+              child: const Text('Ya'),
             ),
             SimpleDialogOption(
               onPressed: () {
                 Navigator.pop(context, false); // Return false
               },
-              child: const Text('False'),
+              child: const Text('Tidak'),
             ),
           ],
         );
@@ -576,7 +576,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Enter Value Voltage Coef"),
+          title: const Text("Masukan data Voltage Coef"),
           content: Form(
             child: TextFormField(
               controller: controller,
@@ -586,7 +586,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
               decoration: const InputDecoration(
-                labelText: 'Value between 0.5 and 1.5',
+                labelText: 'Nilai antara 0.5 and 1.5',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -597,7 +597,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 controller.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -622,7 +622,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select an Option'),
+          title: const Text('Pilih Sebuah Opsi'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: dataMap.map((item) {
@@ -718,7 +718,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings =
                               SetSettingsModel(setSettings: "id", value: input);
-                          BLEUtils.funcWrite(bytes, "Success Set ID", device);
+                          BLEUtils.funcWrite(bytes, "Sukses ubah ID", device);
                         }
                       },
                     ),
@@ -726,7 +726,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(CupertinoIcons.bolt),
-                        title: "Volt Coef 1",
+                        title: "Koefisien Volt 1",
                         data: voltCoef1Txt,
                         onTap: () async {
                           voltageCoefTxtController.text = voltCoef1Txt;
@@ -739,7 +739,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             _setSettings = SetSettingsModel(
                                 setSettings: "voltcoef1", value: input);
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Volt Coef 1", device);
+                                bytes, "Sukses ubah Koefisien Volt 1", device);
                           }
                         },
                       ),
@@ -748,7 +748,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(CupertinoIcons.bolt),
-                        title: "Volt Coef 2",
+                        title: "Koefisien Volt 2",
                         data: voltCoef2Txt,
                         onTap: () async {
                           voltageCoefTxtController.text = voltCoef2Txt;
@@ -761,7 +761,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             _setSettings = SetSettingsModel(
                                 setSettings: "voltcoef2", value: input);
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Volt Coef 2", device);
+                                bytes, "Sukses ubah Koefisien Volt 2", device);
                           }
                         },
                       ),
@@ -770,7 +770,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(Icons.brightness_5),
-                        title: "Camera Brightness",
+                        title: "Kecerahan Kamera",
                         data: brightnessText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
@@ -783,7 +783,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 setSettings: "camera_setting_brightness",
                                 value: input['value'].toString());
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Camera Brightness", device);
+                                bytes, "Sukses ubah Kecerahan Kamera", device);
                           }
                         },
                       ),
@@ -792,7 +792,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(Icons.brightness_6),
-                        title: "Camera Contrast",
+                        title: "Kontras Kamera",
                         data: contrastText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
@@ -805,7 +805,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 setSettings: "camera_setting_contrast",
                                 value: input['value'].toString());
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Camera Contrast", device);
+                                bytes, "Sukses ubah Kontras Kamera", device);
                           }
                         },
                       ),
@@ -814,7 +814,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(Icons.brightness_1_rounded),
-                        title: "Camera Saturation",
+                        title: "Saturasi Kamera",
                         data: saturationText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
@@ -827,7 +827,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 setSettings: "camera_setting_saturation",
                                 value: input['value'].toString());
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Camera Saturation", device);
+                                bytes, "Sukses ubah Saturasi Kamera", device);
                           }
                         },
                       ),
@@ -836,7 +836,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(CupertinoIcons.wand_stars_inverse),
-                        title: "Camera Special effect",
+                        title: "Efek Khusus Kamera",
                         data: specialEffectText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
@@ -849,8 +849,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                               setSettings: "camera_setting_special_effect",
                               value: input['value'].toString(),
                             );
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Camera Brightness", device);
+                            BLEUtils.funcWrite(bytes,
+                                "Sukses ubah Efek Khusus Kamera", device);
                           }
                         },
                       ),
@@ -859,11 +859,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(Icons.flip),
-                        title: "Camera H Mirror",
-                        data: hMirrorText,
+                        title: "Cermin Horizontal Kamera",
+                        data: hMirrorText == "true" ? "Ya" : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Camera H Mirror");
+                              context, "Cermin Horizontal Kamera");
                           if (input != null) {
                             List<int> list =
                                 utf8.encode("camera_setting_hmirror=$input");
@@ -871,8 +871,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             _setSettings = SetSettingsModel(
                                 setSettings: "camera_setting_hmirror",
                                 value: input.toString());
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Camera H Mirror", device);
+                            BLEUtils.funcWrite(bytes,
+                                "Sukses ubah Cermin Horizontal Kamera", device);
                           }
                         },
                       ),
@@ -886,11 +886,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Icons.flip,
                           ),
                         ),
-                        title: "Camera V Flip",
-                        data: vFlipText,
+                        title: "Pembalikan Vertikal Kamera",
+                        data: vFlipText == "true" ? "Ya" : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Camera V Flip");
+                              context, "Pembalikan Vertikal Kamera");
                           if (input != null) {
                             List<int> list =
                                 utf8.encode("camera_setting_vflip=$input");
@@ -899,7 +899,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 setSettings: "camera_setting_vflip",
                                 value: input.toString());
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Camera V Flip", device);
+                                bytes,
+                                "Sukses ubah Pembalikan Vertikal Kamera",
+                                device);
                           }
                         },
                       ),
@@ -910,14 +912,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         icon: const Icon(
                           Icons.high_quality_outlined,
                         ),
-                        title: "Camera Jpeg Quality",
+                        title: "Kualitas JPEG Kamera",
                         data: cameraJpgQualityTxt,
                         onTap: () async {
                           cameraJpegQualityController.text =
                               cameraJpgQualityTxt;
                           String? input = await _showInputDialog(
                             cameraJpegQualityController,
-                            "Camera Jpeg Quality",
+                            "Kualitas JPEG Kamera",
                             label: '0 to 63',
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -933,7 +935,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             _setSettings = SetSettingsModel(
                                 setSettings: "camera_jpeg_quality",
                                 value: input);
-                            BLEUtils.funcWrite(bytes, "Success Set ID", device);
+                            BLEUtils.funcWrite(bytes, "Sukses ubah ID", device);
                           }
                         },
                       ),
@@ -956,7 +958,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 setSettings: "role",
                                 value: result["value"].toString());
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Role", device);
+                                bytes, "Sukses ubah Role", device);
                           }
                         },
                       ),
@@ -965,11 +967,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     Visibility(
                       visible: featureB.contains(roleUser),
                       child: SettingsContainer(
-                        title: "Enable",
-                        data: enableTxt,
+                        title: "Aktifkan Toppi",
+                        data: enableTxt == "true" ? "Ya" : "Tidak",
                         onTap: () async {
-                          bool? input =
-                              await _showTrueFalseDialog(context, "Enable");
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Aktifkan Toppi");
                           if (input != null) {
                             List<int> list = utf8.encode("enable=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -988,11 +990,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
-                        title: "Print to Serial Monitor",
-                        data: printToSerialMonitorTxt,
+                        title: "Tampilkan ke Layar Serial",
+                        data:
+                            printToSerialMonitorTxt == "true" ? "Ya" : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Print to Serial Monitor");
+                              context, "Tampilkan ke Layar Serial");
                           if (input != null) {
                             List<int> list =
                                 utf8.encode("print_to_serial_monitor=$input");
@@ -1002,7 +1005,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             _setSettings.value = input.toString();
                             await BLEUtils.funcWrite(
                                 bytes,
-                                "Set Print to Serial Monitor $input success",
+                                "Set Tampilkan ke Layar Serial $input success",
                                 device);
                           }
                         },
@@ -1159,7 +1162,7 @@ class SettingsContainer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                flex: 4,
+                flex: 5,
                 child: Row(
                   children: [
                     Expanded(
@@ -1213,6 +1216,7 @@ class SettingsContainer extends StatelessWidget {
                     style: GoogleFonts.readexPro(
                       fontSize: 14,
                     ),
+                    textAlign: TextAlign.right,
                   ),
                 ),
               )

@@ -36,7 +36,7 @@ class CaptureSettingsConverter {
       captureIntervalInt,
       captureCountInt,
       captureRecentLimitInt,
-      spCaptureDateInt.reversed.toList(),
+      spCaptureDateInt,
       spCaptureScheduleInt,
       spCaptureIntervalInt,
       spCaptureCountInt
@@ -45,7 +45,7 @@ class CaptureSettingsConverter {
 
   static List<int> bytesToBits(List<int> bytes) {
     List<int> bits = bytes.expand((byte) {
-      return List<int>.generate(8, (i) => (byte >> (7 - i)) & 1);
+      return List<int>.generate(8, (i) => (byte >> (7 - i)) & 1).reversed;
     }).toList();
     return bits;
   }

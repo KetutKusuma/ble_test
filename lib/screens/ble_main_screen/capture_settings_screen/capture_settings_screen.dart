@@ -224,7 +224,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       spCaptureCountTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.capturesettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Sukses ubah ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.capturesettings,
@@ -257,7 +257,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     // Iterate over the list
     for (int i = 0; i < value.length; i++) {
       if (value[i] == 1) {
-        dateTemp.add(i + 1); // Add (index + 1) to match days of the month
+        if (i + 1 != 32) {
+          dateTemp.add(i + 1); // Add (index + 1) to match days of the month
+        }
       }
     }
     return dateTemp.toString().replaceAll("[", "").replaceAll("]", "");
@@ -272,7 +274,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $inputTitle"),
+          title: Text("Masukan data $inputTitle"),
           content: Form(
             child: TextFormField(
               controller: controller,
@@ -291,7 +293,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                 controller.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -315,72 +317,69 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $inputTitle"),
-          content: SizedBox(
-            height: 150,
-            child: Form(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
+          title: Text("Masukan data $inputTitle"),
+          content: Column(
+            mainAxisSize:
+                MainAxisSize.min, // Ensures the Column remains compact
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              TextFormField(
+                controller: spCaptureDateTxtController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: false),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'Masukan Tanggal (1 - 31)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              const Text("Status Tanggal Pengambilan Khusus"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  TextFormField(
-                    controller: spCaptureDateTxtController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: false),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'Enter Date (1 - 31)',
-                      border: OutlineInputBorder(),
-                    ),
+                  ElevatedButton(
+                    onPressed: () {
+                      int dataParse =
+                          int.parse(spCaptureDateTxtController.text.toString());
+                      if (dataParse >= 1 && dataParse <= 31) {
+                        if (spCaptureDateTxtController.text.isNotEmpty) {
+                          Navigator.pop(context, {
+                            "date": spCaptureDateTxtController.text,
+                            "status": true,
+                          });
+                        }
+                      }
+                    },
+                    child: const Text("Aktif"),
                   ),
                   const SizedBox(
-                    height: 15,
+                    width: 10,
                   ),
-                  const Text("Status Special Capture Date"),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          int dataParse = int.parse(
-                              spCaptureDateTxtController.text.toString());
-                          if (dataParse >= 1 && dataParse <= 31) {
-                            if (spCaptureDateTxtController.text.isNotEmpty) {
-                              Navigator.pop(context, {
-                                "date": spCaptureDateTxtController.text,
-                                "status": true,
-                              });
-                            }
-                          }
-                        },
-                        child: const Text("Active"),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          int dataParse = int.parse(
-                              spCaptureDateTxtController.text.toString());
-                          if (dataParse >= 1 && dataParse <= 31) {
-                            if (spCaptureDateTxtController.text.isNotEmpty) {
-                              Navigator.pop(context, {
-                                "date": spCaptureDateTxtController.text,
-                                "status": false,
-                              });
-                            }
-                          }
-                        },
-                        child: const Text("Unactive"),
-                      ),
-                    ],
-                  )
+                  ElevatedButton(
+                    onPressed: () {
+                      int dataParse =
+                          int.parse(spCaptureDateTxtController.text.toString());
+                      if (dataParse >= 1 && dataParse <= 31) {
+                        if (spCaptureDateTxtController.text.isNotEmpty) {
+                          Navigator.pop(context, {
+                            "date": spCaptureDateTxtController.text,
+                            "status": false,
+                          });
+                        }
+                      }
+                    },
+                    child: const Text("Non Aktif"),
+                  ),
                 ],
-              ),
-            ),
+              )
+            ],
           ),
         );
       },
@@ -393,7 +392,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
       key: Snackbar.snackBarKeyCaptureSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Capture Settings'),
+          title: const Text('Pengaturan Pengambilan Gambar'),
           elevation: 0,
           // actions: [
           //   Row(
@@ -405,7 +404,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
           //             : (isConnected ? onDisconnectPressed : onConnectPressed),
           //         child: Text(
           //           _isConnecting
-          //               ? "CANCEL"
+          //               ? "Batalkan"
           //               : (isConnected ? "DISCONNECT" : "CONNECT"),
           //           style: Theme.of(context)
           //               .primaryTextTheme
@@ -435,9 +434,34 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     //     CupertinoIcons.settings,
                     //   ),
                     // ),
+                    const SizedBox(
+                      height: 7,
+                    ),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 7.0, horizontal: 15),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 0.0, horizontal: 15),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            topRight: Radius.circular(10)),
+                      ),
+                      width: MediaQuery.of(context).size.width,
+                      child: const Text(
+                        "Pengaturan Pengambilan Gambar Perhari",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     SettingsContainer(
-                      title: "Capture Schedule",
-                      description: "(Start capture of a day)",
+                      title: "Jadwal Pengambilan Gambar",
+                      description: "(Mulai Pengambilan Gambar Hari Ini)",
                       data: captureScheduleTxt,
                       onTap: () async {
                         TimeOfDay? result =
@@ -449,8 +473,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           List<int> list = utf8.encode(
                               "capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
                           Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Capture Schedule", device);
+                          BLEUtils.funcWrite(bytes,
+                              "Sukses ubah Jadwal Pengambilan Gambar", device);
                         }
                         // if (isConnected) {
                         //   String? input = await _showInputDialog(
@@ -463,7 +487,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         //         utf8.encode("capture_schedule=$input");
                         //     Uint8List bytes = Uint8List.fromList(list);
                         //     BLEUtils.funcWrite(
-                        //         bytes, "Success Set Capture Schedule", device);
+                        //         bytes, "Sukses ubah Capture Schedule", device);
                         //   }
                         // }
                       },
@@ -472,39 +496,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Capture Interval",
-                      description: "(Repetition capture of a day) (minutes)",
-                      data: captureIntervalTxt,
-                      onTap: () async {
-                        if (isConnected) {
-                          controller.text = captureIntervalTxt;
-                          String? input = await _showInputDialog(
-                              controller, "Capture Interval",
-                              label: "repetition capture");
-                          if (input != null) {
-                            _setSettings.setSettings = "capture_interval";
-                            _setSettings.value = input;
-                            List<int> list =
-                                utf8.encode("capture_interval=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Capture Interval", device);
-                          }
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.trending_up_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Capture Count",
-                      description: "(How many repetitions of a day)",
+                      title: "Jumlah Pengambilan Gambar",
+                      description: "(Berapa banyak pengulangan perhari)",
                       data: captureCountTxt,
                       onTap: () async {
                         if (isConnected) {
                           controller.text = captureCountTxt;
                           String? input = await _showInputDialog(
-                              controller, "Capture Count",
+                              controller, "Jumlah Pengambilan Gambar",
                               label: "how many repetitions a day");
                           if (input != null) {
                             _setSettings.setSettings = "capture_count";
@@ -513,7 +512,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                                 utf8.encode("capture_count=$input");
                             Uint8List bytes = Uint8List.fromList(list);
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Capture Count", device);
+                                bytes,
+                                "Sukses ubah Jumlah Pengambilan Gambar",
+                                device);
                           }
                         }
                       },
@@ -521,18 +522,46 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         Icons.looks_3_outlined,
                       ),
                     ),
+                    SettingsContainer(
+                      title: "Interval Pengambilan Gambar",
+                      description:
+                          "(Pengambilan Gambar Berulang berapa menit sekali dalam Satu Hari) (menit)",
+                      data: captureIntervalTxt,
+                      onTap: () async {
+                        if (isConnected) {
+                          controller.text = captureIntervalTxt;
+                          String? input = await _showInputDialog(
+                              controller, "Interval Pengambilan Gambar",
+                              label: "repetition capture");
+                          if (input != null) {
+                            _setSettings.setSettings = "capture_interval";
+                            _setSettings.value = input;
+                            List<int> list =
+                                utf8.encode("capture_interval=$input");
+                            Uint8List bytes = Uint8List.fromList(list);
+                            BLEUtils.funcWrite(
+                                bytes,
+                                "Sukses ubah Interval Pengambilan Gambar",
+                                device);
+                          }
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.trending_up_rounded,
+                      ),
+                    ),
 
                     SettingsContainer(
-                      title: "Capture Recent Limit",
+                      title: "Batas Pengambilan Terbaru",
                       description:
-                          "(The number of photo histories stored before deletion)",
+                          "(Jumlah Riwayat Foto yang Disimpan Sebelum Dihapus)",
                       data: captureRecentLimitTxt,
                       onTap: () async {
                         if (isConnected) {
                           controller.text = captureRecentLimitTxt;
                           String? input = await _showInputDialog(
                             controller,
-                            "Capture Recent Limit",
+                            "Batas Pengambilan Terbaru",
                           );
                           if (input != null) {
                             _setSettings.setSettings = "capture_recent_limit";
@@ -540,8 +569,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             List<int> list =
                                 utf8.encode("capture_recent_limit=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(bytes,
-                                "Success Set Capture Recent Limit", device);
+                            BLEUtils.funcWrite(
+                                bytes,
+                                "Sukses ubah Batas Pengambilan Terbaru",
+                                device);
                           }
                         }
                       },
@@ -553,7 +584,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       onTap: () async {
                         // ini agak special untuk updatenya
                         Map? input = await _showInputSpecialCaptureDateDialog(
-                            "Special Capture Date");
+                            "Tanggal Pengambilan Khusus");
                         if (input != null) {
                           spCaptureDateTxtController.clear();
                           log("input : $input | special_capture_date=${input["date"]};${input["status"]}");
@@ -561,7 +592,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                               "special_capture_date=${input["date"]};${input["status"]}");
                           Uint8List bytes = Uint8List.fromList(list);
                           BLEUtils.funcWrite(bytes,
-                              "Success Set Special Capture Date", device);
+                              "Sukses ubah Tanggal Pengambilan Khusus", device);
                         }
                         // nanti setelah 200 detik get lagi raw_capture
                         // hold dulu
@@ -598,14 +629,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Special Capture Date",
+                                      "Tanggal Pengambilan Khusus",
                                       style: GoogleFonts.readexPro(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
-                                      "(The date active for special capture)",
+                                      "(Tanggal Aktif untuk Pengambilan Khusus)",
                                       style: GoogleFonts.readexPro(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
@@ -634,8 +665,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
 
                     SettingsContainer(
-                      title: "Special Capture Schedule",
-                      description: "(Start capture of the special day)",
+                      title: "Jadwal Pengambilan Gambar Khusus",
+                      description:
+                          "(Mulai Pengambilan Gambar pada Tanggal Khusus)",
                       data: spCaptureScheduleTxt,
                       onTap: () async {
                         TimeOfDay? result =
@@ -647,12 +679,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           List<int> list = utf8.encode(
                               "special_capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
                           Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes,
-                              "Success Set Special Capture Schedule", device);
+                          BLEUtils.funcWrite(
+                              bytes,
+                              "Sukses ubah Jadwal Pengambilan Gambar Khusus",
+                              device);
                         }
                         // if (isConnected) {
                         //   String? input = await _showInputDialog(
-                        //       controller, "Special Capture Schedule",
+                        //       controller, "Jadwal Pengambilan Gambar Khusus",
                         //       label: "start minute");
                         //   if (input != null) {
                         //     _setSettings.setSettings =
@@ -662,7 +696,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         //         utf8.encode("special_capture_schedule=$input");
                         //     Uint8List bytes = Uint8List.fromList(list);
                         //     BLEUtils.funcWrite(bytes,
-                        //         "Success Set Special Capture Schedule", device);
+                        //         "Sukses ubah Jadwal Pengambilan Gambar Khusus", device);
                         //   }
                         // }
                       },
@@ -671,15 +705,15 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Special Capture Interval",
+                      title: "Interval Pengambilan Gambar Khusus",
                       description:
-                          "(Repetition capture of the special day) (minutes)",
+                          "(Pengambilan Berulang pada Tanggal Khusus) (menit)",
                       data: spCaptrueIntervalTxt,
                       onTap: () async {
                         if (isConnected) {
                           controller.text = spCaptrueIntervalTxt;
                           String? input = await _showInputDialog(
-                              controller, "Special Capture Interval",
+                              controller, "Interval Pengambilan Gambar Khusus",
                               label: "repetition capture");
                           if (input != null) {
                             _setSettings.setSettings =
@@ -688,8 +722,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             List<int> list =
                                 utf8.encode("special_capture_interval=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(bytes,
-                                "Success Set Special Capture Interval", device);
+                            BLEUtils.funcWrite(
+                                bytes,
+                                "Sukses ubah Interval Pengambilan Gambar Khusus",
+                                device);
                           }
                         }
                       },
@@ -698,15 +734,16 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Special Capture Count",
-                      description: "(How many repetitions of the special date)",
+                      title: "Jumlah Pengambilan Gambar Khusus",
+                      description:
+                          "(Berapa banyak pengulangan dari tanggal khusus)",
                       data: spCaptureCountTxt,
                       onTap: () async {
                         if (isConnected) {
                           controller.text = spCaptureCountTxt;
                           String? input = await _showInputDialog(
                             controller,
-                            "Special Capture Count",
+                            "Jumlah Pengambilan Gambar Khusus",
                             label: "how many repetitions a day",
                           );
                           if (input != null) {
@@ -715,8 +752,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             List<int> list =
                                 utf8.encode("special_capture_count=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(bytes,
-                                "Success Set Spcial Capture Count", device);
+                            BLEUtils.funcWrite(
+                                bytes,
+                                "Sukses ubah Jumlah Pengambilan Gambar Khusus",
+                                device);
                           }
                         }
                       },

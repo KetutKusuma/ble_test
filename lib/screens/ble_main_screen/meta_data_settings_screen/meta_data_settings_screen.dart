@@ -209,7 +209,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       idPelangganTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.metadatasettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Sukses ubah ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.metadatasettings,
@@ -249,14 +249,14 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
           inputFormatters.addAll(addInputFormatters);
         }
         return AlertDialog(
-          title: Text("Enter Value $field"),
+          title: Text("Masukan data $field"),
           content: Form(
             child: TextFormField(
               controller: controller,
               keyboardType: TextInputType.text,
               inputFormatters: inputFormatters,
               decoration: InputDecoration(
-                labelText: "Enter Valid $field",
+                labelText: "Masukan $field",
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -267,7 +267,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 controller.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -296,7 +296,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Enter Value Time UTC"),
+          title: const Text("Masukan data Time UTC"),
           content: Form(
             child: TextFormField(
               controller: controller,
@@ -306,7 +306,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
               ],
               decoration: const InputDecoration(
-                labelText: 'Value between -12 and 12',
+                labelText: 'Data antara -12 and 12',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -317,7 +317,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 controller.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -342,7 +342,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       key: Snackbar.snackBarKeyMetadataSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Meta Data Settings'),
+          title: const Text('Pengaturan Meta Data'),
           elevation: 0,
           // actions: [
           //   Row(
@@ -354,7 +354,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
           //             : (isConnected ? onDisconnectPressed : onConnectPressed),
           //         child: Text(
           //           _isConnecting
-          //               ? "CANCEL"
+          //               ? "Batalkan"
           //               : (isConnected ? "DISCONNECT" : "CONNECT"),
           //           style: Theme.of(context)
           //               .primaryTextTheme
@@ -396,7 +396,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           _setSettings = SetSettingsModel(
                               setSettings: "meter_model", value: input);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Model Meter", device);
+                              bytes, "Sukses ubah Model Meter", device);
                         }
                       },
                       icon: const Icon(
@@ -404,19 +404,19 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Meter SN",
+                      title: "Nomor Seri Meter",
                       data: meterSnTxt,
                       onTap: () async {
                         meterSnTxtController.text = meterSnTxt;
                         String? input = await _showInputDialog(
-                            meterSnTxtController, "Meter Sn");
+                            meterSnTxtController, "Nomor Seri Meter");
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_sn=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "meter_sn", value: input);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Meter Sn", device);
+                              bytes, "Sukses ubah Nomor Seri Meter", device);
                         }
                       },
                       icon: const Icon(
@@ -424,19 +424,19 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Meter Seal",
+                      title: "Segel Meter",
                       data: meterSealTxt,
                       onTap: () async {
                         meterSealTxtController.text = meterSealTxt;
                         String? input = await _showInputDialog(
-                            meterSealTxtController, "Meter Seal");
+                            meterSealTxtController, "Segel Meter");
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_seal=$input");
                           Uint8List bytes = Uint8List.fromList(list);
                           _setSettings = SetSettingsModel(
                               setSettings: "meter_seal", value: input);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Meter Seal", device);
+                              bytes, "Sukses ubah Segel Meter", device);
                         }
                       },
                       icon: const Icon(
@@ -477,7 +477,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           _setSettings = SetSettingsModel(
                               setSettings: "time_utc", value: input);
                           BLEUtils.funcWrite(
-                              bytes, "Success Set Time UTC", device);
+                              bytes, "Sukses ubah Time UTC", device);
                         }
                       },
                       icon: const Icon(

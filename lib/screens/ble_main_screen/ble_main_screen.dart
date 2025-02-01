@@ -268,7 +268,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
       onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Menu Settings'),
+          title: const Text('Pengaturan Menu'),
           centerTitle: true,
           elevation: 0,
           automaticallyImplyLeading: false,
@@ -280,7 +280,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                 children: [
                   FeatureWidget(
                     visible: featureD.contains(roleUser),
-                    title: "Admin Settings",
+                    title: "Pengaturan Admin",
                     icon: const Icon(Icons.admin_panel_settings_outlined),
                     onTap: () {
                       Navigator.push(
@@ -294,7 +294,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   ),
                   FeatureWidget(
                     visible: featureB.contains(roleUser),
-                    title: "Capture Settings",
+                    title: "Pengaturan Pengambilan Gambar",
                     icon: const Icon(Icons.camera_alt_outlined),
                     onTap: () {
                       if (isConnected) {
@@ -313,7 +313,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   ),
                   FeatureWidget(
                     visible: featureB.contains(roleUser),
-                    title: "Receive Settings",
+                    title: "Pengaturan Penerimaan Data",
                     icon: const Icon(Icons.download_outlined),
                     onTap: () {
                       if (isConnected) {
@@ -331,7 +331,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   ),
                   FeatureWidget(
                     visible: featureB.contains(roleUser),
-                    title: "Transmit Settings",
+                    title: "Pengaturan Pengiriman Data",
                     icon: const Icon(CupertinoIcons.paperplane),
                     onTap: () {
                       if (isConnected) {
@@ -350,7 +350,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   Visibility(
                     visible: featureB.contains(roleUser),
                     child: FeatureWidget(
-                      title: "Upload Settings",
+                      title: "Pengaturan Unggah Data",
                       icon: const Icon(Icons.upload_outlined),
                       onTap: () {
                         if (isConnected) {
@@ -370,7 +370,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   ),
                   FeatureWidget(
                     visible: featureB.contains(roleUser),
-                    title: "Meta Data Settings",
+                    title: "Pengaturan Meta Data",
                     icon: const Icon(Icons.code),
                     onTap: () {
                       if (isConnected) {
@@ -408,7 +408,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
                   FeatureWidget(
                     visible: featureC.contains(roleUser),
-                    title: "Device Status",
+                    title: "Status Perangkat",
                     onTap: () {
                       if (isConnected) {
                         Navigator.push(
@@ -427,7 +427,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                   ),
                   FeatureWidget(
                     visible: featureC.contains(roleUser),
-                    title: "Set Password",
+                    title: "Ubah Password",
                     onTap: () {
                       if (isConnected) {
                         Navigator.push(
@@ -478,7 +478,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                             width: 5,
                           ),
                           Text(
-                            "Capture",
+                            "Pengambilan Gambar",
                             style: GoogleFonts.readexPro(
                               fontSize: 16,
                               color: Colors.white,
@@ -534,7 +534,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                             width: 5,
                           ),
                           Text(
-                            "Logout",
+                            "Keluar",
                             style: GoogleFonts.readexPro(
                               fontSize: 16,
                               color: Colors.white,

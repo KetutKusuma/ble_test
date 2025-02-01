@@ -206,7 +206,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       key: Snackbar.snackBarKeyDeviceScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Device Status'),
+          title: const Text('Status Perangkat'),
           elevation: 0,
         ),
         body: SmartRefresher(
@@ -219,7 +219,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 child: Column(
                   children: [
                     SettingsContainer(
-                      title: "Firmware",
+                      title: "Perangkat Tertanam",
                       data: firmwareTxt.trim(),
                       onTap: () {},
                       icon: const Icon(
@@ -227,7 +227,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Version",
+                      title: "Versi",
                       data: versionTxt,
                       onTap: () {},
                       icon: const Icon(
@@ -235,7 +235,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Temperature",
+                      title: "Temperatur",
                       data: "$temperatureTxt °C",
                       onTap: () {},
                       icon: const Icon(
@@ -243,7 +243,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Battery 1",
+                      title: "Baterai 1",
                       data: "$battery1Txt volt",
                       description: critBattery1Counter == "0" ||
                               critBattery1Counter == '-'
@@ -255,7 +255,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Battery 2",
+                      title: "Baterai 2",
                       data: "$battery2Txt volt",
                       description: critBattery2Counter == "0" ||
                               critBattery2Counter == '-'
@@ -268,7 +268,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     ),
                     FeatureWidget(
                       visible: featureB.contains(roleUser),
-                      title: "Storage",
+                      title: "Penyimpanan",
                       onTap: () {
                         if (isConnected) {
                           Navigator.push(
@@ -289,7 +289,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     ),
                     FeatureWidget(
                       visible: featureB.contains(roleUser),
-                      title: "Files",
+                      title: "Berkas",
                       onTap: () {
                         if (isConnected) {
                           Navigator.push(
@@ -308,7 +308,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Time",
+                      title: "Waktu",
                       data: timeTxt,
                       onTap: () async {},
                       icon: const Icon(
@@ -342,7 +342,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           //         result * 1000)
                           value: displayDateTimeNow,
                         );
-                        BLEUtils.funcWrite(bytes, "Success Set Time", device);
+                        BLEUtils.funcWrite(bytes, "Sukses ubah Time", device);
                       },
                       child: Container(
                         margin:

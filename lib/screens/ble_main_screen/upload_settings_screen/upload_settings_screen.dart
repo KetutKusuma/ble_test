@@ -244,7 +244,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       modemApnTxt = _setSettings.value;
                     }
                     Snackbar.show(ScreenSnackbar.uploadsettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Sukses ubah ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.uploadsettings,
@@ -279,12 +279,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $title"),
+          title: Text("Masukan data $title"),
           content: Form(
             child: TextFormField(
               controller: controller,
               decoration: const InputDecoration(
-                labelText: "Enter Value",
+                labelText: "Masukan data",
                 border: OutlineInputBorder(),
               ),
               keyboardType: keyboardType,
@@ -534,7 +534,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       key: Snackbar.snackBarKeyUploadSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Upload Settings'),
+          title: const Text('Pengaturan Unggah'),
           elevation: 0,
           // actions: [
           //   Row(
@@ -591,7 +591,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             _setSettings.setSettings = "server";
                             _setSettings.value = input;
                             await BLEUtils.funcWrite(
-                                bytes, "Success Set Server", device);
+                                bytes, "Sukses ubah Server", device);
                             controller.clear();
                           }
                         } catch (e) {
@@ -626,7 +626,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             _setSettings.setSettings = "port";
                             _setSettings.value = input;
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Upload Port", device);
+                                bytes, "Sukses ubah Upload Port", device);
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -693,7 +693,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Settings Enable & Schedule",
+                                      "Pengaturan Jadwal dan Aktivasi",
                                       style: GoogleFonts.readexPro(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
@@ -719,7 +719,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Using",
+                      title: "Unggah Menggunakan",
                       data: uploadUsingTxt,
                       onTap: () async {
                         try {
@@ -732,7 +732,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             _setSettings.setSettings = "upload_using";
                             _setSettings.value = input['value'].toString();
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Upload Using", device);
+                                bytes, "Sukses ubah Upload Using", device);
                           }
                         } catch (e) {
                           Snackbar.show(ScreenSnackbar.uploadsettings,
@@ -745,8 +745,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Initial Delay",
-                      description: "(seconds)",
+                      title: "Penundaan Awal Unggah",
+                      description: "(detik)",
                       data: uploadInitialDelayTxt,
                       onTap: () async {
                         try {
@@ -766,7 +766,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             _setSettings.setSettings = "upload_initial_delay";
                             _setSettings.value = input;
                             BLEUtils.funcWrite(bytes,
-                                "Success Set Upload Initial Delay", device);
+                                "Sukses ubah Upload Initial Delay", device);
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -783,13 +783,13 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                     (uploadUsingTxt != "Wifi")
                         ? const SizedBox()
                         : SettingsContainer(
-                            title: "Wifi SSID",
+                            title: "Nama Wifi",
                             data: wifiSsidTxt,
                             onTap: () async {
                               try {
                                 String? input = await _showInputDialog(
                                   controller,
-                                  "Wifi SSID",
+                                  "Nama Wifi",
                                 );
                                 if (input != null) {
                                   List<int> list =
@@ -798,12 +798,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   _setSettings.setSettings = "wifi_ssid";
                                   _setSettings.value = input;
                                   BLEUtils.funcWrite(
-                                      bytes, "Success Set Wifi SSID", device);
+                                      bytes, "Sukses ubah Nama Wifi", device);
                                 }
                               } catch (e) {
                                 Snackbar.show(
                                   ScreenSnackbar.uploadsettings,
-                                  "Error click on wifi ssid : $e",
+                                  "Error click on Nama Wifi : $e",
                                   success: false,
                                 );
                               }
@@ -815,12 +815,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                     (uploadUsingTxt != "Wifi")
                         ? const SizedBox()
                         : SettingsContainer(
-                            title: "Wifi Password",
+                            title: "Kata Sandi Wifi",
                             data: wifiPasswordTxt,
                             onTap: () async {
                               try {
                                 String? input = await _showInputDialog(
-                                    controller, "Wifi Password");
+                                    controller, "Kata Sandi Wifi");
                                 if (input != null) {
                                   List<int> list =
                                       utf8.encode("wifi_password=$input");
@@ -828,12 +828,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   _setSettings.setSettings = "wifi_password";
                                   _setSettings.value = input;
                                   BLEUtils.funcWrite(bytes,
-                                      "Success Set Wifi Password", device);
+                                      "Sukses ubah Kata Sandi Wifi", device);
                                 }
                               } catch (e) {
                                 Snackbar.show(
                                   ScreenSnackbar.uploadsettings,
-                                  "Error click on wifi password : $e",
+                                  "Error click on Kata Sandi Wifi : $e",
                                   success: false,
                                 );
                               }
@@ -929,7 +929,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             _setSettings.setSettings = "modem_apn";
                             _setSettings.value = input;
                             BLEUtils.funcWrite(
-                                bytes, "Success Set Modem APN", device);
+                                bytes, "Sukses ubah Modem APN", device);
                           }
                         } catch (e) {
                           Snackbar.show(

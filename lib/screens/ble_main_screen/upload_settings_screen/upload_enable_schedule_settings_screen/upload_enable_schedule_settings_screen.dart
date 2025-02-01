@@ -203,7 +203,7 @@ class _UploadEnableScheduleSettingScreenState
                 if (_value.length == 1) {
                   if (_value[0] == 1) {
                     Snackbar.show(ScreenSnackbar.uploadsettings,
-                        "Success set ${_setSettings.setSettings}",
+                        "Sukses ubah ${_setSettings.setSettings}",
                         success: true);
                   } else {
                     Snackbar.show(ScreenSnackbar.uploadsettings,
@@ -243,7 +243,7 @@ class _UploadEnableScheduleSettingScreenState
           titlePadding:
               const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
-            "Setup Destination ${number + 1}",
+            "Atur Tujuan ${number + 1}",
             style: GoogleFonts.readexPro(
               fontWeight: FontWeight.w500,
             ),
@@ -268,7 +268,7 @@ class _UploadEnableScheduleSettingScreenState
                       style: GoogleFonts.readexPro(),
                       controller: uploadScheduleTxtController,
                       decoration: const InputDecoration(
-                        labelText: "Enter Upload Schedule",
+                        labelText: "Masukan Jadwal Unggah",
                         hintText: "00.00-23.59",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -289,7 +289,7 @@ class _UploadEnableScheduleSettingScreenState
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            "Upload Enable",
+                            "Aktifkan Unggah ?",
                             style: GoogleFonts.readexPro(),
                           ),
                           const SizedBox(
@@ -311,7 +311,7 @@ class _UploadEnableScheduleSettingScreenState
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      'True',
+                                      'Ya',
                                       style: GoogleFonts.readexPro(),
                                     ),
                                   ],
@@ -331,7 +331,7 @@ class _UploadEnableScheduleSettingScreenState
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      'False',
+                                      'Tidak',
                                       style: GoogleFonts.readexPro(),
                                     ),
                                   ],
@@ -363,7 +363,7 @@ class _UploadEnableScheduleSettingScreenState
                 }
               },
               child: Text(
-                'Update',
+                'Simpan',
                 style: GoogleFonts.readexPro(),
               ),
             ),
@@ -373,7 +373,7 @@ class _UploadEnableScheduleSettingScreenState
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                'Batalkan',
                 style: GoogleFonts.readexPro(),
               ),
             ),
@@ -389,7 +389,7 @@ class _UploadEnableScheduleSettingScreenState
       appBar: AppBar(
         elevation: 0,
         title: Text(
-          "Upload Enable & Schedule Settings",
+          "Pengaturan Jadwal dan Aktivasi Unggah",
           style: GoogleFonts.readexPro(),
         ),
       ),
@@ -420,7 +420,7 @@ class _UploadEnableScheduleSettingScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Upload Schedule dan Enable ${index + 1}",
+                            "Pengaturan Jadwal dan Aktivasi Unggah ${index + 1}",
                             style: GoogleFonts.readexPro(
                                 fontSize: 18, fontWeight: FontWeight.w500),
                           ),
@@ -432,7 +432,7 @@ class _UploadEnableScheduleSettingScreenState
                             children: [
                               Expanded(
                                 child: Text(
-                                  "Upload Enable: ",
+                                  "Aktifkan Unggah : ",
                                   style: GoogleFonts.readexPro(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500),
@@ -444,7 +444,9 @@ class _UploadEnableScheduleSettingScreenState
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      uploadEnable[index].toString(),
+                                      uploadEnable[index].toString() == "true"
+                                          ? "Ya"
+                                          : "Tidak",
                                       style: GoogleFonts.readexPro(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w400),
@@ -458,7 +460,7 @@ class _UploadEnableScheduleSettingScreenState
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Upload Schedule : ",
+                                "Jadwal Unggah : ",
                                 style: GoogleFonts.readexPro(
                                     fontSize: 14, fontWeight: FontWeight.w500),
                               ),
@@ -525,7 +527,7 @@ class _UploadEnableScheduleSettingScreenState
                               width: 5,
                             ),
                             Text(
-                              "Update Upload Enable & Schedule ${index + 1}",
+                              "Ubah Jadwal dan Aktivasi Unggah ${index + 1}",
                               style: GoogleFonts.readexPro(
                                 fontSize: 14,
                                 color: Colors.white,

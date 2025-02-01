@@ -209,7 +209,7 @@ class _FilesScreenState extends State<FilesScreen> {
                         //   ),
                         // ),
                         SettingsContainer(
-                          title: "Image from Another Toppi",
+                          title: "Gambar Toppi Lain",
                           data: dirNearTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -217,13 +217,13 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Image from Another Toppi Unsent",
+                          title: "Gambar Toppi Lain Belum Terkirim",
                           data: dirNearUnsetTxt,
                           onTap: () {},
                           icon: const Icon(Icons.folder),
                         ),
                         SettingsContainer(
-                          title: "Image This Toppi",
+                          title: "Gambar Toppi Ini",
                           data: dirImageTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -231,7 +231,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Image This Toppi Unsent",
+                          title: "Gambar Toppi Ini Belum Terkirim",
                           data: dirImageUnsetTxt,
                           onTap: () {},
                           icon: const Icon(
@@ -239,7 +239,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ),
                         ),
                         SettingsContainer(
-                          title: "Image Log",
+                          title: "Catatan Gambar",
                           data: dirLogTxt,
                           onTap: () {},
                           icon: const Icon(

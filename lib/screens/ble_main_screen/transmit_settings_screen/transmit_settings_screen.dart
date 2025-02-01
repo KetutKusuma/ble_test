@@ -45,10 +45,10 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   bool isTransmitSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
 
-  /// destination id
+  /// Tujuan id
   TextEditingController destinationIDTxtController = TextEditingController();
 
-  /// transmit schedule
+  /// Jadwal Pengiriman
   TextEditingController transmitScheduleTxtController = TextEditingController();
 
   List<dynamic> result = [];
@@ -208,9 +208,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 if (_value.length > 35) {
                   // return of convert transmit
                   // status bool [0]
-                  // destination enable list<bool> [1]
-                  // destination id list<string> [2]
-                  // transmit schedule list<int> [3]
+                  // Tujuan enable list<bool> [1]
+                  // Tujuan id list<string> [2]
+                  // Jadwal Pengiriman list<int> [3]
                   result =
                       TransmitSettingsConvert.convertTransmitSettings(_value);
                   _progressDialog.hide();
@@ -262,7 +262,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           titlePadding:
               const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
-            "Setup Destination ${number + 1}",
+            "Atur Tujuan ${number + 1}",
             style: GoogleFonts.readexPro(
               fontWeight: FontWeight.w500,
             ),
@@ -273,12 +273,12 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
               builder: (BuildContext context, StateSetter setState) {
                 return Column(
                   children: [
-                    // for destination ID
+                    // for Tujuan ID
                     TextFormField(
                       style: GoogleFonts.readexPro(),
                       controller: destinationIDTxtController,
                       decoration: const InputDecoration(
-                        labelText: "Enter Destination ID",
+                        labelText: "Masukan Tujuan ID",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
@@ -297,7 +297,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       height: 7,
                     ),
 
-                    // for transmit schedule
+                    // for Jadwal Pengiriman
                     TextFormField(
                       readOnly: true,
                       onTap: () async {
@@ -311,7 +311,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       style: GoogleFonts.readexPro(),
                       controller: transmitScheduleTxtController,
                       decoration: const InputDecoration(
-                        labelText: "Enter Transmit Schedule",
+                        labelText: "Masukan Jadwal Pengiriman",
                         hintText: "00.00-23.59",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -324,7 +324,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       height: 10,
                     ),
 
-                    // for destination enable
+                    // for Tujuan enable
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Column(
@@ -332,7 +332,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            "Destination Enable",
+                            "Aktifkan Tujuan ?",
                             style: GoogleFonts.readexPro(),
                           ),
                           const SizedBox(
@@ -354,7 +354,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      'True',
+                                      'Ya',
                                       style: GoogleFonts.readexPro(),
                                     ),
                                   ],
@@ -374,7 +374,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      'False',
+                                      'Tidak',
                                       style: GoogleFonts.readexPro(),
                                     ),
                                   ],
@@ -436,7 +436,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
       key: Snackbar.snackBarKeyTransmitSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Transmit Settings'),
+          title: const Text('Pengaturan Pengiriman'),
           elevation: 0,
           // actions: [
           //   Row(
@@ -488,7 +488,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Destination ${index + 1}",
+                                "Tujuan ${index + 1}",
                                 style: GoogleFonts.readexPro(
                                     fontSize: 16, fontWeight: FontWeight.w500),
                               ),
@@ -501,7 +501,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      "Destination ID : ",
+                                      "Tujuan ID : ",
                                       style: GoogleFonts.readexPro(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500),
@@ -528,13 +528,15 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "Destination Enable : ",
+                                    "Aktifkan Tujuan : ",
                                     style: GoogleFonts.readexPro(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500),
                                   ),
                                   Text(
-                                    result[1][index].toString(),
+                                    result[1][index].toString() == "true"
+                                        ? "Ya"
+                                        : "Tidak",
                                     style: GoogleFonts.readexPro(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w400),
@@ -547,7 +549,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      "Transmit Schedule : ",
+                                      "Jadwal Pengiriman : ",
                                       style: GoogleFonts.readexPro(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500),
@@ -622,7 +624,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                   width: 5,
                                 ),
                                 Text(
-                                  "Update Destination ${index + 1}",
+                                  "Update Tujuan ${index + 1}",
                                   style: GoogleFonts.readexPro(
                                     fontSize: 14,
                                     color: Colors.white,

@@ -134,7 +134,7 @@ class _SearchScreenState extends State<SearchScreen> {
     log("SCAN  DEVICE : $device");
     log("name : ${device.advName}");
     log("remote id : ${device.remoteId}");
-    pd.show(message: "Login process . . .");
+    pd.show(message: "Proses masuk . . .");
     bool konek = await device.connectAndUpdateStream().catchError((e) {
       pd.hide();
       log("FAILED CONNECT search screen");
@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
     await Future.delayed(const Duration(seconds: 2));
     // LOGIN
     if (valueHandshake.isNotEmpty) {
-      log("login process search screen . . .");
+      log("Proses masuk search screen . . .");
       loginProcess(device);
     } else {
       pd.hide();
@@ -387,7 +387,7 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Scan Devices',
+            'Pindai Perangkat',
             style: GoogleFonts.readexPro(),
           ),
           elevation: 0,

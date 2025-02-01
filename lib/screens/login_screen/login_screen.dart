@@ -47,8 +47,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   List<String> pageListPumpDetail = [
     "Id",
-    "Mac Address",
-    "Scan",
+    "Alamat Mac",
+    "Pemindaian",
   ];
 
   int indexPage = 0;
@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // init discover services
     // it can be notify(subscribe) and listen lastvalue
     log("SUCCESS CONNECT login screen $isConnected");
-    // pd.show(message: "Login process . . .");
+    // pd.show(message: "Proses masuk . . .");
     Future.delayed(const Duration(seconds: 4, milliseconds: 500));
 
     // listen for connection state
@@ -176,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await Future.delayed(const Duration(seconds: 2));
     // LOGIN
     if (valueHandshake.isNotEmpty) {
-      log("login process . . .");
+      log("Proses masuk . . .");
       loginProcess(device);
     } else {
       pd.hide();
@@ -376,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_scanResultsSubscription != null) {
       _scanResultsSubscription!.cancel();
     }
-    pd.show(message: "Login process . . .");
+    pd.show(message: "Proses masuk . . .");
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
         log("SCAN RESULT : ${result}");
@@ -494,14 +494,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Sign In",
+                        "Masuk",
                         style: GoogleFonts.readexPro(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        "Login to your TOPPI device",
+                        "Masuk ke perangkat Toppi Anda",
                         style: GoogleFonts.readexPro(),
                       )
                     ],
@@ -523,7 +523,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.readexPro(),
                           controller: userRoleTxtController,
                           decoration: const InputDecoration(
-                            labelText: "Username",
+                            labelText: "Nama Pengguna",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.all(
                                 Radius.circular(10),
@@ -540,7 +540,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           cursorColor: Colors.transparent,
                           controller: passwordTxtController,
                           decoration: InputDecoration(
-                              labelText: "Password",
+                              labelText: "Kata Sandi",
                               border: const OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(10),
@@ -577,7 +577,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                             Text(
-                              "Remember Me",
+                              "Ingat Saya",
                               style: GoogleFonts.readexPro(),
                             ),
                           ],
@@ -591,7 +591,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Padding(
                   padding:
                       const EdgeInsets.only(left: 20.0, right: 20, bottom: 5),
-                  child: Text("Choose a way to login",
+                  child: Text("Pilih cara untuk masuk",
                       style: GoogleFonts.readexPro()),
                 ),
               ),
@@ -693,7 +693,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
+                                    "Tolong isi sebelum login",
                                     success: false);
                               }
                             },
@@ -711,7 +711,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Login With Search Id",
+                                    "Masuk dengan mencari Id",
                                     style: GoogleFonts.readexPro(
                                       fontSize: 18,
                                       color: Colors.white,
@@ -735,7 +735,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             cursorColor: Colors.transparent,
                             controller: macAddressTxtConroller,
                             decoration: const InputDecoration(
-                              labelText: "Mac Address",
+                              labelText: "Alamat Mac",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(10),
@@ -763,7 +763,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
+                                    "Tolong isi sebelum login",
                                     success: false);
                               }
                             },
@@ -781,7 +781,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Login with Mac Address",
+                                    "Masuk dengan Alamat Mac",
                                     style: GoogleFonts.readexPro(
                                       fontSize: 18,
                                       color: Colors.white,
@@ -824,7 +824,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Please fill all form before login",
+                                    "Tolong isi sebelum login",
                                     success: false);
                               }
                             },
@@ -843,7 +843,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Login With Scan",
+                                    "Masuk dengan pemindaian",
                                     style: GoogleFonts.readexPro(
                                       fontSize: 18,
                                       color: Colors.white,
