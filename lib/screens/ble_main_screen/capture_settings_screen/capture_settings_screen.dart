@@ -580,6 +580,28 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         Icons.switch_camera_outlined,
                       ),
                     ),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 7.0, horizontal: 15),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 0.0, horizontal: 15),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            topRight: Radius.circular(10)),
+                      ),
+                      width: MediaQuery.of(context).size.width,
+                      child: const Text(
+                        "Pengaturan Pengambilan Gambar Perbulan",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     GestureDetector(
                       onTap: () async {
                         // ini agak special untuk updatenya
