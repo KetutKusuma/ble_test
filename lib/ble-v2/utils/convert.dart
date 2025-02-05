@@ -1,0 +1,150 @@
+import 'dart:typed_data';
+
+class ConvertV2 {
+  String minuteToDateTimeString(int minute) {
+    int hh = minute ~/ 60;
+    int mm = minute % 60;
+    return "${hh.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}";
+  }
+
+  int dateTimeStringToMinute(String s) {
+    if (s.isEmpty) throw const FormatException("Invalid time format");
+    var parts = s.split(":");
+    if (parts.length != 2) throw const FormatException("Invalid time format");
+
+    int hh = int.tryParse(parts[0]) ?? -1;
+    int mm = int.tryParse(parts[1]) ?? -1;
+
+    if (hh == -1 || mm == -1)
+      throw const FormatException("Invalid time format");
+
+    return hh * 60 + mm;
+  }
+
+  List<int> stringHexAddressToArrayUint8(String input, int byteLength) {
+    int expectedLen = byteLength * 2 + (byteLength - 1);
+    if (input.length != expectedLen) {
+      throw FormatException("Input length must be $expectedLen");
+    }
+
+    List<int> result = [];
+    for (int i = 0; i < byteLength; i++) {
+      var hex = input.substring(i * 3, i * 3 + 2);
+      result.add(int.parse(hex, radix: 16));
+    }
+    return result;
+  }
+
+  String arrayUint8ToStringHexAddress(List<int> input) {
+    return input.map((e) => e.toRadixString(16).padLeft(2, '0')).join(":");
+  }
+
+  List<int> stringHexToArrayUint8(String input, int byteLength) {
+    int expectedLen = byteLength * 2;
+    if (input.length != expectedLen) {
+      throw FormatException("Input length must be $expectedLen");
+    }
+
+    List<int> result = [];
+    for (int i = 0; i < byteLength; i++) {
+      var hex = input.substring(i * 2, i * 2 + 2);
+      result.add(int.parse(hex, radix: 16));
+    }
+    return result;
+  }
+
+  String uint8ToUtcString(int utc) {
+    String mm = utc % 2 != 0 ? "30" : "00";
+    if (utc < 24) {
+      return "-${(24 - utc) ~/ 2}:$mm";
+    } else {
+      return "+${(utc - 24) ~/ 2}:$mm";
+    }
+  }
+
+  int utcStringToUint8(String utc) {
+    RegExp regExp = RegExp(r"^[-+]?(0[0-9]|1[0-2]):(00|30)$");
+    if (!regExp.hasMatch(utc)) {
+      throw const FormatException("Invalid format");
+    }
+
+    if (utc.length == 5) {
+      utc = "+" + utc;
+    }
+    int h = int.parse(utc.substring(1, 3));
+    int m = utc.substring(4, 6) == "30" ? 1 : 0;
+    if (utc[0] == '-') {
+      return (12 - h) * 2 - m;
+    } else {
+      return 24 + h * 2 + m;
+    }
+  }
+
+  int stringHexToUint8(String input, int startIndex) {
+    return int.parse(input.substring(startIndex, startIndex + 2), radix: 16);
+  }
+
+  int stringHexToUint16(String input, int startIndex) {
+    return int.parse(input.substring(startIndex, startIndex + 4), radix: 16);
+  }
+
+  int stringHexToUint32(String input, int startIndex) {
+    return int.parse(input.substring(startIndex, startIndex + 8), radix: 16);
+  }
+
+  bool bufferToBool(List<int> buffer, int startIndex) {
+    return (buffer[startIndex]) == 1;
+  }
+
+  int bufferToInt8(List<int> buffer, int startIndex) {
+    return uint8ToInt8(buffer[startIndex]);
+  }
+
+  int bufferToUint8(List<int> buffer, int startIndex) {
+    return buffer[startIndex];
+  }
+
+  int bufferToUint16(List<int> buffer, int startIndex) {
+    return (buffer[startIndex] & 0x00ff) |
+        (buffer[startIndex + 1] & 0xffff << 8);
+  }
+
+  int bufferToUint32(List<int> buffer, int startIndex) {
+    return (buffer[startIndex]) |
+        (buffer[startIndex + 1] << 8) |
+        (buffer[startIndex + 2] << 16) |
+        (buffer[startIndex + 3] << 24);
+  }
+
+  double bufferToFloat32(List<int> buffer, int startIndex) {
+    final byteData = ByteData.sublistView(
+        Uint8List.fromList(buffer), startIndex, startIndex + 4);
+    return byteData.getFloat32(0, Endian.little);
+  }
+
+  int uint8ToInt8(int i) {
+    if (i >= 128) {
+      return -((255 - i + 1));
+    }
+    return i;
+  }
+
+  bool getBit(int data, int index) {
+    if (index > (8 * (data.bitLength ~/ 8) - 1)) {
+      return false;
+    }
+    return ((data & (1 << index)) >> index) == 1;
+  }
+
+  bool setBit(int data, int index, bool value) {
+    if (index > (8 * (data.bitLength ~/ 8) - 1)) {
+      return false;
+    }
+    if (value) {
+      data |= (1 << index);
+    } else {
+      data &= ~(1 << index);
+    }
+    return true;
+  }
+}

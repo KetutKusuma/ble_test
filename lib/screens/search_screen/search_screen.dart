@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
+import 'package:ble_test/screens/tes_coba.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
@@ -360,6 +361,15 @@ class _SearchScreenState extends State<SearchScreen> {
             device: d,
             onOpen: () => onConnectPressed(d),
             onConnect: () => onConnectPressed(d),
+            // onConnect: () {
+            //   Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => TesCaraBaru(
+            //           device: d,
+            //         ),
+            //       ));
+            // },
           ),
         )
         .toList();
@@ -374,7 +384,16 @@ class _SearchScreenState extends State<SearchScreen> {
       (r) {
         return ScanResultTile(
           result: r,
-          onTap: () => onConnectPressed(r.device),
+          // onTap: () => onConnectPressed(r.device),
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TesCaraBaru(
+                    device: r.device,
+                  ),
+                ));
+          },
         );
       },
     ).toList();

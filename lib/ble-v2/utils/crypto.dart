@@ -4,30 +4,17 @@ import 'package:crypto/crypto.dart';
 import 'package:pointycastle/export.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 
-class CryptoUtils {
+import '../../utils/crc32.dart';
+
+class CryptoUtilsV2 {
   static String md5Hash(String text) {
     final bytes = utf8.encode(text);
     final digest = md5.convert(bytes);
     return digest.toString();
   }
 
-  static int crc32(Uint8List bytes) {
-    int crc = 0xFFFFFFFF;
-    List<int> table = List<int>.generate(256, (i) {
-      int c = i;
-      for (int j = 0; j < 8; j++) {
-        if ((c & 1) != 0) {
-          c = 0xedb88320 ^ (c >> 1);
-        } else {
-          c >>= 1;
-        }
-      }
-      return c;
-    });
-    for (final byte in bytes) {
-      crc = table[(crc ^ byte) & 0xff] ^ (crc >> 8);
-    }
-    return ~crc & 0xFFFFFFFF;
+  static int crc32(List<int> bytes) {
+    return CRC32.compute(bytes);
   }
 
   static Uint8List pkcs5Padding(Uint8List src, int blockSize) {
@@ -43,24 +30,27 @@ class CryptoUtils {
     return src.sublist(0, src.length - unpadding);
   }
 
-  static Uint8List aesEncrypt(Uint8List input, Uint8List key, Uint8List iv) {
+  static Uint8List aesEncrypt(List<int> input, List<int> key, List<int> iv) {
     final cipher = CBCBlockCipher(AESFastEngine())
       ..init(
-          true, ParametersWithIV(KeyParameter(key), iv)); // true untuk encrypt
-    return _processBlocks(cipher, pkcs5Padding(input, cipher.blockSize));
+          true,
+          ParametersWithIV(KeyParameter(Uint8List.fromList(key)),
+              Uint8List.fromList(iv))); // true untuk encrypt
+    return _processBlocks(
+        cipher, pkcs5Padding(Uint8List.fromList(input), cipher.blockSize));
   }
 
-  static Uint8List aesDecrypt(Uint8List input, Uint8List key, Uint8List iv) {
+  static Uint8List aesDecrypt(List<int> input, List<int> key, List<int> iv) {
     final cipher = CBCBlockCipher(AESFastEngine())
-      ..init(false,
-          ParametersWithIV(KeyParameter(key), iv)); // false untuk decrypt
-    print("mama sampe process blocks");
-    final decrypted = _processBlocks(cipher, input);
-    print("mama sampe process unpadding");
+      ..init(
+          false,
+          ParametersWithIV(KeyParameter(Uint8List.fromList(key)),
+              Uint8List.fromList(iv))); // false untuk decrypt
+    final decrypted = _processBlocks(cipher, Uint8List.fromList(input));
     return pkcs5Unpadding(decrypted);
   }
 
-  static String base64Encode(Uint8List bytes) {
+  static String base64Encode(List<int> bytes) {
     return base64.encode(bytes);
   }
 
@@ -68,10 +58,11 @@ class CryptoUtils {
     return Uint8List.fromList(base64.decode(encoded));
   }
 
-  static Uint8List _processBlocks(BlockCipher cipher, Uint8List input) {
+  static Uint8List _processBlocks(BlockCipher cipher, List<int> input) {
     final output = Uint8List(input.length);
     for (int offset = 0; offset < input.length;) {
-      offset += cipher.processBlock(input, offset, output, offset);
+      offset += cipher.processBlock(
+          Uint8List.fromList(input), offset, output, offset);
     }
     return output;
   }
