@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
@@ -28,21 +30,17 @@ class UploadEnableScheduleSettingScreen extends StatefulWidget {
 
 class _UploadEnableScheduleSettingScreenState
     extends State<UploadEnableScheduleSettingScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
 
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
 
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   TextEditingController portController = TextEditingController();
 
@@ -51,8 +49,6 @@ class _UploadEnableScheduleSettingScreenState
     {"title": "Sim800l", "value": 1},
     {"title": "NB-Iot", "value": 2},
   ];
-
-  bool isUploadSettings = true;
 
   // for progress dialog
   late SimpleFontelicoProgressDialog _progressDialog;
@@ -67,6 +63,7 @@ class _UploadEnableScheduleSettingScreenState
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -110,16 +107,12 @@ class _UploadEnableScheduleSettingScreenState
       }
     });
     initGetRawUpload();
-    initDiscoverServices();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isUploadSettings = false;
+
     super.dispose();
   }
 
@@ -149,84 +142,6 @@ class _UploadEnableScheduleSettingScreenState
     } catch (e) {
       Snackbar.show(ScreenSnackbar.uploadsettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.uploadsettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isUploadSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 100) {
-                  List<dynamic> result =
-                      UploadSettingsConverter.convertUploadSettings(_value);
-                  _progressDialog.hide();
-                  if (mounted) {
-                    log("result[1]: '${result[1]}', ${result[1].trim().length} ${result[1].isEmpty}");
-                    setState(() {
-                      // upload enable dan upload schedule itu harusnya berupa list
-
-                      uploadEnable = result[3]; // List<bool> [8]
-                      uploadSchedule = result[4]; // List<int> [8]
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    Snackbar.show(ScreenSnackbar.uploadsettings,
-                        "Sukses ubah ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.uploadsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
-          prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 

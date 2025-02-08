@@ -9,8 +9,6 @@ import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/file_screen/file_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/storage_screen/storage_screen.dart';
-import 'package:ble_test/utils/converter/bytes_convert.dart';
-import 'package:ble_test/utils/converter/settings/device_settings_convert.dart';
 import 'package:ble_test/utils/global.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

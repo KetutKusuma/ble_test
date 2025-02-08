@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/status/status.dart';
@@ -22,20 +23,16 @@ class StorageScreen extends StatefulWidget {
 }
 
 class _StorageScreenState extends State<StorageScreen> {
+  late BLEProvider bleProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
 
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-", getTotalBytesTxt = "-", getUsedBytesTxt = "-";
+  String getTotalBytesTxt = "-", getUsedBytesTxt = "-";
 
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
-  bool isStorageScreen = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
 
@@ -63,16 +60,12 @@ class _StorageScreenState extends State<StorageScreen> {
       },
     );
     initGetStorage();
-    initDiscoverServices();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    isStorageScreen = false;
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
+
     super.dispose();
   }
 
@@ -102,71 +95,6 @@ class _StorageScreenState extends State<StorageScreen> {
     } catch (e) {
       Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.capturesettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isStorageScreen) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length >= 9) {
-                  List<dynamic> result =
-                      StatusConverter.convertStorageStatus(_value);
-                  _progressDialog.hide();
-
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      getTotalBytesTxt = formatBytes(result[1]);
-                      getUsedBytesTxt = formatBytes(result[2]);
-                    });
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings,
-          prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -207,14 +135,6 @@ class _StorageScreenState extends State<StorageScreen> {
                         vertical: 5.0, horizontal: 0),
                     child: Column(
                       children: [
-                        // SettingsContainer(
-                        //   title: "Status",
-                        //   data: statusTxt,
-                        //   onTap: () {},
-                        //   icon: const Icon(
-                        //     CupertinoIcons.settings,
-                        //   ),
-                        // ),
                         SettingsContainer(
                           title: "Total Penyimpanan",
                           data: getTotalBytesTxt,

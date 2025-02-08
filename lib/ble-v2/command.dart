@@ -3,7 +3,9 @@ import 'dart:developer';
 
 import 'package:ble_test/ble-v2/model/admin_model.dart';
 import 'package:ble_test/ble-v2/model/device_status_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/crypto.dart';
@@ -514,16 +516,152 @@ class Command {
         dateTime: dateTime,
       );
 
-      if (responseWrite.header.status) {
-        return BLEResponse.success(
-          "Sukses dapat device status",
-          data: deviceStatusModels,
-        );
-      } else {
-        return BLEResponse.error("Gagal get device status");
-      }
+      return BLEResponse.success(
+        "Sukses dapat status perangakt",
+        data: deviceStatusModels,
+      );
     } catch (e) {
-      return BLEResponse.error("Error get device status : $e");
+      return BLEResponse.error("Error dapat status perangkat : $e");
+    }
+  }
+
+  Future<BLEResponse<CaptureModel>> getCaptureSchedule(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      MessageV2().createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.captureSchedule], buffer);
+      List<int> idata = MessageV2().createEnd(
+        sessionID,
+        buffer,
+        InitConfig.data().KEY,
+        InitConfig.data().IV,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      log("response wriste get capture schedule : ${responseWrite}");
+
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Fail to retrieve parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      int startIndex = 0;
+
+      int schedule = ConvertV2().bufferToUint16(params[startIndex], 0);
+      int count = ConvertV2().bufferToUint8(params[startIndex + 1], 0);
+      int interval = ConvertV2().bufferToUint16(params[startIndex + 2], 0);
+      int spDate = ConvertV2().bufferToUint32(params[startIndex + 3], 0);
+      log("MAMA from ${params[startIndex + 3]} to $spDate");
+      int spSchedule = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
+      int spCount = ConvertV2().bufferToUint8(params[startIndex + 5], 0);
+      int spInterval = ConvertV2().bufferToUint16(params[startIndex + 6], 0);
+      int recentCaptureLimit =
+          ConvertV2().bufferToUint16(params[startIndex + 7], 0);
+
+      CaptureModel captureModel = CaptureModel(
+        schedule: schedule,
+        count: count,
+        interval: interval,
+        specialDate: spDate,
+        specialSchedule: spSchedule,
+        specialCount: spCount,
+        specialInterval: spInterval,
+        recentCaptureLimit: recentCaptureLimit,
+      );
+
+      return BLEResponse.success(
+        "Sukses dapat jadwal pengambilan gambar",
+        data: captureModel,
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat jadwal pengambilan gambar : $e");
+    }
+  }
+
+  Future<BLEResponse<ReceiveModel>> getReceiveSchedule(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.receiveSchedule;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      MessageV2().createBegin(uniqueID, MessageV2.request, command, buffer);
+      List<int> idata = MessageV2().createEnd(
+        sessionID,
+        buffer,
+        InitConfig.data().KEY,
+        InitConfig.data().IV,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get receive schedule : ${responseWrite}");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Fail to retrieve parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      int startIndex = 0;
+
+      bool enable = ConvertV2().bufferToBool(params[startIndex], 0);
+      int schedule = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+      int count = ConvertV2().bufferToUint8(params[startIndex + 2], 0);
+      int interval = ConvertV2().bufferToUint16(params[startIndex + 3], 0);
+      int timeAdjust = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
+
+      ReceiveModel receiveModel = ReceiveModel(
+        enable: enable,
+        schedule: schedule,
+        count: count,
+        interval: interval,
+        timeAdjust: timeAdjust,
+      );
+
+      return BLEResponse.success(
+        "Sukses dapat jadwal pengambilan gambar",
+        data: receiveModel,
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat jadwal pengambilan gambar : $e");
     }
   }
 }

@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/converter/settings/meta_data_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
@@ -22,26 +24,20 @@ class MetaDataSettingsScreen extends StatefulWidget {
 }
 
 class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      modelMeterTxt = '-',
+  String modelMeterTxt = '-',
       meterSnTxt = '-',
       meterSealTxt = '-',
       timeUTCTxt = '-',
       idPelangganTxt = '-';
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   TextEditingController modelMeterTxtController = TextEditingController();
   TextEditingController meterSnTxtController = TextEditingController();
@@ -49,12 +45,12 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   TextEditingController timeUTCTxtController = TextEditingController();
   TextEditingController idPelangganTxtController = TextEditingController();
 
-  bool isMetaDataSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
 
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -98,17 +94,13 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         }
       }
     });
-    initDiscoverServices();
     initGetRawMetaData();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isMetaDataSettings = false;
+
     super.dispose();
   }
 
@@ -139,100 +131,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     } catch (e) {
       Snackbar.show(ScreenSnackbar.metadatasettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.metadatasettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isMetaDataSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 45) {
-                  log("masuk sini ?");
-                  List<dynamic> result =
-                      MetaDataSettingsConvert.convertMetaDataSettings(_value);
-                  _progressDialog.hide();
-
-                  if (mounted) {
-                    setState(() {
-                      if (result.isNotEmpty) {
-                        statusTxt = result[0].toString();
-                        modelMeterTxt = result[1].toString();
-                        meterSnTxt = result[2].toString();
-                        meterSealTxt = result[3].toString();
-                        timeUTCTxt = result[4].toString();
-                        idPelangganTxt = result[5].toString();
-                      }
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "meter_model") {
-                      modelMeterTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "meter_sn") {
-                      meterSnTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "meter_seal") {
-                      meterSealTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "time_utc") {
-                      timeUTCTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "meta_data_custom") {
-                      idPelangganTxt = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.metadatasettings,
-                        "Sukses ubah ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.metadatasettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.metadatasettings,
-          prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -344,27 +242,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         appBar: AppBar(
           title: const Text('Pengaturan Meta Data'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "Batalkan"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -375,15 +252,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    // Text("VALUE : $_value"),
-                    // SettingsContainer(
-                    //   title: "Status",
-                    //   data: statusTxt,
-                    //   onTap: () {},
-                    //   icon: const Icon(
-                    //     CupertinoIcons.settings,
-                    //   ),
-                    // ),
                     SettingsContainer(
                       title: "Model Meter",
                       data: modelMeterTxt,
@@ -393,8 +261,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_model=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meter_model", value: input);
+
                           BLEUtils.funcWrite(
                               bytes, "Sukses ubah Model Meter", device);
                         }
@@ -413,8 +280,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_sn=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meter_sn", value: input);
+
                           BLEUtils.funcWrite(
                               bytes, "Sukses ubah Nomor Seri Meter", device);
                         }
@@ -433,8 +299,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_seal=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meter_seal", value: input);
+
                           BLEUtils.funcWrite(
                               bytes, "Sukses ubah Segel Meter", device);
                         }
@@ -454,8 +319,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           List<int> list =
                               utf8.encode("meta_data_custom=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meta_data_custom", value: input);
+
                           BLEUtils.funcWrite(
                               bytes, "Sukses Ubah ID Pelanggan", device);
                         }
@@ -474,8 +338,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         if (input != null) {
                           List<int> list = utf8.encode("time_utc=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "time_utc", value: input);
+
                           BLEUtils.funcWrite(
                               bytes, "Sukses ubah Time UTC", device);
                         }

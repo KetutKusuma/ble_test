@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../../utils/snackbar.dart';
 
@@ -20,22 +22,16 @@ class SetPasswordScreen extends StatefulWidget {
 }
 
 class _SetPasswordScreenState extends State<SetPasswordScreen> {
+  late BLEProvider bleProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
 
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
 
   TextEditingController pwdNewTxtController = TextEditingController();
   TextEditingController pwdNewConfirmTxtController = TextEditingController();
   TextEditingController pwdOldTxtController = TextEditingController();
-
-  bool isSetPasswordScreen = true;
-  bool isSetPasswordStart = false;
 
   bool isObscureTextOldPassword = true;
   bool isObsecureTextNewPasssword = true;
@@ -44,6 +40,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
       if (_connectionState == BluetoothConnectionState.disconnected) {
@@ -54,16 +51,11 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         setState(() {});
       }
     });
-    initDiscoverServices();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isSetPasswordScreen = false;
     super.dispose();
   }
 
@@ -74,63 +66,6 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
 
   bool get isConnected {
     return _connectionState == BluetoothConnectionState.connected;
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.setpassword,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isSetPasswordScreen) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-                if (isSetPasswordStart) {
-                  if (_value.length == 1 && _value[0] == 1) {
-                    Snackbar.show(
-                        ScreenSnackbar.setpassword, "Sukses ubah New Passoword",
-                        success: true);
-                  } else {
-                    Snackbar.show(
-                        ScreenSnackbar.setpassword, "Fail Set New Passoword",
-                        success: false);
-                  }
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.setpassword, prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
-    }
   }
 
   @override
@@ -261,7 +196,6 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                                   success: false);
                               return;
                             } else {
-                              isSetPasswordStart = true;
                               List<int> list = utf8.encode(
                                   "set_password=${pwdOldTxtController.text};${pwdNewTxtController.text}");
                               Uint8List bytes = Uint8List.fromList(list);

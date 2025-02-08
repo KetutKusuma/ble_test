@@ -1,16 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/capture_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
@@ -27,20 +31,14 @@ class CaptureSettingsScreen extends StatefulWidget {
 }
 
 class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-",
-      captureScheduleTxt = "-",
+  String captureScheduleTxt = "-",
       captureIntervalTxt = "-",
       captureCountTxt = '-',
       captureRecentLimitTxt = '-',
@@ -49,9 +47,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
       spCaptrueIntervalTxt = '-',
       spCaptureCountTxt = '-';
 
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
-  bool isCaptureSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
 
@@ -59,6 +55,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -78,40 +75,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         }
       },
     );
-    // spCaptureDateTxtController.addListener(() {
-    //   final text = spCaptureDateTxtController.text;
-    //   if (text.isNotEmpty) {
-    //     final value = double.tryParse(text);
-    //     if (value != null) {
-    //       if (value <= 1 && text.length >= 31) {
-    //         // Otomatis set menjadi 0.5 jika kurang dari 0.5
-    //         spCaptureDateTxtController.text = '1';
-    //         spCaptureDateTxtController.selection = TextSelection.fromPosition(
-    //             TextPosition(
-    //                 offset: spCaptureDateTxtController
-    //                     .text.length)); // Memastikan cursor di akhir
-    //       } else if (value >= 31) {
-    //         // Otomatis set menjadi 1.5 jika lebih dari 1.5
-    //         spCaptureDateTxtController.text = '31';
-    //         spCaptureDateTxtController.selection = TextSelection.fromPosition(
-    //             TextPosition(
-    //                 offset: spCaptureDateTxtController
-    //                     .text.length)); // Memastikan cursor di akhir
-    //       }
-    //     }
-    //   }
-    // });
-    initGetRawCapture();
-    initDiscoverServices();
+
+    initGetCapture();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    isCaptureSettings = false;
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
+
     super.dispose();
   }
 
@@ -123,7 +94,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawCapture();
+      initGetCapture();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -131,123 +102,38 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     }
   }
 
-  initGetRawCapture() async {
+  initGetCapture() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_capture?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Capture", device);
+        BLEResponse<CaptureModel> response =
+            await Command().getCaptureSchedule(bleProvider);
+        _progressDialog.hide();
+        if (response.status) {
+          captureScheduleTxt =
+              ConvertTime.minuteToDateTimeString(response.data!.schedule);
+          captureIntervalTxt = response.data!.interval.toString();
+          captureCountTxt = response.data!.count.toString();
+          captureRecentLimitTxt = response.data!.recentCaptureLimit.toString();
+          spCaptureDateTxt = (response.data!.specialDateString == "")
+              ? "-"
+              : response.data!.specialDateString;
+          spCaptureScheduleTxt = ConvertTime.minuteToDateTimeString(
+              response.data!.specialSchedule);
+          spCaptrueIntervalTxt = response.data!.specialInterval.toString();
+          spCaptureCountTxt = response.data!.specialCount.toString();
+
+          setState(() {});
+        } else {
+          Snackbar.show(
+            ScreenSnackbar.capturesettings,
+            response.message,
+            success: false,
+          );
+        }
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.capturesettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isCaptureSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 16) {
-                  List<dynamic> result =
-                      CaptureSettingsConverter.convertCaptureSettings(_value);
-                  _progressDialog.hide();
-
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      captureScheduleTxt = TimePickerHelper.formatTimeOfDay(
-                          TimePickerHelper.minutesToTimeOfDay(result[1]));
-                      captureIntervalTxt = result[2].toString();
-                      captureCountTxt = result[3].toString();
-                      captureRecentLimitTxt = (result[4]).toString();
-                      spCaptureDateTxt = getDateSpecialCaptureDate(result[5]);
-                      spCaptureScheduleTxt = TimePickerHelper.formatTimeOfDay(
-                          TimePickerHelper.minutesToTimeOfDay(result[6]));
-                      spCaptrueIntervalTxt = result[7].toString();
-                      spCaptureCountTxt = result[8].toString();
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "capture_schedule") {
-                      captureScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "capture_interval") {
-                      captureIntervalTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "capture_count") {
-                      captureCountTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "capture_recent_limit") {
-                      captureRecentLimitTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "special_capture_date") {
-                      spCaptureDateTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "special_capture_schedule") {
-                      spCaptureScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "special_capture_interval") {
-                      spCaptrueIntervalTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "special_capture_count") {
-                      spCaptureCountTxt = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.capturesettings,
-                        "Sukses ubah ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.capturesettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings,
-          prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -394,27 +280,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         appBar: AppBar(
           title: const Text('Pengaturan Pengambilan Gambar'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "Batalkan"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -425,15 +290,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    // Text("VALUE : $_value"),
-                    // SettingsContainer(
-                    //   title: "Status",
-                    //   data: statusTxt,
-                    //   onTap: () {},
-                    //   icon: const Icon(
-                    //     CupertinoIcons.settings,
-                    //   ),
-                    // ),
                     const SizedBox(
                       height: 7,
                     ),
@@ -467,9 +323,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
-                          _setSettings.setSettings = "capture_schedule";
-                          _setSettings.value =
-                              TimePickerHelper.formatTimeOfDay(result);
+                          TimePickerHelper.formatTimeOfDay(result);
                           List<int> list = utf8.encode(
                               "capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -506,8 +360,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                               controller, "Jumlah Pengambilan Gambar",
                               label: "how many repetitions a day");
                           if (input != null) {
-                            _setSettings.setSettings = "capture_count";
-                            _setSettings.value = input;
                             List<int> list =
                                 utf8.encode("capture_count=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -534,8 +386,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                               controller, "Interval Pengambilan Gambar",
                               label: "repetition capture");
                           if (input != null) {
-                            _setSettings.setSettings = "capture_interval";
-                            _setSettings.value = input;
                             List<int> list =
                                 utf8.encode("capture_interval=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -550,7 +400,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         Icons.trending_up_rounded,
                       ),
                     ),
-
                     SettingsContainer(
                       title: "Batas Pengambilan Terbaru",
                       description:
@@ -564,8 +413,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             "Batas Pengambilan Terbaru",
                           );
                           if (input != null) {
-                            _setSettings.setSettings = "capture_recent_limit";
-                            _setSettings.value = input;
                             List<int> list =
                                 utf8.encode("capture_recent_limit=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -579,6 +426,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       icon: const Icon(
                         Icons.switch_camera_outlined,
                       ),
+                    ),
+                    const SizedBox(
+                      height: 10,
                     ),
                     Container(
                       padding:
@@ -619,7 +469,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         // nanti setelah 200 detik get lagi raw_capture
                         // hold dulu
                         await Future.delayed(const Duration(milliseconds: 200));
-                        initGetRawCapture();
+                        initGetCapture();
                       },
                       child: Container(
                         margin:
@@ -685,7 +535,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         ),
                       ),
                     ),
-
                     SettingsContainer(
                       title: "Jadwal Pengambilan Gambar Khusus",
                       description:
@@ -695,9 +544,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
-                          _setSettings.setSettings = "special_capture_schedule";
-                          _setSettings.value =
-                              TimePickerHelper.formatTimeOfDay(result);
+                          TimePickerHelper.formatTimeOfDay(result);
                           List<int> list = utf8.encode(
                               "special_capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -738,9 +585,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                               controller, "Interval Pengambilan Gambar Khusus",
                               label: "repetition capture");
                           if (input != null) {
-                            _setSettings.setSettings =
-                                "special_capture_interval";
-                            _setSettings.value = input;
                             List<int> list =
                                 utf8.encode("special_capture_interval=$input");
                             Uint8List bytes = Uint8List.fromList(list);
@@ -769,8 +613,6 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             label: "how many repetitions a day",
                           );
                           if (input != null) {
-                            _setSettings.setSettings = "special_capture_count";
-                            _setSettings.value = input;
                             List<int> list =
                                 utf8.encode("special_capture_count=$input");
                             Uint8List bytes = Uint8List.fromList(list);

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_enable_schedule_settings_screen/upload_enable_schedule_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
@@ -26,30 +27,22 @@ class UploadSettingsScreen extends StatefulWidget {
 }
 
 class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      serverTxt = '-',
+  String serverTxt = '-',
       portTxt = '-',
       uploadUsingTxt = '-',
       uploadInitialDelayTxt = '-',
       wifiSsidTxt = '-',
       wifiPasswordTxt = '-',
       modemApnTxt = '-';
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   TextEditingController portController = TextEditingController();
 
@@ -58,8 +51,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     {"title": "Sim800l", "value": 1},
     {"title": "NB-Iot", "value": 2},
   ];
-
-  bool isUploadSettings = true;
 
   // for progress dialog
   late SimpleFontelicoProgressDialog _progressDialog;
@@ -72,6 +63,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -115,16 +107,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       }
     });
     initGetRawUpload();
-    initDiscoverServices();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isUploadSettings = false;
+
     super.dispose();
   }
 
@@ -154,120 +142,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     } catch (e) {
       Snackbar.show(ScreenSnackbar.uploadsettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.uploadsettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isUploadSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 100) {
-                  List<dynamic> result =
-                      UploadSettingsConverter.convertUploadSettings(_value);
-                  _progressDialog.hide();
-                  if (mounted) {
-                    log("result[1]: '${result[1]}', ${result[1].trim().length} ${result[1].isEmpty}");
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      serverTxt = "${result[1]}";
-                      portTxt = result[2].toString();
-                      // upload enable dan upload schedule itu harusnya berupa list
-
-                      uploadEnable = result[3]; // List<bool> [8]
-                      uploadSchedule = result[4]; // List<int> [8]
-                      uploadUsingTxt = result[5] == 0
-                          ? "Wifi"
-                          : result[5] == 1
-                              ? "Sim800l"
-                              : result[5] == 2
-                                  ? "NB-IoT"
-                                  : "Error";
-                      uploadInitialDelayTxt = result[6].toString();
-                      wifiSsidTxt = result[7].toString();
-                      wifiPasswordTxt = result[8].toString();
-                      modemApnTxt = result[9].toString();
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "server") {
-                      serverTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "port") {
-                      portTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_using") {
-                      uploadUsingTxt = _setSettings.value == "0"
-                          ? "Wifi"
-                          : _setSettings.value == "1"
-                              ? "Sim800l"
-                              : _setSettings.value == "2"
-                                  ? "NB-IoT"
-                                  : "Error";
-                    } else if (_setSettings.setSettings ==
-                        "upload_initial_delay") {
-                      uploadInitialDelayTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_ssid") {
-                      wifiSsidTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_password") {
-                      wifiPasswordTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "modem_apn") {
-                      modemApnTxt = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.uploadsettings,
-                        "Sukses ubah ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.uploadsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
-          prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -588,8 +462,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           if (input != null) {
                             List<int> list = utf8.encode("server=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "server";
-                            _setSettings.value = input;
                             await BLEUtils.funcWrite(
                                 bytes, "Sukses ubah Server", device);
                             controller.clear();
@@ -623,8 +495,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           if (input != null) {
                             List<int> list = utf8.encode("port=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "port";
-                            _setSettings.value = input;
+
                             BLEUtils.funcWrite(
                                 bytes, "Sukses ubah Upload Port", device);
                           }
@@ -729,8 +600,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             List<int> list =
                                 utf8.encode("upload_using=${input['value']}");
                             Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "upload_using";
-                            _setSettings.value = input['value'].toString();
+
                             BLEUtils.funcWrite(
                                 bytes, "Sukses ubah Upload Using", device);
                           }
@@ -763,8 +633,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             List<int> list =
                                 utf8.encode("upload_initial_delay=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "upload_initial_delay";
-                            _setSettings.value = input;
+
                             BLEUtils.funcWrite(bytes,
                                 "Sukses ubah Upload Initial Delay", device);
                           }
@@ -795,8 +664,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   List<int> list =
                                       utf8.encode("wifi_ssid=$input");
                                   Uint8List bytes = Uint8List.fromList(list);
-                                  _setSettings.setSettings = "wifi_ssid";
-                                  _setSettings.value = input;
+
                                   BLEUtils.funcWrite(
                                       bytes, "Sukses ubah Nama Wifi", device);
                                 }
@@ -825,8 +693,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   List<int> list =
                                       utf8.encode("wifi_password=$input");
                                   Uint8List bytes = Uint8List.fromList(list);
-                                  _setSettings.setSettings = "wifi_password";
-                                  _setSettings.value = input;
+
                                   BLEUtils.funcWrite(bytes,
                                       "Sukses ubah Kata Sandi Wifi", device);
                                 }
@@ -926,8 +793,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           if (input != null) {
                             List<int> list = utf8.encode("modem_apn=$input");
                             Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "modem_apn";
-                            _setSettings.value = input;
+
                             BLEUtils.funcWrite(
                                 bytes, "Sukses ubah Modem APN", device);
                           }

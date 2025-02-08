@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ble_test/ble-v2/utils/convert.dart';
 
 class CaptureModel {
@@ -45,12 +47,16 @@ class CaptureModel {
   }
 
   String get specialDateString {
+    log("masok ?? $specialDate");
     List<String> specialDates = [];
     for (int i = 0; i < 31; i++) {
+      // log("special dates uuhy : ${ConvertTime.getBit(specialDate, i)}");
       if (ConvertTime.getBit(specialDate, i)) {
+        // log("special dates : $specialDates");
         specialDates.add((i + 1).toString());
       }
     }
+    log("special dates : $specialDates");
     return specialDates.join(",");
   }
 

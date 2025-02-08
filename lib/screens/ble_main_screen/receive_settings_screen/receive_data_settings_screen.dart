@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
@@ -25,28 +25,20 @@ class ReceiveDataSettingsScreen extends StatefulWidget {
 }
 
 class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      receiveEnableTxt = '-',
+  String receiveEnableTxt = '-',
       receiveScheduleTxt = '-',
       receiveIntervalTxt = '-',
       receiveCountTxt = '-',
       receiveTimeAdjust = '-';
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   TextEditingController receiveEnableTxtController = TextEditingController();
   TextEditingController receiveScheduleTxtController = TextEditingController();
@@ -54,12 +46,12 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   TextEditingController receiveCountTxtController = TextEditingController();
   TextEditingController receiveTimeAdjustTxtController =
       TextEditingController();
-  bool isReceiveDataSettings = true;
   late SimpleFontelicoProgressDialog _progressDialog;
 
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -79,17 +71,12 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         }
       },
     );
-    initGetRawReceive();
-    initDiscoverServices();
+    initGetReceive();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isReceiveDataSettings = false;
 
     super.dispose();
   }
@@ -102,7 +89,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawReceive();
+      initGetReceive();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -110,7 +97,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     }
   }
 
-  initGetRawReceive() async {
+  initGetReceive() async {
     try {
       if (isConnected) {
         List<int> list = utf8.encode("raw_receive?");
@@ -120,99 +107,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     } catch (e) {
       Snackbar.show(ScreenSnackbar.receivesettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.receivesettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isReceiveDataSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 7) {
-                  List<dynamic> result =
-                      ReceiveSettingsConvert.convertReceiveSettings(_value);
-                  _progressDialog.hide();
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      receiveEnableTxt = result[1].toString();
-                      receiveScheduleTxt = TimePickerHelper.formatTimeOfDay(
-                          TimePickerHelper.minutesToTimeOfDay(result[2]));
-                      receiveIntervalTxt = result[3].toString();
-                      receiveCountTxt = result[4].toString();
-                      receiveTimeAdjust = result[5].toString();
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "receive_enable") {
-                      receiveEnableTxt =
-                          (_setSettings.value == '1' ? true : false).toString();
-                    } else if (_setSettings.setSettings == "receive_schedule") {
-                      receiveScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "receive_interval") {
-                      receiveIntervalTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "receive_count") {
-                      receiveCountTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "receive_time_adjust") {
-                      receiveTimeAdjust = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.receivesettings,
-                        "Sukses ubah ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.receivesettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.receivesettings,
-          prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -297,27 +191,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         appBar: AppBar(
           title: const Text('Pengaturan Penerimaan'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -328,15 +201,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    // Text("VALUE : $_value"),
-                    // SettingsContainer(
-                    //   title: "Status",
-                    //   data: statusTxt,
-                    //   onTap: () {},
-                    //   icon: const Icon(
-                    //     CupertinoIcons.settings,
-                    //   ),
-                    // ),
                     SettingsContainer(
                       title: "Izinkan Penerimaan",
                       data: receiveEnableTxt == "true" ? "Ya" : "Tidak",
@@ -349,10 +213,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                           List<int> list = utf8.encode(
                               "receive_enable=${encodedValue == "1" ? true : false}");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                            setSettings: "receive_enable",
-                            value: encodedValue,
-                          );
+
                           BLEUtils.funcWrite(
                             bytes,
                             "Sukses ubah Izin Penerimaan",
@@ -371,10 +232,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
-                          _setSettings = SetSettingsModel(
-                            setSettings: "receive_schedule",
-                            value: TimePickerHelper.formatTimeOfDay(result),
-                          );
                           List<int> list = utf8.encode(
                               "receive_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
                           Uint8List bytes = Uint8List.fromList(list);
@@ -411,8 +268,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         if (input != null) {
                           List<int> list = utf8.encode("receive_count=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_count", value: input);
                           BLEUtils.funcWrite(
                               bytes, "Sukses ubah Jumlah Penerimaan", device);
                         }
@@ -434,8 +289,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                           List<int> list =
                               utf8.encode("receive_interval=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_interval", value: input);
                           BLEUtils.funcWrite(
                               bytes, "Sukses ubah Interval Penerimaan", device);
                         }
@@ -457,8 +310,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                           List<int> list =
                               utf8.encode("receive_time_adjust=$input");
                           Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_time_adjust", value: input);
                           BLEUtils.funcWrite(
                               bytes,
                               "Sukses ubah Penyesuaian Waktu Penerimaan",
