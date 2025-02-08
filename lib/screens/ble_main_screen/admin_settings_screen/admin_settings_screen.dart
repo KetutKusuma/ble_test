@@ -165,7 +165,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     });
 
     initGetRawAdmin();
-    initDiscoverServices();
   }
 
   @override
@@ -231,169 +230,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         Uint8List bytes = Uint8List.fromList(list);
         await BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
         await Future.delayed(const Duration(milliseconds: 800));
-        initGetEnable();
         await Future.delayed(const Duration(milliseconds: 300));
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  initGetEnable() async {
-    try {
-      if (isConnected) {
-        isGetEnable = true;
-        List<int> list = utf8.encode("enable?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Enable", device);
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get enable : $e",
-          success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.login,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              log("is notifying ga nih : ${characters.isNotifying}");
-              if (characters.properties.notify && isAdminSettings) {
-                _value = value;
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 16) {
-                  List<dynamic> result =
-                      AdminSettingsConverter().convertAdminSettings(_value);
-                  _progressDialog.hide();
-
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      idTxt = result[1].toString();
-                      voltCoef1Txt = result[2].toString();
-                      voltCoef2Txt = result[3].toString();
-                      printToSerialMonitorTxt = result[4].toString();
-                      brightnessText = (result[5]).toString();
-                      contrastText = (result[6]).toString();
-                      saturationText = (result[7]).toString();
-                      specialEffectText = getSpecialEffectString(result[8]);
-                      hMirrorText = result[9].toString();
-                      vFlipText = result[10].toString();
-                      cameraJpgQualityTxt = result[11].toString();
-                      roleTxt = result[12] == 0
-                          ? "Tidak Terdefinisi"
-                          : result[12] == 1
-                              ? "Regular"
-                              : result[12] == 2
-                                  ? "Gateway"
-                                  : "Error";
-                    });
-                  }
-                }
-                // this is for get enable
-                if (_value.length == 1 && isGetEnable) {
-                  isGetEnable = false;
-                  if (_value[0] == 1) {
-                    enableTxt = "true";
-                  } else {
-                    enableTxt = "false";
-                  }
-                }
-
-                // this is for set
-                else if (_value.length == 1 && !isGetEnable) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "id") {
-                      idTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "voltcoef1") {
-                      voltCoef1Txt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "voltcoef2") {
-                      voltCoef2Txt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "camera_setting_brightness") {
-                      brightnessText = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "camera_setting_contrast") {
-                      contrastText = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "camera_setting_saturation") {
-                      saturationText = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "camera_setting_special_effect") {
-                      try {
-                        specialEffectText = getSpecialEffectString(
-                            int.parse(_setSettings.value));
-                      } catch (e) {
-                        log("error catch on special effect : $e");
-                      }
-                    } else if (_setSettings.setSettings ==
-                        "camera_setting_vflip") {
-                      vFlipText = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "camera_setting_hmirror") {
-                      hMirrorText = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "camera_jpeg_quality") {
-                      cameraJpgQualityTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "role") {
-                      roleTxt = _setSettings.value == "0"
-                          ? "Tidak Terdefinisi"
-                          : _setSettings.value == "1"
-                              ? "Regular"
-                              : _setSettings.value == "2"
-                                  ? "Gateway"
-                                  : "Error";
-                    } else if (_setSettings.setSettings ==
-                        "print_to_serial_monitor") {
-                      printToSerialMonitorTxt = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Sukses ubah ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-        }
-      }
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -977,7 +818,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Uint8List bytes = Uint8List.fromList(list);
                             await BLEUtils.funcWrite(
                                 bytes, "Set Enable $input success", device);
-                            initGetEnable();
                           }
                         },
                         icon: const Icon(

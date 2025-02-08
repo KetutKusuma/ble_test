@@ -29,7 +29,7 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
 
   initGet() async {
     await bleProvider.connect(widget.device);
-    await Command().handshake(widget.device, bleProvider);
+    // await Command().handshake(widget.device, bleProvider);
   }
 
   @override
@@ -49,10 +49,60 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
         child: Column(
           children: [
             ElevatedButton(
-              onPressed: () {
-                Command().handshake(widget.device, bleProvider);
+              onPressed: () async {
+                BLEResponse resHandshake =
+                    await Command().handshake(widget.device, bleProvider);
+                log("resHandshake : $resHandshake");
+                if (resHandshake.status == false) {
+                  return;
+                }
+                List<int> challenge = resHandshake.data!;
+                BLEResponse resLogin = await Command().login(
+                    widget.device, bleProvider, "admin", "admin", challenge);
+                log("resLogin : $resLogin");
               },
               child: Text("Handshake"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                List<int> challenge = [
+                  100,
+                  177,
+                  1,
+                  0,
+                  207,
+                  64,
+                  1,
+                  11,
+                  1,
+                  16,
+                  2,
+                  5,
+                  120,
+                  99,
+                  30,
+                  181,
+                  154,
+                  43,
+                  170,
+                  68,
+                  10,
+                  227,
+                  108,
+                  111,
+                  160,
+                  41,
+                  1,
+                  197,
+                  159,
+                  186,
+                  50
+                ];
+                BLEResponse resLogin = await Command().login(
+                    widget.device, bleProvider, "admin", "admin", challenge);
+                log("resLogin : $resLogin");
+              },
+              child: Text("Login"),
             ),
             StreamBuilder<List<int>>(
               stream: bleProvider.dataStream, // Get BLE data stream

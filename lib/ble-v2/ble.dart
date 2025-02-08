@@ -1,11 +1,20 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
+
+class LoginAs {
+  static const none = 0;
+  static const admin = 1;
+  static const operator = 2;
+  static const guest = 3;
+  static const forgetPassword = 4;
+}
 
 class Response {
   final Header header;
@@ -90,7 +99,7 @@ class BLEProvider with ChangeNotifier {
         await _writeCharacteristic!.write(
           data,
         );
-        log("Data written: $data");
+        // log("Data written: $data");
         // return [];
         return await _listenToNotificationss(_notifyCharacteristic!, headerBLE);
       } catch (e) {
@@ -136,7 +145,7 @@ class BLEProvider with ChangeNotifier {
     StreamSubscription<List<int>>? subscription;
 
     subscription = characteristic.lastValueStream.listen((value) {
-      debugPrint("Received Value: $value");
+      log("Received Value: $value");
       _valueController.add(value); // Send value to stream
 
       if (!completer.isCompleted) {
@@ -171,15 +180,17 @@ class BLEProvider with ChangeNotifier {
         InitConfig.data().IV,
         buffer,
       );
-      log("response parse : $resParse");
+      log(
+        "buffer parse :$buffer ",
+      );
       if (!resParse) {
         return Response(headerBLE, []);
       }
 
       log("=== start get header ===");
       Header headerRes = MessageV2().getHeader(buffer);
-      log("cek unique ID sama : ${headerRes.uniqueID} == ${headerBLE.uniqueID}");
-      log("cek unique ID sama : ${headerRes.command} == ${headerBLE.command}");
+      log("cek unique ID sama : ${headerRes.uniqueID}(uniqueID res) == ${headerBLE.uniqueID}(uniqueID ble)");
+      log("cek command sama : ${headerRes.command} == ${headerBLE.command}");
       if (headerRes.uniqueID == headerBLE.uniqueID &&
           headerRes.command == headerBLE.command) {
         return Response(headerRes, buffer);
@@ -204,9 +215,19 @@ class UniqueIDManager {
   int _uniqueID = 0;
 
   int getUniqueID() {
+    DateTime now = DateTime.now();
+
+    // Extract hour, minute, and second
+    String hour = now.hour.toString().padLeft(2, '0'); // HH
+    String minute = now.minute.toString().padLeft(2, '0');
     if (_uniqueID == 65535) {
       _uniqueID = 0;
     }
-    return ++_uniqueID;
+
+    int ran = math.Random().nextInt(9);
+    String uniqueIDStr = "$hour$minute$ran";
+    log("UNIQUE : $uniqueIDStr");
+
+    return int.parse(uniqueIDStr);
   }
 }

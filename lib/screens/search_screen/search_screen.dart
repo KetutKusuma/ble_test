@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/ble-v2/command.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/tes_coba.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -14,7 +15,9 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import '../../ble-v2/ble.dart';
 import '../../utils/ble.dart';
 import '../../utils/crypto/crypto.dart';
 import '../../utils/snackbar.dart';
@@ -51,10 +54,12 @@ class _SearchScreenState extends State<SearchScreen> {
   List<int> valueHandshake = [];
   List<int> _value = [];
   bool isSearchScreen = true;
+  late BLEProvider bleProvider;
 
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     userRole = widget.userRole;
     password = widget.password;
     pd =
@@ -132,196 +137,35 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void onConnectPressed(BluetoothDevice device) async {
-    log("SCAN  DEVICE : $device");
-    log("name : ${device.advName}");
-    log("remote id : ${device.remoteId}");
-    pd.show(message: "Proses masuk . . .");
-    bool konek = await device.connectAndUpdateStream().catchError((e) {
-      pd.hide();
-      log("FAILED CONNECT search screen");
-
-      Snackbar.show(
-          ScreenSnackbar.searchscreen, prettyException("Connect Error:", e),
-          success: false);
-      if (e != null) {
-        return false;
-      }
-      return true;
-    });
-    log("SUCCESS CONNECT search screen : $konek");
-    Future.delayed(const Duration(seconds: 4, milliseconds: 500));
-
-    // listen for connection state
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
-    log("isconnected : $isConnected");
-
-    /// disini harusnya ada pengecekan connected
-    await initDiscoverServices(device);
-
-    /// DO HANDSHAKE
-    List<int> list = utf8.encode("handshake?");
-    Uint8List bytes = Uint8List.fromList(list);
-    BLEUtils.funcWrite(bytes, "Handshake Success", device);
-
-    // await for handshake cause handshake is importanto
-    await Future.delayed(const Duration(seconds: 2));
-    // LOGIN
-    if (valueHandshake.isNotEmpty) {
-      log("Proses masuk search screen . . .");
-      loginProcess(device);
-    } else {
-      pd.hide();
-      Snackbar.show(
-          ScreenSnackbar.searchscreen, "Login Failed! Value handshake is empty",
-          success: false);
+    pd.show(message: "Proses masuk ...");
+    await bleProvider.connect(device);
+    Future.delayed(const Duration(seconds: 2, milliseconds: 500));
+    // login new v2
+    BLEResponse resHandshake = await Command().handshake(device, bleProvider);
+    log("resHandshake : $resHandshake");
+    if (resHandshake.status == false) {
+      return;
     }
-  }
-
-  loginProcess(BluetoothDevice device) async {
-    List<int> forIV = valueHandshake + SALT1;
-    List<int> forKey1 = valueHandshake + SALT2;
-    List<int> forKey2 = valueHandshake + SALT3;
-
-    String iv = md5.convert(forIV).toString();
-    String key =
-        md5.convert(forKey1).toString() + md5.convert(forKey2).toString();
-
-    String resultAes256 =
-        await CryptoAES256().encryptCustomV2(key, iv, password);
-
-    log("login=$userRole;$resultAes256");
-    String commLogin = "login=$userRole;$resultAes256";
-    List<int> list = utf8.encode(commLogin);
-    Uint8List bytes = Uint8List.fromList(list);
-
-    await BLEUtils.funcWrite(bytes, "Command login success", device);
+    List<int> challenge = resHandshake.data!;
+    BLEResponse resLogin = await Command()
+        .login(device, bleProvider, userRole, password, challenge);
+    log("resLogin : $resLogin");
     pd.hide();
-  }
-
-  Future initDiscoverServices(BluetoothDevice device) async {
-    await Future.delayed(const Duration(seconds: 2));
-    try {
-      _services = await device.discoverServices();
-      initSubscription(device);
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.searchscreen,
-          prettyException("Discover Services Error:", e),
-          success: false);
-      log(e.toString());
-    }
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  initLastValueSubscription(BluetoothCharacteristic c, BluetoothDevice device) {
-    // ini disini harusnya ada algoritm untuk ambil data value notify
-    // ketika handshake? ke write
-    try {
-      // log("notify : ${characters.properties.notify}, isNotifying : $isNotifying");
-      lastValueSubscription = c.lastValueStream.listen(
-        (value) {
-          log("is notifying ga nih : ${c.isNotifying}");
-        },
-        cancelOnError: true,
+    if (resLogin.status == false) {
+      Snackbar.show(
+        ScreenSnackbar.searchscreen,
+        resLogin.message,
+        success: false,
       );
-
-      lastValueSubscription!.onData((data) {
-        if (c.properties.notify && isSearchScreen) {
-          lastValueG = data;
-          log("_VALUE LOGIN : $lastValueG");
-
-          /// this is for login
-          if (lastValueG.length == 1 && lastValueG[0] == 1) {
-            pd.hide();
-            if (userRole == "admin") {
-              roleUser = Role.ADMIN;
-            } else if (userRole == "operator") {
-              roleUser = Role.OPERATOR;
-            } else if (userRole == "guest") {
-              roleUser = Role.GUEST;
-            }
-            isSearchScreen = false;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BleMainScreen(
-                  device: device,
-                ),
-              ),
-            ).then((value) {
-              isSearchScreen = true;
-            });
-          } else if (lastValueG.length == 1 && lastValueG[0] == 0) {
-            Snackbar.show(
-              ScreenSnackbar.searchscreen,
-              "Login Failed",
-              success: false,
-            );
-          }
-
-          /// handshake
-          if (lastValueG.length > 1) {
-            log("LENGTH HANDSHAKE : ${lastValueG.length}");
-            valueHandshake = lastValueG;
-          }
-          if (mounted) {
-            setState(() {});
-          }
-        }
-      });
-      // _lastValueSubscription.cancel();
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.searchscreen, prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
-    }
-  }
-
-  void initSubscription(BluetoothDevice device) {
-    for (var service in _services) {
-      // log("characteristic : ${service.characteristics}");
-      for (var characteristic in service.characteristics) {
-        // log("ini true kah : ${characteristic.properties.notify}");
-        if (characteristic.properties.notify) {
-          // await characteristic
-          subscribeProcess(characteristic, device);
-          if (mounted) {
-            setState(() {});
-          }
-        }
-      }
-    }
-  }
-
-  Future subscribeProcess(
-      BluetoothCharacteristic c, BluetoothDevice device) async {
-    log("masuk sini tak ?");
-    try {
-      await c.setNotifyValue(true);
-      if (c.isNotifying) {
-        initLastValueSubscription(c, device);
-      }
-      if (c.properties.read) {
-        await c.read();
-      }
-      log("set value notify success");
+    } else {
       if (mounted) {
-        setState(() {});
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BleMainScreen(device: device),
+          ),
+        );
       }
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.searchscreen, prettyException("Subscribe Error:", e),
-          success: false);
-      log("notify set error : $e");
     }
   }
 
@@ -384,16 +228,16 @@ class _SearchScreenState extends State<SearchScreen> {
       (r) {
         return ScanResultTile(
           result: r,
-          // onTap: () => onConnectPressed(r.device),
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TesCaraBaru(
-                    device: r.device,
-                  ),
-                ));
-          },
+          onTap: () => onConnectPressed(r.device),
+          // onTap: () {
+          //   Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => TesCaraBaru(
+          //           device: r.device,
+          //         ),
+          //       ));
+          // },
         );
       },
     ).toList();

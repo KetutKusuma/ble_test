@@ -159,6 +159,8 @@ class MessageV2 {
           status: false);
     }
 
+    log("buffer uniqueID : ${buffer.sublist(4, 6)}");
+
     return Header(
       dateTime: bytesToInt32(buffer.sublist(0, 4)),
       uniqueID: bytesToInt16(buffer.sublist(4, 6)),
@@ -170,11 +172,11 @@ class MessageV2 {
   }
 
   int bytesToInt16(List<int> bytes) {
-    return (bytes[0] << 8) + bytes[1];
+    return (bytes[1] << 8) + bytes[0];
   }
 
   int bytesToInt32(List<int> bytes) {
-    return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+    return (bytes[3] << 24) | (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
   }
 
   List<int> intToUint8List(int value) {

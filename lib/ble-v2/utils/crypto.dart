@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:pointycastle/export.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
@@ -7,10 +8,9 @@ import 'package:encrypt/encrypt.dart' as encrypt;
 import '../../utils/crc32.dart';
 
 class CryptoUtilsV2 {
-  static String md5Hash(String text) {
-    final bytes = utf8.encode(text);
+  static List<int> md5Hash(List<int> bytes) {
     final digest = md5.convert(bytes);
-    return digest.toString();
+    return ConvertV2().hexStringtoList(digest.toString());
   }
 
   static int crc32(List<int> bytes) {
@@ -22,7 +22,7 @@ class CryptoUtilsV2 {
     return Uint8List.fromList(src + List.filled(padding, padding));
   }
 
-  static Uint8List pkcs5Unpadding(Uint8List src) {
+  static List<int> pkcs5Unpadding(Uint8List src) {
     final unpadding = src.last;
     if (unpadding > src.length) {
       throw Exception("Invalid padding length");
@@ -30,7 +30,7 @@ class CryptoUtilsV2 {
     return src.sublist(0, src.length - unpadding);
   }
 
-  static Uint8List aesEncrypt(List<int> input, List<int> key, List<int> iv) {
+  static List<int> aesEncrypt(List<int> input, List<int> key, List<int> iv) {
     final cipher = CBCBlockCipher(AESFastEngine())
       ..init(
           true,
@@ -40,7 +40,7 @@ class CryptoUtilsV2 {
         cipher, pkcs5Padding(Uint8List.fromList(input), cipher.blockSize));
   }
 
-  static Uint8List aesDecrypt(List<int> input, List<int> key, List<int> iv) {
+  static List<int> aesDecrypt(List<int> input, List<int> key, List<int> iv) {
     final cipher = CBCBlockCipher(AESFastEngine())
       ..init(
           false,

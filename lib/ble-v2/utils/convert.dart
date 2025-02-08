@@ -92,6 +92,10 @@ class ConvertV2 {
     return int.parse(input.substring(startIndex, startIndex + 8), radix: 16);
   }
 
+  String bufferToString(List<int> buffer) {
+    return String.fromCharCodes(buffer);
+  }
+
   bool bufferToBool(List<int> buffer, int startIndex) {
     return (buffer[startIndex]) == 1;
   }
@@ -146,5 +150,14 @@ class ConvertV2 {
       data &= ~(1 << index);
     }
     return true;
+  }
+
+  List<int> hexStringtoList(String hexString) {
+    List<int> byteList = [];
+    for (int i = 0; i < hexString.length; i += 2) {
+      String hexPair = hexString.substring(i, i + 2);
+      byteList.add(int.parse(hexPair, radix: 16));
+    }
+    return byteList;
   }
 }

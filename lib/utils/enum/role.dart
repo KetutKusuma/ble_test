@@ -5,6 +5,7 @@ enum Role {
   ADMIN,
   OPERATOR,
   NONE,
+  FORGETPASSWORD,
 }
 
 List<Role> featureA = [Role.ADMIN];
