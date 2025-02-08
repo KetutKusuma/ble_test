@@ -1,4 +1,7 @@
-import 'models.dart';
+import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
+
+import 'sub_model/battery_coefficient_model.dart';
 
 class AdminModels {
   IdentityModel? identityModel;

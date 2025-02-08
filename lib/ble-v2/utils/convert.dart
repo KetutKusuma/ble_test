@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:intl/intl.dart' as intl;
 
 class ConvertV2 {
   String minuteToDateTimeString(int minute) {
@@ -159,5 +160,39 @@ class ConvertV2 {
       byteList.add(int.parse(hexPair, radix: 16));
     }
     return byteList;
+  }
+}
+
+class ConvertTime {
+  static String minuteToDateTimeString(int minutes) {
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    return "\${hours.toString().padLeft(2, '0')}:\${mins.toString().padLeft(2, '0')}";
+  }
+
+  static int dateTimeStringToMinute(String time) {
+    final parts = time.split(":");
+    if (parts.length != 2) throw FormatException("Invalid time format");
+    final hours = int.parse(parts[0]);
+    final minutes = int.parse(parts[1]);
+    return hours * 60 + minutes;
+  }
+
+  static bool getBit(int value, int position) {
+    return (value & (1 << position)) != 0;
+  }
+
+  static int setBit(int value, int position, bool state) {
+    if (state) {
+      return value | (1 << position);
+    } else {
+      return value & ~(1 << position);
+    }
+  }
+
+  static String dateFormatDateTime(DateTime dateTime) {
+    String formattedDate =
+        intl.DateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime);
+    return formattedDate;
   }
 }

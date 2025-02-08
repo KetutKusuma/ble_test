@@ -1,4 +1,7 @@
-import 'package:ble_test/ble-v2/model/models.dart';
+import 'package:ble_test/ble-v2/model/sub_model/battery_voltage_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/firmware_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/image_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/storage_model.dart';
 
 class DeviceStatusModels {
   FirmwareModel? firmwareModel;

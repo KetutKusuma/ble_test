@@ -96,6 +96,7 @@ class BLEProvider with ChangeNotifier {
   Future<Response> writeData(List<int> data, Header headerBLE) async {
     if (_writeCharacteristic != null) {
       try {
+        log("idata Data to write : $data");
         await _writeCharacteristic!.write(
           data,
         );
@@ -189,6 +190,7 @@ class BLEProvider with ChangeNotifier {
 
       log("=== start get header ===");
       Header headerRes = MessageV2().getHeader(buffer);
+      log("header response : $headerRes");
       log("cek unique ID sama : ${headerRes.uniqueID}(uniqueID res) == ${headerBLE.uniqueID}(uniqueID ble)");
       log("cek command sama : ${headerRes.command} == ${headerBLE.command}");
       if (headerRes.uniqueID == headerBLE.uniqueID &&

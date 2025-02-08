@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/model/device_status_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/file_screen/file_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/storage_screen/storage_screen.dart';
@@ -12,6 +16,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../utils/ble.dart';
@@ -29,17 +34,13 @@ class DeviceScreen extends StatefulWidget {
 }
 
 class _DeviceScreenState extends State<DeviceScreen> {
+  late BLEProvider bleProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController = RefreshController();
-  String statusTxt = "-",
-      timeTxt = "-",
+  String timeTxt = "-",
       firmwareTxt = "-",
       versionTxt = "-",
       temperatureTxt = "-",
@@ -48,19 +49,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
       critBattery1Counter = "-",
       critBattery2Counter = "-";
 
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
-  bool isDeviceScreen = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
-  bool isGetTime = false;
-  bool isGetFirmware = false;
-  bool isGetVersion = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -80,17 +77,13 @@ class _DeviceScreenState extends State<DeviceScreen> {
         }
       },
     );
-    initGetRawDeviceStatus();
-    initDiscoverServices();
+    initGetDeviceStatus();
   }
 
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
-    isDeviceScreen = false;
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
+
     super.dispose();
   }
 
@@ -102,7 +95,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   onRefresh() async {
     try {
-      initGetRawDeviceStatus();
+      initGetDeviceStatus();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -110,93 +103,34 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
   }
 
-  initGetRawDeviceStatus() async {
+  initGetDeviceStatus() async {
     try {
-      List<int> list = [];
-      Uint8List bytes = Uint8List(0);
-      if (isConnected) {
-        list = utf8.encode("raw_device_status?");
-        bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Raw Device Status", device);
-        isGetTime = true;
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.devicescreen, "Error get raw admin : $e",
-          success: false);
-    }
-  }
+      BLEResponse<DeviceStatusModels> resDeviceStatus =
+          await Command().getDeviceStatus(device, bleProvider);
+      log("hasil get device status : $resDeviceStatus");
+      _progressDialog.hide();
+      if (resDeviceStatus.status) {
+        timeTxt =
+            ConvertTime.dateFormatDateTime(resDeviceStatus.data!.dateTime!);
+        firmwareTxt = resDeviceStatus.data!.firmwareModel!.name;
+        versionTxt = resDeviceStatus.data!.firmwareModel!.version;
+        temperatureTxt = resDeviceStatus.data!.temperature.toString();
+        battery1Txt = resDeviceStatus.data!.batteryVoltageModel!.batteryVoltage1
+            .toStringAsFixed(2);
 
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.devicescreen,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
+        battery2Txt = resDeviceStatus.data!.batteryVoltageModel!.batteryVoltage2
+            .toStringAsFixed(2);
+
+        critBattery1Counter = "0";
+        critBattery2Counter = "0";
         setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isDeviceScreen) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-                if (_value.length > 40) {
-                  _progressDialog.hide();
-                  List<dynamic> result =
-                      DeviceStatusConverter.converDeviceStatus(_value);
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      firmwareTxt = result[1].toString();
-                      versionTxt = result[2].toString();
-                      timeTxt = result[3].toString();
-                      temperatureTxt = result[4].toString();
-                      battery1Txt = result[5].toString();
-                      battery2Txt = result[6].toString();
-                      critBattery1Counter = result[7].toString();
-                      critBattery2Counter = result[8].toString();
-                    });
-                  }
-                }
-
-                log("value : ${value.length} && value[0] : ${value[0]}");
-                if (_value.length == 1 && _value[0] == 1) {
-                  if (_setSettings.setSettings == "time") {
-                    timeTxt = _setSettings.value;
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-          );
-          // _lastValueSubscription.cancel();
-        }
+      } else {
+        Snackbar.show(ScreenSnackbar.devicescreen, resDeviceStatus.message,
+            success: false);
       }
     } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.devicescreen, prettyException("Last Value Error:", e),
+      Snackbar.show(ScreenSnackbar.devicescreen, "Error get device status : $e",
           success: false);
-      log(e.toString());
     }
   }
 
@@ -335,13 +269,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         String displayDateTimeNow =
                             dateTimeNowFormatted.replaceFirst('T', ' ');
 
-                        _setSettings = SetSettingsModel(
-                          setSettings: "time",
-                          // ini hasil pengurangna atau result
-                          // value: DateTime.fromMillisecondsSinceEpoch(
-                          //         result * 1000)
-                          value: displayDateTimeNow,
-                        );
                         BLEUtils.funcWrite(bytes, "Sukses ubah Time", device);
                       },
                       child: Container(

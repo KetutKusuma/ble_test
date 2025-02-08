@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/model/admin_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/converter/settings/admin_settings_convert.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -12,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
@@ -26,22 +31,15 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  // for connection
+  late BLEProvider bleProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
 
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  String statusTxt = '-',
-      idTxt = '-',
+  String idTxt = '-',
       voltCoef1Txt = '-',
       voltCoef2Txt = '-',
       brightnessText = '-',
@@ -94,11 +92,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
-      _showLoading();
-    });
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
@@ -113,6 +107,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         }
       },
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
 
     idTxtController.addListener(() {
       _onTextChanged(idTxtController);
@@ -164,16 +163,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       }
     });
 
-    initGetRawAdmin();
+    initGetAdmin();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
     isAdminSettings = false;
     super.dispose();
   }
@@ -213,7 +207,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawAdmin();
+      initGetAdmin();
       await Future.delayed(
         const Duration(seconds: 1),
       );
@@ -223,14 +217,54 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     }
   }
 
-  Future initGetRawAdmin() async {
+  String getRole(int role) {
+    String roleS = "Tidak terdefinisi";
+    if (role == 1) {
+      roleS = "Regular";
+    }
+    if (role == 2) {
+      roleS = "Gateway";
+    }
+    return roleS;
+  }
+
+  Future initGetAdmin() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_admin?");
-        Uint8List bytes = Uint8List.fromList(list);
-        await BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
-        await Future.delayed(const Duration(milliseconds: 800));
-        await Future.delayed(const Duration(milliseconds: 300));
+        BLEResponse<AdminModels> adminResponse =
+            await Command().getAdminData(device, bleProvider);
+        _progressDialog.hide();
+        log("admin response : $adminResponse");
+        if (adminResponse.status) {
+          idTxt = ConvertV2().arrayUint8ToStringHexAddress(
+              adminResponse.data!.identityModel!.toppiID);
+          voltCoef1Txt = adminResponse
+              .data!.batteryCoefficientModel!.coefficient1
+              .toString();
+          voltCoef2Txt = adminResponse
+              .data!.batteryCoefficientModel!.coefficient2
+              .toString();
+          brightnessText =
+              adminResponse.data!.cameraModel!.brightness.toString();
+          contrastText = adminResponse.data!.cameraModel!.contrast.toString();
+          saturationText =
+              adminResponse.data!.cameraModel!.saturation.toString();
+          specialEffectText = getSpecialEffectString(
+              adminResponse.data!.cameraModel!.specialEffect);
+          hMirrorText = adminResponse.data!.cameraModel!.hMirror.toString();
+          vFlipText = adminResponse.data!.cameraModel!.vFlip.toString();
+          cameraJpgQualityTxt =
+              adminResponse.data!.cameraModel!.jpegQuality.toString();
+          roleTxt = getRole(adminResponse.data!.role ?? 0);
+          enableTxt = adminResponse.data!.enable.toString();
+          printToSerialMonitorTxt =
+              adminResponse.data!.printToSerialMonitor.toString();
+          setState(() {});
+        } else {
+          Snackbar.show(ScreenSnackbar.adminsettings,
+              "Terjadi Kesalahan : ${adminResponse.message}",
+              success: false);
+        }
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
