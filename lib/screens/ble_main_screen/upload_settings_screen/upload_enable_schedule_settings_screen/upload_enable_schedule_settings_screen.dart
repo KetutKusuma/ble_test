@@ -405,14 +405,7 @@ class _UploadEnableScheduleSettingScreenState
                             await showSetupUploadDialog(context, index);
                         if (result != null) {
                           // do your magic
-                          List<int> list = utf8.encode(result);
-                          Uint8List bytes = Uint8List.fromList(list);
-                          await BLEUtils.funcWrite(
-                            bytes,
-                            "Success Upload Schedule ${index + 1}",
-                            device,
-                          );
-                          onRefresh();
+
                         }
                       },
                       child: Container(

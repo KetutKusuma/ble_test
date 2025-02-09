@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:html';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
@@ -13,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
+import '../../../ble-v2/command/command_set.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
@@ -47,6 +49,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   TextEditingController idPelangganTxtController = TextEditingController();
 
   late SimpleFontelicoProgressDialog _progressDialog;
+  late MetaDataModel metaData;
+  final _commandSet = CommandSet();
 
   @override
   void initState() {
@@ -128,6 +132,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
             await Command().getMetaData(bleProvider);
         _progressDialog.hide();
         if (response.status) {
+          metaData = response.data!;
           setState(() {
             meterModelTxt = response.data!.meterModel;
             meterSnTxt = response.data!.meterSN;
@@ -275,11 +280,14 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         String? input = await _showInputDialog(
                             meterModelTxtController, "Model Meter");
                         if (input != null && input.isNotEmpty) {
-                          List<int> list = utf8.encode("meter_model=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Model Meter", device);
+                          metaData.meterModel = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider, metaData);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
@@ -294,11 +302,14 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         String? input = await _showInputDialog(
                             meterSnTxtController, "Nomor Seri Meter");
                         if (input != null && input.isNotEmpty) {
-                          List<int> list = utf8.encode("meter_sn=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Nomor Seri Meter", device);
+                          metaData.meterSN = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider, metaData);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
@@ -313,11 +324,14 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         String? input = await _showInputDialog(
                             meterSealTxtController, "Segel Meter");
                         if (input != null && input.isNotEmpty) {
-                          List<int> list = utf8.encode("meter_seal=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Segel Meter", device);
+                          metaData.meterSeal = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider, metaData);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
@@ -352,11 +366,16 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         String? input =
                             await _showInputDialogTimeUTC(timeUTCTxtController);
                         if (input != null) {
-                          List<int> list = utf8.encode("time_utc=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Time UTC", device);
+                          metaData.timeUTC = int.parse(input);
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                            bleProvider,
+                            metaData,
+                          );
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(

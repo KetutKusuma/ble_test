@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 
 import 'package:ble_test/ble-v2/model/device_status_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
@@ -51,6 +52,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   TextEditingController controller = TextEditingController();
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
+  final _commandSet = CommandSet();
 
   @override
   void initState() {
@@ -258,23 +260,23 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       onTap: () async {
                         DateTime subtraction =
                             DateTime.utc(2000, 1, 1, 0, 0, 0);
-                        log("datetime fo subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
+                        log("datetime of subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
                         DateTime dateTimeNow = DateTime.now()
                             .toUtc()
                             .add(const Duration(hours: 8));
+                        log("datetime of now ${dateTimeNow.millisecondsSinceEpoch ~/ 1000}");
                         int result =
                             (dateTimeNow.millisecondsSinceEpoch ~/ 1000) -
                                 (subtraction.millisecondsSinceEpoch ~/ 1000);
                         log("result now $result");
-                        List<int> list = utf8.encode("time=$result");
-                        Uint8List bytes = Uint8List.fromList(list);
-
-                        String dateTimeNowFormatted =
-                            dateTimeNow.toIso8601String().split('.').first;
-                        String displayDateTimeNow =
-                            dateTimeNowFormatted.replaceFirst('T', ' ');
-
-                        BLEUtils.funcWrite(bytes, "Sukses ubah Time", device);
+                        int dataUpdate = result;
+                        BLEResponse resBLE = await _commandSet.setDateTime(
+                            bleProvider, dataUpdate);
+                        Snackbar.showHelperV2(
+                          ScreenSnackbar.devicescreen,
+                          resBLE,
+                          onSuccess: onRefresh,
+                        );
                       },
                       child: Container(
                         margin:

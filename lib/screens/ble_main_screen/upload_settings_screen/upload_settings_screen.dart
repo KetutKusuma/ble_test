@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_enable_schedule_settings_screen/upload_enable_schedule_settings_screen.dart';
@@ -62,6 +63,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   List<bool> uploadEnable = [];
   List<int> uploadSchedule = [];
   TextEditingController uploadScheduleTxtController = TextEditingController();
+
+  // v2
+  final _commandSet = CommandSet();
+  late GatewayModel gatewayModel;
 
   @override
   void initState() {
@@ -152,6 +157,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       BLEResponse<GatewayModel> res = await Command().getGateway(bleProvider);
       _progressDialog.hide();
       if (res.status) {
+        gatewayModel = res.data!;
         setState(() {
           serverTxt = res.data!.server.changeEmptyString();
           portTxt = res.data!.port.toString().changeZeroString();
@@ -450,18 +456,21 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       title: "Server",
                       data: serverTxt,
                       onTap: () async {
-                        log("masokkk");
                         try {
                           controller.text = serverTxt;
                           String? input =
                               await _showInputDialog(controller, "Server");
                           log("input : $input");
                           if (input != null) {
-                            List<int> list = utf8.encode("server=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            await BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Server", device);
                             controller.clear();
+                            gatewayModel.server = input;
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -490,11 +499,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             keyboardType: TextInputType.number,
                           );
                           if (input != null) {
-                            List<int> list = utf8.encode("port=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Upload Port", device);
+                            gatewayModel.port = int.parse(input);
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -594,12 +606,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           Map? input = await _showSelectionPopup(
                               context, listMapUploadUsing);
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("upload_using=${input['value']}");
-                            Uint8List bytes = Uint8List.fromList(list);
-
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Upload Using", device);
+                            gatewayModel.uploadUsing = input["value"];
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(ScreenSnackbar.uploadsettings,
@@ -627,12 +641,15 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   const TextInputType.numberWithOptions(
                                       signed: false, decimal: true));
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("upload_initial_delay=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-
-                            BLEUtils.funcWrite(bytes,
-                                "Sukses ubah Upload Initial Delay", device);
+                            controller.clear();
+                            gatewayModel.uploadInitialDelay = int.parse(input);
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -658,12 +675,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   "Nama Wifi",
                                 );
                                 if (input != null) {
-                                  List<int> list =
-                                      utf8.encode("wifi_ssid=$input");
-                                  Uint8List bytes = Uint8List.fromList(list);
-
-                                  BLEUtils.funcWrite(
-                                      bytes, "Sukses ubah Nama Wifi", device);
+                                  gatewayModel.wifiSSID = input;
+                                  BLEResponse resBLE = await _commandSet
+                                      .setGateway(bleProvider, gatewayModel);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.uploadsettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
                                 }
                               } catch (e) {
                                 Snackbar.show(
@@ -687,12 +706,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                 String? input = await _showInputDialog(
                                     controller, "Kata Sandi Wifi");
                                 if (input != null) {
-                                  List<int> list =
-                                      utf8.encode("wifi_password=$input");
-                                  Uint8List bytes = Uint8List.fromList(list);
-
-                                  BLEUtils.funcWrite(bytes,
-                                      "Sukses ubah Kata Sandi Wifi", device);
+                                  gatewayModel.wifiPassword = input;
+                                  BLEResponse resBLE = await _commandSet
+                                      .setGateway(bleProvider, gatewayModel);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.uploadsettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
                                 }
                               } catch (e) {
                                 Snackbar.show(
@@ -788,11 +809,15 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           String? input =
                               await _showInputDialog(controller, "Modem APN");
                           if (input != null) {
-                            List<int> list = utf8.encode("modem_apn=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Modem APN", device);
+                            controller.clear();
+                            gatewayModel.modemAPN = input;
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(

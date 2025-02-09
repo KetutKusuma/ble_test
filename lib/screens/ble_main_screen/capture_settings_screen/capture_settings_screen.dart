@@ -121,9 +121,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
           captureIntervalTxt = response.data!.interval.toString();
           captureCountTxt = response.data!.count.toString();
           captureRecentLimitTxt = response.data!.recentCaptureLimit.toString();
-          spCaptureDateTxt = (response.data!.specialDateString == "")
+          spCaptureDateTxt = (response.data!.getSpecialDateString == "")
               ? "-"
-              : response.data!.specialDateString;
+              : response.data!.getSpecialDateString;
           spCaptureScheduleTxt = ConvertTime.minuteToDateTimeString(
               response.data!.specialSchedule);
           spCaptrueIntervalTxt = response.data!.specialInterval.toString();
@@ -336,7 +336,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           BLEResponse resBLE = await _commandSet
                               .setCaptureSchedule(bleProvider, captureModel);
                           Snackbar.showHelperV2(
-                              ScreenSnackbar.capturesettings, resBLE);
+                            ScreenSnackbar.capturesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
@@ -358,7 +361,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             BLEResponse resBLE = await _commandSet
                                 .setCaptureSchedule(bleProvider, captureModel);
                             Snackbar.showHelperV2(
-                                ScreenSnackbar.capturesettings, resBLE);
+                              ScreenSnackbar.capturesettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         }
                       },
@@ -378,13 +384,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                               controller, "Interval Pengambilan Gambar",
                               label: "repetition capture");
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("capture_interval=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes,
-                                "Sukses ubah Interval Pengambilan Gambar",
-                                device);
+                            captureModel.interval = int.parse(input);
+                            BLEResponse resBLE = await _commandSet
+                                .setCaptureSchedule(bleProvider, captureModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.capturesettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         }
                       },
@@ -405,13 +412,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             "Batas Pengambilan Terbaru",
                           );
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("capture_recent_limit=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes,
-                                "Sukses ubah Batas Pengambilan Terbaru",
-                                device);
+                            captureModel.recentCaptureLimit = int.parse(input);
+                            BLEResponse resBLE = await _commandSet
+                                .setCaptureSchedule(bleProvider, captureModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.capturesettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         }
                       },
@@ -450,18 +458,18 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         Map? input = await _showInputSpecialCaptureDateDialog(
                             "Tanggal Pengambilan Khusus");
                         if (input != null) {
+                          // ini masih belum benar
                           spCaptureDateTxtController.clear();
-                          log("input : $input | special_capture_date=${input["date"]};${input["status"]}");
-                          List<int> list = utf8.encode(
-                              "special_capture_date=${input["date"]};${input["status"]}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes,
-                              "Sukses ubah Tanggal Pengambilan Khusus", device);
+                          captureModel.specialDate;
+                          captureModel.setSpecialDateString = input["date"];
+                          BLEResponse resBLE = await _commandSet
+                              .setCaptureSchedule(bleProvider, captureModel);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.capturesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
-                        // nanti setelah 200 detik get lagi raw_capture
-                        // hold dulu
-                        await Future.delayed(const Duration(milliseconds: 200));
-                        initGetCapture();
                       },
                       child: Container(
                         margin:
@@ -542,37 +550,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           BLEResponse resBLE = await _commandSet
                               .setCaptureSchedule(bleProvider, captureModel);
                           Snackbar.showHelperV2(
-                              ScreenSnackbar.capturesettings, resBLE);
+                            ScreenSnackbar.capturesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
                         Icons.calendar_month_sharp,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Interval Pengambilan Gambar Khusus",
-                      description:
-                          "(Pengambilan Berulang pada Tanggal Khusus) (menit)",
-                      data: spCaptrueIntervalTxt,
-                      onTap: () async {
-                        if (isConnected) {
-                          controller.text = spCaptrueIntervalTxt;
-                          String? input = await _showInputDialog(
-                              controller, "Interval Pengambilan Gambar Khusus",
-                              label: "repetition capture");
-                          if (input != null) {
-                            List<int> list =
-                                utf8.encode("special_capture_interval=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes,
-                                "Sukses ubah Interval Pengambilan Gambar Khusus",
-                                device);
-                          }
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.trending_up_outlined,
                       ),
                     ),
                     SettingsContainer(
@@ -589,18 +574,46 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             label: "how many repetitions a day",
                           );
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("special_capture_count=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes,
-                                "Sukses ubah Jumlah Pengambilan Gambar Khusus",
-                                device);
+                            captureModel.specialCount = int.parse(input);
+                            BLEResponse resBLE = await _commandSet
+                                .setCaptureSchedule(bleProvider, captureModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.capturesettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         }
                       },
                       icon: const Icon(
                         Icons.looks_4_outlined,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Interval Pengambilan Gambar Khusus",
+                      description:
+                          "(Pengambilan Berulang pada Tanggal Khusus) (menit)",
+                      data: spCaptrueIntervalTxt,
+                      onTap: () async {
+                        if (isConnected) {
+                          controller.text = spCaptrueIntervalTxt;
+                          String? input = await _showInputDialog(
+                              controller, "Interval Pengambilan Gambar Khusus",
+                              label: "repetition capture");
+                          if (input != null) {
+                            captureModel.specialInterval = int.parse(input);
+                            BLEResponse resBLE = await _commandSet
+                                .setCaptureSchedule(bleProvider, captureModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.capturesettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.trending_up_outlined,
                       ),
                     ),
                     const SizedBox(

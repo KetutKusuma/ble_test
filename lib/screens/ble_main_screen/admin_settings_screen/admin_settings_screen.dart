@@ -577,6 +577,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Snackbar.showHelperV2(
                             ScreenSnackbar.adminsettings,
                             resBLE,
+                            onSuccess: onRefresh,
                           );
                         }
                       },
@@ -604,6 +605,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -632,6 +634,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -655,6 +658,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -678,6 +682,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -701,6 +706,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -724,6 +730,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -747,6 +754,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -775,6 +783,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -811,6 +820,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -833,6 +843,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -853,6 +864,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },
@@ -878,6 +890,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
+                              onSuccess: onRefresh,
                             );
                           }
                         },

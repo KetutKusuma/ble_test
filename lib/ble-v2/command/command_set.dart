@@ -522,4 +522,36 @@ class CommandSet {
       return BLEResponse.error("Error ubah koefisien tegangan");
     }
   }
+
+  Future<BLEResponse> setPassword(
+      BLEProvider bleProvider, String oldPassword, String newPassword) async {
+    try {
+      int command = CommandCode.changePassword;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addString(oldPassword, buffer);
+      messageV2.addString(newPassword, buffer);
+
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+
+      Header headerBLE =
+          Header(uniqueID: uniqueID, command: command, status: false);
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+      if (responseWrite.header.status) {
+        return BLEResponse.success("Sukses ubah password");
+      } else {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+    } catch (e) {
+      return BLEResponse.error("Error ubah password");
+    }
+  }
 }

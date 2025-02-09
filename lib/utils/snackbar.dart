@@ -22,6 +22,7 @@ enum ScreenSnackbar {
   storagescreen,
   devicescreen,
   batteryscreen,
+  passwordscreen,
 
   /// for new login
   loginscreen,
@@ -51,6 +52,7 @@ class Snackbar {
   static final snackBarKeyStorageScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyDeviceScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyBatteryScreen = GlobalKey<ScaffoldMessengerState>();
+  static final snackBarKeyPasswordScreen = GlobalKey<ScaffoldMessengerState>();
 
   static GlobalKey<ScaffoldMessengerState> getSnackbar(ScreenSnackbar ss) {
     switch (ss) {
@@ -94,6 +96,8 @@ class Snackbar {
         return snackBarKeyDeviceScreen;
       case ScreenSnackbar.batteryscreen:
         return snackBarKeyBatteryScreen;
+      case ScreenSnackbar.passwordscreen:
+        return snackBarKeyPasswordScreen;
     }
   }
 
@@ -111,7 +115,7 @@ class Snackbar {
         ? SnackBar(content: Text(resBLE.message), backgroundColor: Colors.blue)
         : SnackBar(content: Text(resBLE.message), backgroundColor: Colors.red);
     if (resBLE.status) {
-      onSuccess;
+      Future.delayed(const Duration(milliseconds: 500), onSuccess);
     }
     getSnackbar(ss).currentState?.removeCurrentSnackBar();
     getSnackbar(ss).currentState?.showSnackBar(snackBar);

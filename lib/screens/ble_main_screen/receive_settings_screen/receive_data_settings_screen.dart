@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 
 import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
@@ -51,6 +52,10 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   TextEditingController receiveTimeAdjustTxtController =
       TextEditingController();
   late SimpleFontelicoProgressDialog _progressDialog;
+
+  // v2
+  final _commandSet = CommandSet();
+  late ReceiveModel receive;
 
   @override
   void initState() {
@@ -108,6 +113,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
             await Command().getReceiveSchedule(bleProvider);
         _progressDialog.hide();
         if (response.status) {
+          receive = response.data!;
           setState(() {
             receiveEnableTxt = response.data!.enable.toString();
             receiveScheduleTxt =
@@ -227,15 +233,13 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                             context, "Ubah Izin Penerimaan");
                         if (input != null) {
                           // Ubah nilai boolean menjadi string "1" untuk true atau "0" untuk false
-                          String encodedValue = input ? "1" : "0";
-                          List<int> list = utf8.encode(
-                              "receive_enable=${encodedValue == "1" ? true : false}");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          BLEUtils.funcWrite(
-                            bytes,
-                            "Sukses ubah Izin Penerimaan",
-                            device,
+                          receive.enable = input;
+                          BLEResponse resBLE = await _commandSet
+                              .setReceiveSchedule(bleProvider, receive);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.receivesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
                           );
                         }
                       },
@@ -250,25 +254,17 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
-                          List<int> list = utf8.encode(
-                              "receive_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Jadwal Penerimaan", device);
+                          int data =
+                              TimePickerHelper.timeOfDayToMinutes(result);
+                          receive.schedule = data;
+                          BLEResponse resBLE = await _commandSet
+                              .setReceiveSchedule(bleProvider, receive);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.receivesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
-                        // String? input = await _showInputDialogInteger(
-                        //     receiveScheduleTxtController,
-                        //     "Jadwal Penerimaan",
-                        //     "minute");
-                        // if (input != null) {
-                        //   List<int> list =
-                        //       utf8.encode("receive_schedule=$input");
-                        //   Uint8List bytes = Uint8List.fromList(list);
-                        //   _setSettings = SetSettingsModel(
-                        //       setSettings: "receive_schedule", value: input);
-                        //   BLEUtils.funcWrite(
-                        //       bytes, "Sukses ubah Jadwal Penerimaan", device);
-                        // }
                       },
                       icon: const Icon(
                         Icons.calendar_today_outlined,
@@ -284,10 +280,14 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                             "Jumlah Penerimaan",
                             "angka");
                         if (input != null) {
-                          List<int> list = utf8.encode("receive_count=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Jumlah Penerimaan", device);
+                          receive.count = int.parse(input);
+                          BLEResponse resBLE = await _commandSet
+                              .setReceiveSchedule(bleProvider, receive);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.receivesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
@@ -304,11 +304,14 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                             "Interval Penerimaan",
                             "menit");
                         if (input != null) {
-                          List<int> list =
-                              utf8.encode("receive_interval=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses ubah Interval Penerimaan", device);
+                          receive.interval = int.parse(input);
+                          BLEResponse resBLE = await _commandSet
+                              .setReceiveSchedule(bleProvider, receive);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.receivesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
@@ -325,13 +328,14 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                             "Penyesuaian Waktu Penerimaan",
                             "detik");
                         if (input != null) {
-                          List<int> list =
-                              utf8.encode("receive_time_adjust=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes,
-                              "Sukses ubah Penyesuaian Waktu Penerimaan",
-                              device);
+                          receive.timeAdjust = int.parse(input);
+                          BLEResponse resBLE = await _commandSet
+                              .setReceiveSchedule(bleProvider, receive);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.receivesettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(

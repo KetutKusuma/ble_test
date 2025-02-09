@@ -46,7 +46,7 @@ class CaptureModel {
     schedule = ConvertTime.dateTimeStringToMinute(value);
   }
 
-  String get specialDateString {
+  String get getSpecialDateString {
     log("masok ?? $specialDate");
     List<String> specialDates = [];
     for (int i = 0; i < 31; i++) {
@@ -60,7 +60,7 @@ class CaptureModel {
     return specialDates.join(",");
   }
 
-  set specialDateString(String value) {
+  set setSpecialDateString(String value) {
     int temp = 0;
     List<String> arr = value.split(",");
     for (String v in arr) {
