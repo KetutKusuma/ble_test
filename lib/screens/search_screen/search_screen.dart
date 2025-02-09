@@ -1,25 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
-import 'package:ble_test/screens/tes_coba.dart';
-import 'package:ble_test/utils/enum/role.dart';
-import 'package:ble_test/utils/extra.dart';
-import 'package:ble_test/utils/global.dart';
-import 'package:ble_test/utils/salt.dart';
 import 'package:ble_test/widgets/scan_result_tile.dart';
 import 'package:ble_test/widgets/system_device_tile.dart';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../ble-v2/ble.dart';
-import '../../utils/ble.dart';
-import '../../utils/crypto/crypto.dart';
 import '../../utils/snackbar.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -49,11 +39,6 @@ class _SearchScreenState extends State<SearchScreen> {
   StreamSubscription<BluetoothConnectionState>? _connectionStateSubscription;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.disconnected;
-  List<BluetoothService> _services = [];
-  StreamSubscription<List<int>>? _lastValueSubscription;
-  List<int> valueHandshake = [];
-  List<int> _value = [];
-  bool isSearchScreen = true;
   late BLEProvider bleProvider;
 
   @override
@@ -66,9 +51,6 @@ class _SearchScreenState extends State<SearchScreen> {
         SimpleFontelicoProgressDialog(context: context, barrierDimisable: true);
 
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
-      if (isSearchScreen) {
-        _scanResults = results;
-      }
       if (mounted) {
         setState(() {});
       }
@@ -93,7 +75,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _scanResultsSubscription.cancel();
     _isScanningSubscription.cancel();
-    isSearchScreen = false;
     super.dispose();
   }
 
@@ -101,9 +82,7 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       // `withServices` is required on iOS for privacy purposes, ignored on android.
       var withServices = [Guid("180f")]; // Battery Level Service
-      if (isSearchScreen) {
-        _systemDevices = await FlutterBluePlus.systemDevices(withServices);
-      }
+      _systemDevices = await FlutterBluePlus.systemDevices(withServices);
       log("system devices resultnya : $_systemDevices, ${_systemDevices.length}, ${_systemDevices[0].advName}");
     } catch (e) {
       // ini biasanya bisa diabaikans

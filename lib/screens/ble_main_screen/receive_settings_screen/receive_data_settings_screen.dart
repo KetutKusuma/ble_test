@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+
+import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
@@ -100,12 +103,26 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   initGetReceive() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_receive?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Receive", device);
+        BLEResponse<ReceiveModel> response =
+            await Command().getReceiveSchedule(bleProvider);
+        _progressDialog.hide();
+        if (response.status) {
+          setState(() {
+            receiveEnableTxt = response.data!.enable.toString();
+            receiveScheduleTxt = response.data!.schedule.toString();
+            receiveIntervalTxt = response.data!.interval.toString();
+            receiveCountTxt = response.data!.count.toString();
+            receiveTimeAdjust = response.data!.timeAdjust.toString();
+          });
+        } else {
+          Snackbar.show(ScreenSnackbar.receivesettings,
+              "Error jadwal terima : ${response.message}",
+              success: false);
+        }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.receivesettings, "Error get raw admin : $e",
+      Snackbar.show(
+          ScreenSnackbar.receivesettings, "Dapat error jadwal terima : $e",
           success: false);
     }
   }

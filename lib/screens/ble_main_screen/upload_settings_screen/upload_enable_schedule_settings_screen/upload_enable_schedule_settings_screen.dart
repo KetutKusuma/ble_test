@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,10 +11,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-
 import '../../../../constant/constant_color.dart';
 import '../../../../utils/time_pick/time_pick.dart';
-import '../../admin_settings_screen/admin_settings_screen.dart';
 
 class UploadEnableScheduleSettingScreen extends StatefulWidget {
   final BluetoothDevice device;

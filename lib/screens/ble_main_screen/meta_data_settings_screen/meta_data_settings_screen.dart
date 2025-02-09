@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/meta_data_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,13 +34,13 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String modelMeterTxt = '-',
+  String meterModelTxt = '-',
       meterSnTxt = '-',
       meterSealTxt = '-',
       timeUTCTxt = '-',
       idPelangganTxt = '-';
   TextEditingController controller = TextEditingController();
-  TextEditingController modelMeterTxtController = TextEditingController();
+  TextEditingController meterModelTxtController = TextEditingController();
   TextEditingController meterSnTxtController = TextEditingController();
   TextEditingController meterSealTxtController = TextEditingController();
   TextEditingController timeUTCTxtController = TextEditingController();
@@ -94,7 +95,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         }
       }
     });
-    initGetRawMetaData();
+    initGetMetaData();
   }
 
   @override
@@ -112,7 +113,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawMetaData();
+      initGetMetaData();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -120,16 +121,31 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     }
   }
 
-  initGetRawMetaData() async {
+  initGetMetaData() async {
     try {
-      log("masuk ke init raw meta data");
       if (isConnected) {
-        List<int> list = utf8.encode("raw_meta_data?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Meta data", device);
+        BLEResponse<MetaDataModel> response =
+            await Command().getMetaData(bleProvider);
+        _progressDialog.hide();
+        if (response.status) {
+          setState(() {
+            meterModelTxt = response.data!.meterModel;
+            meterSnTxt = response.data!.meterSN;
+            meterSealTxt = response.data!.meterSeal;
+            timeUTCTxt = response.data!.timeUTC.toString();
+            // idPelangganTxt = response.data!.idPelanggan;
+          });
+        } else {
+          Snackbar.show(
+            ScreenSnackbar.metadatasettings,
+            "Terjadi error meta data : ${response.message}",
+            success: false,
+          );
+        }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Error get raw admin : $e",
+      Snackbar.show(
+          ScreenSnackbar.metadatasettings, "Dapat error meta data : $e",
           success: false);
     }
   }
@@ -254,10 +270,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                   children: [
                     SettingsContainer(
                       title: "Model Meter",
-                      data: modelMeterTxt,
+                      data: meterModelTxt,
                       onTap: () async {
                         String? input = await _showInputDialog(
-                            modelMeterTxtController, "Model Meter");
+                            meterModelTxtController, "Model Meter");
                         if (input != null && input.isNotEmpty) {
                           List<int> list = utf8.encode("meter_model=$input");
                           Uint8List bytes = Uint8List.fromList(list);

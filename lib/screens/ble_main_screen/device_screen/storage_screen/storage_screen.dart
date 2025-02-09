@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/storage_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/converter/status/status.dart';
 import 'package:ble_test/utils/snackbar.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -87,13 +87,22 @@ class _StorageScreenState extends State<StorageScreen> {
 
   initGetStorage() async {
     try {
-      if (isConnected) {
-        List<int> list = utf8.encode("storage?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get storage", device);
+      BLEResponse<StorageModel> storageResponse =
+          await Command().getStorage(bleProvider);
+      _progressDialog.hide();
+      if (storageResponse.status == false) {
+        Snackbar.show(
+          ScreenSnackbar.capturesettings,
+          storageResponse.message,
+          success: false,
+        );
+      } else {
+        getTotalBytesTxt = formatBytes(storageResponse.data!.total);
+        getUsedBytesTxt = formatBytes(storageResponse.data!.used);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
+      Snackbar.show(
+          ScreenSnackbar.capturesettings, "Dapat Error penyimpanan : $e",
           success: false);
     }
   }

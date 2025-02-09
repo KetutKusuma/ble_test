@@ -1,28 +1,31 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/model/admin_model.dart';
 import 'package:ble_test/ble-v2/model/device_status_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/battery_voltage_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/firmware_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/image_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/storage_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/crypto.dart';
 import 'package:ble_test/ble-v2/utils/crypto_tut.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/global.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-
-import '../utils/enum/role.dart';
-import 'ble.dart';
-import 'model/sub_model/battery_coefficient_model.dart';
-import 'model/sub_model/battery_voltage_model.dart';
-import 'model/sub_model/camera_model.dart';
-import 'model/sub_model/firmware_model.dart';
-import 'model/sub_model/image_model.dart';
-import 'model/sub_model/storage_model.dart';
 
 class CommandCode {
   static const int handshake = 11;
@@ -113,7 +116,9 @@ status : $status \nmessage : $message \ndata : $data
 }
 
 class Command {
-  MessageV2 messageV2 = MessageV2();
+  static MessageV2 messageV2 = MessageV2();
+  static final ivGlobal = InitConfig.data().IV;
+  static final keyGlobal = InitConfig.data().KEY;
 
   Future<BLEResponse<List<int>>> handshake(
       BluetoothDevice device, BLEProvider bleProvider) async {
@@ -126,8 +131,8 @@ class Command {
       List<int> idata = MessageV2().createEnd(
         0,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
 
       // init for request response struct
@@ -184,8 +189,8 @@ class Command {
       List<int> idata = MessageV2().createEnd(
         0,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
 
       // create struktur header for matching
@@ -266,8 +271,8 @@ class Command {
       List<int> idata = MessageV2().createEnd(
         sessionID,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -309,8 +314,8 @@ class Command {
       List<int> idata = MessageV2().createEnd(
         sessionID,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -430,8 +435,8 @@ class Command {
       List<int> idata = MessageV2().createEnd(
         sessionID,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -536,8 +541,8 @@ class Command {
       List<int> idata = MessageV2().createEnd(
         sessionID,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -569,7 +574,7 @@ class Command {
 
       int startIndex = 0;
 
-      int schedule = ConvertV2().bufferToUint16(params[startIndex], 0);
+      int schedule = ConvertV2().bufferToUint16V2(params[startIndex]);
       int count = ConvertV2().bufferToUint8(params[startIndex + 1], 0);
       int interval = ConvertV2().bufferToUint16(params[startIndex + 2], 0);
       int spDate = ConvertV2().bufferToUint32(params[startIndex + 3], 0);
@@ -603,15 +608,17 @@ class Command {
   Future<BLEResponse<ReceiveModel>> getReceiveSchedule(
       BLEProvider bleProvider) async {
     try {
-      int command = CommandCode.receiveSchedule;
+      int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
       List<int> buffer = [];
-      MessageV2().createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> idata = MessageV2().createEnd(
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.receiveSchedule], buffer);
+
+      List<int> idata = messageV2.createEnd(
         sessionID,
         buffer,
-        InitConfig.data().KEY,
-        InitConfig.data().IV,
+        keyGlobal,
+        ivGlobal,
       );
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -627,7 +634,7 @@ class Command {
         return BLEResponse.errorFromBLE(responseWrite);
       }
 
-      log("response write get receive schedule : ${responseWrite}");
+      log("response write get receive schedule : $responseWrite");
       // turn to a model
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -662,6 +669,388 @@ class Command {
       );
     } catch (e) {
       return BLEResponse.error("Error dapat jadwal pengambilan gambar : $e");
+    }
+  }
+
+  Future<BLEResponse<List<TransmitModel>>> getTransmitSchedule(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.transmitSchedule], buffer);
+
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get transmit schedule : $responseWrite");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Gagal untuk mengembalikan parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      List<TransmitModel> listTransmitModel = [];
+      int startIndex = 0;
+      for (var i = 0; i < 8; i++) {
+        listTransmitModel.add(TransmitModel(
+          enable: ConvertV2().bufferToBool(params[(i * 3) + startIndex], 0),
+          schedule:
+              ConvertV2().bufferToUint16(params[(i * 3) + startIndex + 1], 0),
+          destinationID: params[(i * 3) + startIndex + 2],
+        ));
+      }
+
+      if (listTransmitModel.length != 8) {
+        return BLEResponse.error(
+            "Gagal panjang jadwal pengiriman tidak sesuai");
+      }
+
+      return BLEResponse.success(
+        "Sukses dapat jadwal pengambilan gambar",
+        data: listTransmitModel,
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat jadwal pengambilan gambar : $e");
+    }
+  }
+
+  Future<BLEResponse<List<UploadModel>>> getUploadSchedule(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.uploadSchedule], buffer);
+
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get upload schedule : $responseWrite");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Gagal untuk mengembalikan parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      if (params.length != (8 * 2)) {
+        throw Exception("Gagal panjang jadwal upload tidak sesuai");
+      }
+
+      List<UploadModel> listUploadModel = [];
+      int startIndex = 0;
+      for (var i = 0; i < 8; i++) {
+        listUploadModel.add(UploadModel(
+          enable: ConvertV2().bufferToBool(params[(i * 2) + startIndex], 0),
+          schedule:
+              ConvertV2().bufferToUint16(params[(i * 2) + startIndex + 1], 0),
+        ));
+      }
+
+      return BLEResponse.success(
+        "Sukses dapat jadwal pengambilan gambar",
+        data: listUploadModel,
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat jadwal pengambilan gambar : $e");
+    }
+  }
+
+  Future<BLEResponse<GatewayModel>> getGateway(BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.gateway], buffer);
+
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get gateway : $responseWrite");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Gagal untuk mengembalikan parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      int startIndex = 0;
+      String server = ConvertV2().bufferToString(params[startIndex]);
+      int port = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+      int uploadUsing = ConvertV2().bufferToUint8(params[startIndex + 2], 0);
+      int uploadInitialDelay =
+          ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+      String wifiSSID = ConvertV2().bufferToString(params[startIndex + 4]);
+      String wifiPassword = ConvertV2().bufferToString(params[startIndex + 5]);
+      String modemAPN = ConvertV2().bufferToString(params[startIndex + 6]);
+
+      return BLEResponse.success(
+        "Sukses dapat gateway",
+        data: GatewayModel(
+          server: server,
+          port: port,
+          uploadUsing: uploadUsing,
+          uploadInitialDelay: uploadInitialDelay,
+          wifiSSID: wifiSSID,
+          wifiPassword: wifiPassword,
+          modemAPN: modemAPN,
+        ),
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat gateway : $e");
+    }
+  }
+
+  Future<BLEResponse<MetaDataModel>> getMetaData(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.metaData], buffer);
+
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get meta data : $responseWrite");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Gagal untuk mengembalikan parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      int startIndex = 0;
+      String meterModel = ConvertV2().bufferToString(params[startIndex]);
+      String meterSN = ConvertV2().bufferToString(params[startIndex + 1]);
+      String meterSeal = ConvertV2().bufferToString(params[startIndex + 2]);
+      int timeUTC = ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+
+      return BLEResponse.success(
+        "Sukses dapat meta data",
+        data: MetaDataModel(
+          meterModel: meterModel,
+          meterSN: meterSN,
+          meterSeal: meterSeal,
+          timeUTC: timeUTC,
+        ),
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat meta data : $e");
+    }
+  }
+
+  Future<BLEResponse<ImageModel>> getImage(BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.imageExplorer], buffer);
+
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get image : $responseWrite");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Gagal untuk mengembalikan parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      int startIndex = 0;
+      int allImage = ConvertV2().bufferToUint16(params[startIndex], 0);
+      int allUnsent = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+      int selfAll = ConvertV2().bufferToUint16(params[startIndex + 2], 0);
+      int selfUnsent = ConvertV2().bufferToUint16(params[startIndex + 3], 0);
+      int nearAll = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
+      int nearUnsent = ConvertV2().bufferToUint16(params[startIndex + 5], 0);
+
+      return BLEResponse.success(
+        "Sukses dapat image",
+        data: ImageModel(
+          allImage: allImage,
+          allUnsent: allUnsent,
+          selfAll: selfAll,
+          selfUnsent: selfUnsent,
+          nearAll: nearAll,
+          nearUnsent: nearUnsent,
+        ),
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat image : $e");
+    }
+  }
+
+  Future<BLEResponse<StorageModel>> getStorage(BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.get;
+      int uniqueID = UniqueIDManager().getUniqueID();
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.storage], buffer);
+
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+
+      log("response write get storage : $responseWrite");
+      // turn to a model
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          throw Exception("Gagal untuk mengembalikan parameter");
+        }
+        params.add(param);
+      }
+
+      log("params : ${params}");
+
+      int startIndex = 0;
+
+      int totalStorage = ConvertV2().bufferToUint16(params[startIndex], 0);
+      int usedStorage = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+
+      return BLEResponse.success(
+        "Sukses dapat penyimpanan",
+        data: StorageModel(total: totalStorage, used: usedStorage),
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat penyimpanan : $e");
     }
   }
 }

@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/admin_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/converter/settings/admin_settings_convert.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
@@ -397,18 +396,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter $title"),
+          title: Text("Masukan $title"),
           content: Form(
             child: TextFormField(
               controller: controller,
               decoration: InputDecoration(
-                labelText: "Enter $label",
+                labelText: "Masukan $label",
                 border: const OutlineInputBorder(),
               ),
               keyboardType: keyboardType,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
+                  return 'Tolong diisi sebuah data';
                 }
                 return null;
               },
@@ -421,7 +420,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 Navigator.of(context).pop();
                 controller.clear();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -451,7 +450,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Masukan data Voltage Coef"),
+          title: const Text("Masukan data Koefisien Tegangan"),
           content: Form(
             child: TextFormField(
               controller: controller,
@@ -521,29 +520,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       key: Snackbar.snackBarKeyAdminSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Admin Settings'),
+          title: const Text('Pengaturan Admin'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -601,7 +579,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(CupertinoIcons.bolt),
-                        title: "Koefisien Volt 1",
+                        title: "Koefisien Tegangan 1",
                         data: voltCoef1Txt,
                         onTap: () async {
                           voltageCoefTxtController.text = voltCoef1Txt;
@@ -623,7 +601,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         icon: const Icon(CupertinoIcons.bolt),
-                        title: "Koefisien Volt 2",
+                        title: "Koefisien Tegangan 2",
                         data: voltCoef2Txt,
                         onTap: () async {
                           voltageCoefTxtController.text = voltCoef2Txt;
@@ -635,8 +613,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             Uint8List bytes = Uint8List.fromList(list);
                             _setSettings = SetSettingsModel(
                                 setSettings: "voltcoef2", value: input);
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Koefisien Volt 2", device);
+                            BLEUtils.funcWrite(bytes,
+                                "Sukses ubah Koefisien Tegangan 2", device);
                           }
                         },
                       ),
@@ -971,7 +949,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 width: 5,
                               ),
                               Text(
-                                "Format",
+                                "Format Berkas",
                                 style: GoogleFonts.readexPro(
                                   fontSize: 16,
                                   color: Colors.white,

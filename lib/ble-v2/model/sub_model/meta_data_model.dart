@@ -1,11 +1,11 @@
 class MetaDataModel {
-  final String modelMeter;
+  final String meterModel;
   final String meterSN;
   final String meterSeal;
   final int timeUTC;
 
   MetaDataModel(
-      {required this.modelMeter,
+      {required this.meterModel,
       required this.meterSN,
       required this.meterSeal,
       required this.timeUTC});
@@ -15,7 +15,7 @@ class MetaDataModel {
     // TODO: implement toString
     return '''
 {
-modelMeter : $modelMeter \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ntimeUTC : $timeUTC
+meterModel : $meterModel \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ntimeUTC : $timeUTC
       }
 ''';
   }

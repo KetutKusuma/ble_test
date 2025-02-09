@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+
 import 'package:ble_test/ble-v2/model/device_status_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
@@ -123,12 +124,18 @@ class _DeviceScreenState extends State<DeviceScreen> {
         critBattery2Counter = "0";
         setState(() {});
       } else {
-        Snackbar.show(ScreenSnackbar.devicescreen, resDeviceStatus.message,
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.devicescreen,
+          resDeviceStatus.message,
+          success: false,
+        );
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.devicescreen, "Error get device status : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.devicescreen,
+        "Dapat error status perangkat : $e",
+        success: false,
+      );
     }
   }
 
@@ -180,7 +187,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       description: critBattery1Counter == "0" ||
                               critBattery1Counter == '-'
                           ? null
-                          : "(Critical Counter : $critBattery1Counter)",
+                          : "(Jumlah hitungan kritis : $critBattery1Counter)",
                       onTap: () {},
                       icon: const Icon(
                         Icons.battery_5_bar_outlined,
@@ -192,7 +199,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       description: critBattery2Counter == "0" ||
                               critBattery2Counter == '-'
                           ? null
-                          : "(Critical Counter : $critBattery2Counter)",
+                          : "(Jumlah hitungan kritis : $critBattery2Counter)",
                       onTap: () {},
                       icon: const Icon(
                         Icons.battery_full,
@@ -291,7 +298,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                               width: 5,
                             ),
                             Text(
-                              "Set Time",
+                              "Atur Waktu",
                               style: GoogleFonts.readexPro(
                                 fontSize: 16,
                                 color: Colors.white,

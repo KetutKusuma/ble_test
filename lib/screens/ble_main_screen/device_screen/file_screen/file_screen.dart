@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/converter/status/status.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/image_model.dart';
 import 'package:ble_test/utils/snackbar.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
@@ -93,13 +90,22 @@ class _FilesScreenState extends State<FilesScreen> {
 
   initGetFiles() async {
     try {
-      if (isConnected) {
-        List<int> list = utf8.encode("files?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Files", device);
+      BLEResponse<ImageModel> res = await Command().getImage(bleProvider);
+      _progressDialog.hide();
+      if (res.status) {
+        setState(() {
+          dirNearTxt = res.data!.nearAll.toString();
+          dirNearUnsetTxt = res.data!.nearUnsent.toString();
+          dirImageTxt = res.data!.selfAll.toString();
+          dirImageUnsetTxt = res.data!.selfUnsent.toString();
+          // dirLogTxt = res.data!.dirLogTxt!;
+        });
+      } else {
+        Snackbar.show(ScreenSnackbar.capturesettings, res.message,
+            success: false);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings, "Error get files : $e",
+      Snackbar.show(ScreenSnackbar.capturesettings, "Dapat Error berkas : $e",
           success: false);
     }
   }

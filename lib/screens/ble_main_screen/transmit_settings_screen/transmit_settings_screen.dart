@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
 import 'package:ble_test/constant/constant_color.dart';
-import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/transmit_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/material.dart';
@@ -42,9 +42,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   /// Jadwal Pengiriman
   TextEditingController transmitScheduleTxtController = TextEditingController();
 
-  List<dynamic> result = [];
   // for choice true or false
   bool? selectedChoice;
+  List<TransmitModel> transmitList = [];
 
   @override
   void initState() {
@@ -96,7 +96,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
       }
     });
 
-    initGetRawTransmit();
+    initGetTransmit();
   }
 
   @override
@@ -138,7 +138,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawTransmit();
+      initGetTransmit();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -146,16 +146,27 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     }
   }
 
-  initGetRawTransmit() async {
+  initGetTransmit() async {
     try {
-      if (isConnected) {
-        List<int> list = utf8.encode("raw_transmit?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Transmit", device);
+      BLEResponse<List<TransmitModel>> response =
+          await Command().getTransmitSchedule(bleProvider);
+      _progressDialog.hide();
+      if (response.status) {
+        // ini harusnya ada set state
+        setState(() {
+          transmitList = response.data ?? [];
+        });
+      } else {
+        Snackbar.show(ScreenSnackbar.transmitsettings,
+            "Error jadwal kirim : ${response.message}",
+            success: false);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Error get raw admin : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.transmitsettings,
+        "Error dapat jadwal kirim : $e",
+        success: false,
+      );
     }
   }
 
@@ -350,27 +361,6 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
         appBar: AppBar(
           title: const Text('Pengaturan Pengiriman'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -425,7 +415,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                       child: FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                          result[2][index],
+                                          transmitList[index]
+                                              .destinationID
+                                              .toString(),
                                           style: GoogleFonts.readexPro(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w400),
@@ -446,7 +438,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                         fontWeight: FontWeight.w500),
                                   ),
                                   Text(
-                                    result[1][index].toString() == "true"
+                                    transmitList[index].enable == true
                                         ? "Ya"
                                         : "Tidak",
                                     style: GoogleFonts.readexPro(
@@ -471,7 +463,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                     child: Text(
                                       TimePickerHelper.formatTimeOfDay(
                                           TimePickerHelper.minutesToTimeOfDay(
-                                              result[3][index])),
+                                              transmitList[index].schedule)),
                                       textAlign: TextAlign.right,
                                       style: GoogleFonts.readexPro(
                                           fontSize: 14,
@@ -485,12 +477,13 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                         ),
                         GestureDetector(
                           onTap: () async {
-                            destinationIDTxtController.text = result[2][index];
+                            destinationIDTxtController.text =
+                                transmitList[index].destinationIDString;
                             transmitScheduleTxtController.text =
                                 TimePickerHelper.formatTimeOfDay(
                                     TimePickerHelper.minutesToTimeOfDay(
-                                        result[3][index]));
-                            selectedChoice = result[1][index];
+                                        transmitList[index].schedule));
+                            selectedChoice = transmitList[index].enable;
 
                             String? resultPop =
                                 await showSetupTransmitDialog(context, index);
@@ -550,7 +543,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       ],
                     );
                   },
-                  childCount: result.isEmpty ? 0 : result[1].length,
+                  childCount: transmitList.isEmpty ? 0 : transmitList.length,
                 ),
               ),
               const SliverToBoxAdapter(

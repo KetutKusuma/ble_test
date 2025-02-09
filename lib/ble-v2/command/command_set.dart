@@ -1,6 +1,7 @@
 import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/ble-v2/command.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
@@ -10,8 +11,6 @@ import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:ble_test/utils/global.dart';
-
-import 'model/sub_model/capture_model.dart';
 
 class CommandSet {
   static final ivGlobal = InitConfig.data().IV;
@@ -278,7 +277,7 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addString(meta.modelMeter, buffer);
+      messageV2.addString(meta.meterModel, buffer);
       messageV2.addString(meta.meterSN, buffer);
       messageV2.addString(meta.meterSeal, buffer);
       messageV2.addUint8(meta.timeUTC, buffer);

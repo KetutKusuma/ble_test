@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_enable_schedule_settings_screen/upload_enable_schedule_settings_screen.dart';
 import 'package:ble_test/utils/extra.dart';
@@ -134,13 +136,23 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   initGetRawUpload() async {
     try {
-      if (isConnected) {
-        List<int> list = utf8.encode("raw_upload?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Upload", device);
+      BLEResponse<GatewayModel> res = await Command().getGateway(bleProvider);
+      if (res.status) {
+        setState(() {
+          serverTxt = res.data!.server;
+          portTxt = res.data!.port.toString();
+          uploadUsingTxt = res.data!.uploadUsing.toString();
+          uploadInitialDelayTxt = res.data!.uploadInitialDelay.toString();
+          wifiSsidTxt = res.data!.wifiSSID;
+          wifiPasswordTxt = res.data!.wifiPassword;
+          modemApnTxt = res.data!.modemAPN;
+        });
+      } else {
+        Snackbar.show(ScreenSnackbar.uploadsettings, res.message,
+            success: false);
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Error get raw admin : $e",
+      Snackbar.show(ScreenSnackbar.uploadsettings, "Error dapat gateway : $e",
           success: false);
     }
   }

@@ -111,8 +111,18 @@ class ConvertV2 {
   }
 
   int bufferToUint16(List<int> buffer, int startIndex) {
-    return (buffer[startIndex] & 0x00ff) |
-        (buffer[startIndex + 1] & 0xffff << 8);
+    int value2 =
+        ((buffer[startIndex + 1] & 0xFF) << 8) | (buffer[startIndex] & 0xFF);
+    int value =
+        (buffer[startIndex + 1] & 0xFF << 8) | (buffer[startIndex] & 0xFF);
+    return value2;
+  }
+
+  int bufferToUint16V2(List<int> buffer) {
+    ByteData byteData = ByteData.sublistView(Uint8List.fromList(buffer));
+
+    int value = byteData.getUint16(0, Endian.little);
+    return value;
   }
 
   int bufferToUint32(List<int> buffer, int startIndex) {
