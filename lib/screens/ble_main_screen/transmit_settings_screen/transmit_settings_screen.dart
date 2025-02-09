@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/constant/constant_color.dart';
@@ -170,7 +171,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     }
   }
 
-  Future<String?> showSetupTransmitDialog(
+  Future<TransmitModel?> showSetupTransmitDialog(
       BuildContext context, int number) async {
     // Tracks the selected choice
 
@@ -327,6 +328,13 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
                   Navigator.of(context).pop(
                       "transmit=${number + 1};$selectedChoice;$destinationId;$transmitSchedule");
+
+                  TransmitModel transmitNew = TransmitModel(
+                    enable: selectedChoice ?? false,
+                    schedule: transmitSchedule,
+                    destinationID: ConvertV2()
+                        .stringHexAddressToArrayUint8(destinationId, 5),
+                  );
                   destinationIDTxtController.clear();
                   transmitScheduleTxtController.clear();
                 }
@@ -486,18 +494,19 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                         transmitList[index].schedule));
                             selectedChoice = transmitList[index].enable;
 
-                            String? resultPop =
+                            TransmitModel? resultPop =
                                 await showSetupTransmitDialog(context, index);
                             if (resultPop != null) {
                               // do your magic
-                              List<int> list = utf8.encode(resultPop);
-                              Uint8List bytes = Uint8List.fromList(list);
-                              await BLEUtils.funcWrite(
-                                bytes,
-                                "Transmit Set Success !!",
-                                device,
+                              transmitList[index] = resultPop;
+                              BLEResponse resBLE = await CommandSet()
+                                  .setTransmitSchedule(
+                                      bleProvider, transmitList);
+                              Snackbar.showHelperV2(
+                                ScreenSnackbar.transmitsettings,
+                                resBLE,
+                                onSuccess: onRefresh,
                               );
-                              onRefresh();
                             }
                           },
                           child: Container(

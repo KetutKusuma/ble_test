@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -147,7 +148,7 @@ class _UploadEnableScheduleSettingScreenState
     }
   }
 
-  Future<String?> showSetupUploadDialog(
+  Future<UploadModel?> showSetupUploadDialog(
       BuildContext context, int number) async {
     return await showDialog(
       context: context,
@@ -273,10 +274,11 @@ class _UploadEnableScheduleSettingScreenState
                   int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
                       TimePickerHelper.stringToTimeOfDay(
                           uploadScheduleTxtController.text));
-
-                  Navigator.of(context).pop(
-                    "upload=${number + 1};$selectedChoice;$transmitSchedule",
+                  UploadModel uploadNew = UploadModel(
+                    enable: selectedChoice ?? false,
+                    schedule: transmitSchedule,
                   );
+                  Navigator.pop(context, uploadNew);
                 }
               },
               child: Text(
@@ -401,11 +403,19 @@ class _UploadEnableScheduleSettingScreenState
                             TimePickerHelper.formatTimeOfDay(
                                 TimePickerHelper.minutesToTimeOfDay(
                                     uploadScheduleList[index].schedule));
-                        String? result =
+                        UploadModel? result =
                             await showSetupUploadDialog(context, index);
                         if (result != null) {
                           // do your magic
-
+                          uploadScheduleList[index] = result;
+                          BLEResponse resBLE = await CommandSet()
+                              .setUploadSchedule(
+                                  bleProvider, uploadScheduleList);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.uploadsettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       child: Container(
