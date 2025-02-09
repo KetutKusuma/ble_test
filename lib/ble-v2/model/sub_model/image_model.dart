@@ -1,10 +1,10 @@
 class ImageModel {
-  final int allImage;
-  final int allUnsent;
-  final int selfAll;
-  final int selfUnsent;
-  final int nearAll;
-  final int nearUnsent;
+  int allImage;
+  int allUnsent;
+  int selfAll;
+  int selfUnsent;
+  int nearAll;
+  int nearUnsent;
 
   ImageModel({
     required this.allImage,

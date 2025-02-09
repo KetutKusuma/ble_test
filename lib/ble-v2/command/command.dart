@@ -294,6 +294,8 @@ class Command {
     }
   }
 
+  // Future<BLEResponse> reset
+
   Future<BLEResponse<AdminModels>> getAdminData(
       BluetoothDevice device, BLEProvider bleProvider) async {
     try {
@@ -630,11 +632,12 @@ class Command {
         idata,
         headerBLE,
       );
+      log("response write get receive schedule : $responseWrite");
+
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
 
-      log("response write get receive schedule : $responseWrite");
       // turn to a model
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -653,8 +656,8 @@ class Command {
       int schedule = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
       int count = ConvertV2().bufferToUint8(params[startIndex + 2], 0);
       int interval = ConvertV2().bufferToUint16(params[startIndex + 3], 0);
-      int timeAdjust = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
-
+      int timeAdjust = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
+      log("masok end ga nih");
       ReceiveModel receiveModel = ReceiveModel(
         enable: enable,
         schedule: schedule,
@@ -1023,11 +1026,11 @@ class Command {
         idata,
         headerBLE,
       );
+      log("response write get storage : $responseWrite");
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
 
-      log("response write get storage : $responseWrite");
       // turn to a model
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {

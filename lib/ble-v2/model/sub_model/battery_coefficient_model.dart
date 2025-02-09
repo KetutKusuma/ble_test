@@ -1,6 +1,6 @@
 class BatteryCoefficientModel {
-  final double coefficient1;
-  final double coefficient2;
+  double coefficient1;
+  double coefficient2;
 
   BatteryCoefficientModel(
       {required this.coefficient1, required this.coefficient2});

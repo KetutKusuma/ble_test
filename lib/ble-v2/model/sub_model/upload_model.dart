@@ -1,8 +1,8 @@
 import 'package:ble_test/ble-v2/utils/convert.dart';
 
 class UploadModel {
-  final bool enable;
-  final int schedule;
+  bool enable;
+  int schedule;
 
   UploadModel({required this.enable, required this.schedule});
 

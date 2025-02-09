@@ -173,7 +173,6 @@ class BLEProvider with ChangeNotifier {
       if (dataResponse.isEmpty) {
         return Response(headerBLE, []);
       }
-      log("start on receive");
       List<int> buffer = [];
       bool resParse = await MessageV2().parse(
         dataResponse,
@@ -181,27 +180,22 @@ class BLEProvider with ChangeNotifier {
         InitConfig.data().IV,
         buffer,
       );
-      log(
-        "buffer parse :$buffer ",
-      );
+
       if (!resParse) {
         return Response(headerBLE, []);
       }
 
-      log("=== start get header ===");
       Header headerRes = MessageV2().getHeader(buffer);
       log("header response : $headerRes");
-      log("cek unique ID sama : ${headerRes.uniqueID}(uniqueID res) == ${headerBLE.uniqueID}(uniqueID ble)");
-      log("cek command sama : ${headerRes.command} == ${headerBLE.command}");
       if (headerRes.uniqueID == headerBLE.uniqueID &&
           headerRes.command == headerBLE.command) {
         return Response(headerRes, buffer);
+      } else {
+        throw Exception("Header not match");
       }
-
-      return Response(headerRes, []);
     } catch (e) {
       log("Error catch on receive : $e");
-      return Response(headerBLE, []);
+      throw Exception("Error catch on receive : $e");
     }
   }
 
@@ -228,7 +222,6 @@ class UniqueIDManager {
 
     int ran = math.Random().nextInt(9);
     String uniqueIDStr = "$hour$minute$ran";
-    log("UNIQUE : $uniqueIDStr");
 
     return int.parse(uniqueIDStr);
   }

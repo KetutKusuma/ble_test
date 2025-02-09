@@ -5,6 +5,7 @@ import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 
 import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
@@ -109,14 +110,14 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         if (response.status) {
           setState(() {
             receiveEnableTxt = response.data!.enable.toString();
-            receiveScheduleTxt = response.data!.schedule.toString();
+            receiveScheduleTxt =
+                ConvertTime.minuteToDateTimeString(response.data!.schedule);
             receiveIntervalTxt = response.data!.interval.toString();
             receiveCountTxt = response.data!.count.toString();
             receiveTimeAdjust = response.data!.timeAdjust.toString();
           });
         } else {
-          Snackbar.show(ScreenSnackbar.receivesettings,
-              "Error jadwal terima : ${response.message}",
+          Snackbar.show(ScreenSnackbar.receivesettings, response.message,
               success: false);
         }
       }

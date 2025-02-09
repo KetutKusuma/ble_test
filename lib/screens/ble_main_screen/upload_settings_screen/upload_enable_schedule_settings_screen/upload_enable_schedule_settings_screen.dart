@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -49,8 +51,7 @@ class _UploadEnableScheduleSettingScreenState
   late SimpleFontelicoProgressDialog _progressDialog;
 
   // ini untuk uplado schedule dan upload enbale
-  List<bool> uploadEnable = [];
-  List<int> uploadSchedule = [];
+  List<UploadModel> uploadScheduleList = [];
   TextEditingController uploadScheduleTxtController = TextEditingController();
 
   bool? selectedChoice; // Tracks the selected choice
@@ -101,7 +102,7 @@ class _UploadEnableScheduleSettingScreenState
         }
       }
     });
-    initGetRawUpload();
+    initGetDataUpload();
   }
 
   @override
@@ -119,7 +120,7 @@ class _UploadEnableScheduleSettingScreenState
 
   onRefresh() async {
     try {
-      initGetRawUpload();
+      initGetDataUpload();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -127,12 +128,18 @@ class _UploadEnableScheduleSettingScreenState
     }
   }
 
-  initGetRawUpload() async {
+  initGetDataUpload() async {
     try {
-      if (isConnected) {
-        List<int> list = utf8.encode("raw_upload?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Upload", device);
+      BLEResponse<List<UploadModel>> response =
+          await Command().getUploadSchedule(bleProvider);
+      _progressDialog.hide();
+      if (response.status) {
+        setState(() {
+          uploadScheduleList = response.data ?? [];
+        });
+      } else {
+        Snackbar.show(ScreenSnackbar.uploadsettings, response.message,
+            success: false);
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.uploadsettings, "Error get raw admin : $e",
@@ -309,7 +316,8 @@ class _UploadEnableScheduleSettingScreenState
         child: CustomScrollView(
           slivers: [
             SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
+                delegate: SliverChildBuilderDelegate(
+              (context, index) {
                 return Column(
                   children: [
                     Container(
@@ -354,7 +362,7 @@ class _UploadEnableScheduleSettingScreenState
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      uploadEnable[index].toString() == "true"
+                                      uploadScheduleList[index].enable
                                           ? "Ya"
                                           : "Tidak",
                                       style: GoogleFonts.readexPro(
@@ -377,7 +385,7 @@ class _UploadEnableScheduleSettingScreenState
                               Text(
                                 TimePickerHelper.formatTimeOfDay(
                                     TimePickerHelper.minutesToTimeOfDay(
-                                        uploadSchedule[index])),
+                                        uploadScheduleList[index].schedule)),
                                 style: GoogleFonts.readexPro(
                                     fontSize: 14, fontWeight: FontWeight.w400),
                               ),
@@ -388,11 +396,11 @@ class _UploadEnableScheduleSettingScreenState
                     ),
                     GestureDetector(
                       onTap: () async {
-                        selectedChoice = uploadEnable[index];
+                        selectedChoice = uploadScheduleList[index].enable;
                         uploadScheduleTxtController.text =
                             TimePickerHelper.formatTimeOfDay(
                                 TimePickerHelper.minutesToTimeOfDay(
-                                    uploadSchedule[index]));
+                                    uploadScheduleList[index].schedule));
                         String? result =
                             await showSetupUploadDialog(context, index);
                         if (result != null) {
@@ -451,10 +459,8 @@ class _UploadEnableScheduleSettingScreenState
                   ],
                 );
               },
-                  childCount: (uploadEnable.length == uploadSchedule.length)
-                      ? uploadEnable.length
-                      : 0),
-            ),
+              childCount: uploadScheduleList.length,
+            )),
             const SliverToBoxAdapter(
               child: SizedBox(height: 15),
             )

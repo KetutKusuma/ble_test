@@ -138,7 +138,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         } else {
           Snackbar.show(
             ScreenSnackbar.metadatasettings,
-            "Terjadi error meta data : ${response.message}",
+            response.message,
             success: false,
           );
         }

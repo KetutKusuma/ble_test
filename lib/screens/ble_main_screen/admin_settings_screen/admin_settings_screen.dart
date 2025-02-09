@@ -3,7 +3,11 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/admin_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -86,6 +90,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   // for get print to serial monitor
   String printToSerialMonitorTxt = "-";
+
+  // v2
+  late AdminModels adminModels;
+  Command _command = Command();
+  CommandSet _commandSet = CommandSet();
 
   @override
   void initState() {
@@ -231,10 +240,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     try {
       if (isConnected) {
         BLEResponse<AdminModels> adminResponse =
-            await Command().getAdminData(device, bleProvider);
+            await _command.getAdminData(device, bleProvider);
         _progressDialog.hide();
         log("admin response : $adminResponse");
         if (adminResponse.status) {
+          adminModels = adminResponse.data!;
           idTxt = ConvertV2().arrayUint8ToStringHexAddress(
               adminResponse.data!.identityModel!.toppiID);
           voltCoef1Txt = adminResponse
@@ -260,8 +270,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               adminResponse.data!.printToSerialMonitor.toString();
           setState(() {});
         } else {
-          Snackbar.show(ScreenSnackbar.adminsettings,
-              "Terjadi Kesalahan : ${adminResponse.message}",
+          Snackbar.show(ScreenSnackbar.adminsettings, adminResponse.message,
               success: false);
         }
       }
@@ -536,18 +545,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       height: 10,
                     ),
 
-                    // SettingsContainer(
-                    //   icon: const Icon(
-                    //     CupertinoIcons.settings,
-                    //   ),
-                    //   title: "Status",
-                    //   data: statusTxt,
-                    //   onTap: () {
-                    //     // List<int> list = utf8.encode("?");
-                    //     // Uint8List bytes = Uint8List.fromList(list);
-                    //     // BLEUtils.funcWrite(bytes, "Success Get Raw Admin");
-                    //   },
-                    // ),
                     SettingsContainer(
                       icon: const Icon(Icons.person_outline),
                       title: "ID",
@@ -567,11 +564,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         );
                         log("input : $input");
                         if (input != null) {
-                          List<int> list = utf8.encode("id=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings =
-                              SetSettingsModel(setSettings: "id", value: input);
-                          BLEUtils.funcWrite(bytes, "Sukses ubah ID", device);
+                          List<int> dataSet = ConvertV2()
+                              .stringHexAddressToArrayUint8(input, 5);
+                          log("hasil data set : $dataSet");
+                          IdentityModel identityUpdate =
+                              adminModels.identityModel!;
+                          identityUpdate.toppiID = dataSet;
+                          BLEResponse resBLE = await _commandSet.setIdentity(
+                            bleProvider,
+                            identityUpdate,
+                          );
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.adminsettings,
+                            resBLE,
+                          );
                         }
                       },
                     ),
@@ -586,13 +592,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           String? input = await _showInputDialogVoltage(
                               voltageCoefTxtController);
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("voltage1_coef=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "voltcoef1", value: input);
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Koefisien Volt 1", device);
+                            BatteryCoefficientModel batteryCoef =
+                                adminModels.batteryCoefficientModel!;
+                            log("inputan coef 1 : $input");
+                            batteryCoef.coefficient1 = double.parse(input);
+                            BLEResponse resBLE =
+                                await _commandSet.setBatteryVoltageCoef(
+                              bleProvider,
+                              batteryCoef,
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -608,13 +620,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           String? input = await _showInputDialogVoltage(
                               voltageCoefTxtController);
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("voltage2_coef=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "voltcoef2", value: input);
-                            BLEUtils.funcWrite(bytes,
-                                "Sukses ubah Koefisien Tegangan 2", device);
+                            BatteryCoefficientModel batteryCoef =
+                                adminModels.batteryCoefficientModel!;
+                            log("inputan coef 2 : $input");
+                            batteryCoef.coefficient2 = double.parse(input);
+                            BLEResponse resBLE =
+                                await _commandSet.setBatteryVoltageCoef(
+                              bleProvider,
+                              batteryCoef,
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -629,14 +647,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Map? input = await _showSelectionPopup(
                               context, dataMapBrightnessContrastSaturation);
                           if (input != null) {
-                            List<int> list = utf8.encode(
-                                "camera_setting_brightness=${input['value']}");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "camera_setting_brightness",
-                                value: input['value'].toString());
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Kecerahan Kamera", device);
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.brightness = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -651,14 +670,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Map? input = await _showSelectionPopup(
                               context, dataMapBrightnessContrastSaturation);
                           if (input != null) {
-                            List<int> list = utf8.encode(
-                                "camera_setting_contrast=${input['value']}");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "camera_setting_contrast",
-                                value: input['value'].toString());
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Kontras Kamera", device);
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.contrast = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -673,14 +693,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Map? input = await _showSelectionPopup(
                               context, dataMapBrightnessContrastSaturation);
                           if (input != null) {
-                            List<int> list = utf8.encode(
-                                "camera_setting_saturation=${input['value']}");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "camera_setting_saturation",
-                                value: input['value'].toString());
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Saturasi Kamera", device);
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.saturation = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -695,15 +716,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Map? input = await _showSelectionPopup(
                               context, dataMapSpecialEffect);
                           if (input != null) {
-                            List<int> list = utf8.encode(
-                                "camera_setting_special_effect=${input['value']}");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                              setSettings: "camera_setting_special_effect",
-                              value: input['value'].toString(),
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.specialEffect = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
                             );
-                            BLEUtils.funcWrite(bytes,
-                                "Sukses ubah Efek Khusus Kamera", device);
                           }
                         },
                       ),
@@ -718,14 +739,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           bool? input = await _showTrueFalseDialog(
                               context, "Cermin Horizontal Kamera");
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("camera_setting_hmirror=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "camera_setting_hmirror",
-                                value: input.toString());
-                            BLEUtils.funcWrite(bytes,
-                                "Sukses ubah Cermin Horizontal Kamera", device);
+                            bool dataUpdate = input;
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.hMirror = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -745,16 +767,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           bool? input = await _showTrueFalseDialog(
                               context, "Pembalikan Vertikal Kamera");
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("camera_setting_vflip=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "camera_setting_vflip",
-                                value: input.toString());
-                            BLEUtils.funcWrite(
-                                bytes,
-                                "Sukses ubah Pembalikan Vertikal Kamera",
-                                device);
+                            bool dataUpdate = input;
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.vFlip = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -782,13 +803,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           );
                           log("input : $input");
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("camera_jpeg_quality=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "camera_jpeg_quality",
-                                value: input);
-                            BLEUtils.funcWrite(bytes, "Sukses ubah ID", device);
+                            int dataUpdate = int.parse(input);
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.jpegQuality = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -801,17 +824,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         title: "Role",
                         data: roleTxt,
                         onTap: () async {
-                          Map? result =
+                          Map? input =
                               await _showSelectionPopup(context, dataMapRole);
-                          if (result != null) {
-                            List<int> list =
-                                utf8.encode("role=${result["value"]}");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "role",
-                                value: result["value"].toString());
-                            BLEUtils.funcWrite(
-                                bytes, "Sukses ubah Role", device);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            BLEResponse resBLE = await _commandSet.setRole(
+                                bleProvider, dataUpdate);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                       ),
@@ -826,10 +848,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           bool? input = await _showTrueFalseDialog(
                               context, "Aktifkan Toppi");
                           if (input != null) {
-                            List<int> list = utf8.encode("enable=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            await BLEUtils.funcWrite(
-                                bytes, "Set Enable $input success", device);
+                            BLEResponse resBLE =
+                                await _commandSet.setEnable(bleProvider, input);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                         icon: const Icon(
@@ -849,16 +873,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           bool? input = await _showTrueFalseDialog(
                               context, "Tampilkan ke Layar Serial");
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("print_to_serial_monitor=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings =
-                                "print_to_serial_monitor";
-                            _setSettings.value = input.toString();
-                            await BLEUtils.funcWrite(
-                                bytes,
-                                "Set Tampilkan ke Layar Serial $input success",
-                                device);
+                            BLEResponse resBLE = await _commandSet
+                                .setPrintSerialMonitor(bleProvider, input);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                            );
                           }
                         },
                         icon: const Icon(
@@ -875,13 +895,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
                         onTap: () async {
-                          List<int> list = utf8.encode("reset!");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          await BLEUtils.funcWrite(
-                              bytes, "Reset success", device);
-                          await Future.delayed(
-                              const Duration(milliseconds: 500));
-                          onRefresh();
+                          // BLEResponse resBLE =
+                          //     await _command(bleProvider, dataUpdate);
+                          // Snackbar.showHelperV2(
+                          //   ScreenSnackbar.adminsettings,
+                          //   resBLE,
+                          // );
                         },
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -922,10 +941,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
                         onTap: () async {
-                          List<int> list = utf8.encode("must_format!");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes, "Set Format success", device);
+                          BLEResponse resBLE =
+                              await _command.formatFAT(device, bleProvider);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.adminsettings,
+                            resBLE,
+                          );
                         },
                         child: Container(
                           margin: const EdgeInsets.only(

@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
@@ -96,7 +97,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
       }
     });
 
-    initGetTransmit();
+    initGetDataTransmit();
   }
 
   @override
@@ -138,7 +139,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetTransmit();
+      initGetDataTransmit();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -146,7 +147,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     }
   }
 
-  initGetTransmit() async {
+  initGetDataTransmit() async {
     try {
       BLEResponse<List<TransmitModel>> response =
           await Command().getTransmitSchedule(bleProvider);
@@ -157,8 +158,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           transmitList = response.data ?? [];
         });
       } else {
-        Snackbar.show(ScreenSnackbar.transmitsettings,
-            "Error jadwal kirim : ${response.message}",
+        Snackbar.show(ScreenSnackbar.transmitsettings, response.message,
             success: false);
       }
     } catch (e) {
@@ -415,9 +415,10 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                       child: FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                          transmitList[index]
-                                              .destinationID
-                                              .toString(),
+                                          ConvertV2()
+                                              .arrayUint8ToStringHexAddress(
+                                                  transmitList[index]
+                                                      .destinationID),
                                           style: GoogleFonts.readexPro(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w400),

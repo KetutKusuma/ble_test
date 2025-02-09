@@ -1,3 +1,4 @@
+import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -100,6 +101,18 @@ class Snackbar {
     final snackBar = success
         ? SnackBar(content: Text(msg), backgroundColor: Colors.blue)
         : SnackBar(content: Text(msg), backgroundColor: Colors.red);
+    getSnackbar(ss).currentState?.removeCurrentSnackBar();
+    getSnackbar(ss).currentState?.showSnackBar(snackBar);
+  }
+
+  static showHelperV2(ScreenSnackbar ss, BLEResponse resBLE,
+      {VoidCallback? onSuccess}) {
+    final snackBar = resBLE.status
+        ? SnackBar(content: Text(resBLE.message), backgroundColor: Colors.blue)
+        : SnackBar(content: Text(resBLE.message), backgroundColor: Colors.red);
+    if (resBLE.status) {
+      onSuccess;
+    }
     getSnackbar(ss).currentState?.removeCurrentSnackBar();
     getSnackbar(ss).currentState?.showSnackBar(snackBar);
   }

@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/ble.dart';
@@ -50,6 +51,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   TextEditingController controller = TextEditingController();
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
+
+  // v2
+  late CaptureModel captureModel;
+  final _commandSet = CommandSet();
 
   @override
   void initState() {
@@ -109,6 +114,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
             await Command().getCaptureSchedule(bleProvider);
         _progressDialog.hide();
         if (response.status) {
+          captureModel = response.data!;
+
           captureScheduleTxt =
               ConvertTime.minuteToDateTimeString(response.data!.schedule);
           captureIntervalTxt = response.data!.interval.toString();
@@ -294,8 +301,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       height: 7,
                     ),
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 7.0, horizontal: 15),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 7.0, horizontal: 15),
                       margin: const EdgeInsets.symmetric(
                           vertical: 0.0, horizontal: 15),
                       decoration: const BoxDecoration(
@@ -323,27 +330,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
-                          TimePickerHelper.formatTimeOfDay(result);
-                          List<int> list = utf8.encode(
-                              "capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes,
-                              "Sukses ubah Jadwal Pengambilan Gambar", device);
+                          int dataUpdate = ConvertTime.dateTimeStringToMinute(
+                              TimePickerHelper.formatTimeOfDay(result));
+                          captureModel.schedule = dataUpdate;
+                          BLEResponse resBLE = await _commandSet
+                              .setCaptureSchedule(bleProvider, captureModel);
+                          Snackbar.showHelperV2(
+                              ScreenSnackbar.capturesettings, resBLE);
                         }
-                        // if (isConnected) {
-                        //   String? input = await _showInputDialog(
-                        //       controller, "Capture Schedule",
-                        //       label: "what minute of a day");
-                        //   if (input != null) {
-                        //     _setSettings.setSettings = "capture_schedule";
-                        //     _setSettings.value = input;
-                        //     List<int> list =
-                        //         utf8.encode("capture_schedule=$input");
-                        //     Uint8List bytes = Uint8List.fromList(list);
-                        //     BLEUtils.funcWrite(
-                        //         bytes, "Sukses ubah Capture Schedule", device);
-                        //   }
-                        // }
                       },
                       icon: const Icon(
                         Icons.calendar_month_outlined,
@@ -358,15 +352,13 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           controller.text = captureCountTxt;
                           String? input = await _showInputDialog(
                               controller, "Jumlah Pengambilan Gambar",
-                              label: "how many repetitions a day");
+                              label: "Berapa banyak pengulangan perhari");
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("capture_count=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes,
-                                "Sukses ubah Jumlah Pengambilan Gambar",
-                                device);
+                            captureModel.count = int.parse(input);
+                            BLEResponse resBLE = await _commandSet
+                                .setCaptureSchedule(bleProvider, captureModel);
+                            Snackbar.showHelperV2(
+                                ScreenSnackbar.capturesettings, resBLE);
                           }
                         }
                       },
@@ -431,8 +423,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       height: 10,
                     ),
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 7.0, horizontal: 15),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 7.0, horizontal: 15),
                       margin: const EdgeInsets.symmetric(
                           vertical: 0.0, horizontal: 15),
                       decoration: const BoxDecoration(
@@ -544,30 +536,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         TimeOfDay? result =
                             await TimePickerHelper.pickTime(context, null);
                         if (result != null) {
-                          TimePickerHelper.formatTimeOfDay(result);
-                          List<int> list = utf8.encode(
-                              "special_capture_schedule=${TimePickerHelper.timeOfDayToMinutes(result)}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(
-                              bytes,
-                              "Sukses ubah Jadwal Pengambilan Gambar Khusus",
-                              device);
+                          int dataUpdate = ConvertTime.dateTimeStringToMinute(
+                              TimePickerHelper.formatTimeOfDay(result));
+                          captureModel.schedule = dataUpdate;
+                          BLEResponse resBLE = await _commandSet
+                              .setCaptureSchedule(bleProvider, captureModel);
+                          Snackbar.showHelperV2(
+                              ScreenSnackbar.capturesettings, resBLE);
                         }
-                        // if (isConnected) {
-                        //   String? input = await _showInputDialog(
-                        //       controller, "Jadwal Pengambilan Gambar Khusus",
-                        //       label: "start minute");
-                        //   if (input != null) {
-                        //     _setSettings.setSettings =
-                        //         "special_capture_schedule";
-                        //     _setSettings.value = input;
-                        //     List<int> list =
-                        //         utf8.encode("special_capture_schedule=$input");
-                        //     Uint8List bytes = Uint8List.fromList(list);
-                        //     BLEUtils.funcWrite(bytes,
-                        //         "Sukses ubah Jadwal Pengambilan Gambar Khusus", device);
-                        //   }
-                        // }
                       },
                       icon: const Icon(
                         Icons.calendar_month_sharp,

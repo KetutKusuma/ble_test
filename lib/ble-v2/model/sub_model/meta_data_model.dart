@@ -1,8 +1,8 @@
 class MetaDataModel {
-  final String meterModel;
-  final String meterSN;
-  final String meterSeal;
-  final int timeUTC;
+  String meterModel;
+  String meterSN;
+  String meterSeal;
+  int timeUTC;
 
   MetaDataModel(
       {required this.meterModel,

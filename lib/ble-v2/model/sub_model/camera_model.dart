@@ -1,11 +1,11 @@
 class CameraModel {
-  final int brightness;
-  final int contrast;
-  final int saturation;
-  final int specialEffect;
-  final bool hMirror;
-  final bool vFlip;
-  final int jpegQuality;
+  int brightness;
+  int contrast;
+  int saturation;
+  int specialEffect;
+  bool hMirror;
+  bool vFlip;
+  int jpegQuality;
 
   CameraModel(
       {required this.brightness,

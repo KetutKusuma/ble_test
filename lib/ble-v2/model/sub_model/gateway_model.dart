@@ -1,11 +1,11 @@
 class GatewayModel {
-  final String server;
-  final int port;
-  final int uploadUsing;
-  final int uploadInitialDelay;
-  final String wifiSSID;
-  final String wifiPassword;
-  final String modemAPN;
+  String server;
+  int port;
+  int uploadUsing;
+  int uploadInitialDelay;
+  String wifiSSID;
+  String wifiPassword;
+  String modemAPN;
 
   GatewayModel(
       {required this.server,

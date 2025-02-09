@@ -19,6 +19,7 @@ import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
 
 class UploadSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -108,7 +109,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       }
     });
-    initGetRawUpload();
+    initGetDataGateway();
   }
 
   @override
@@ -126,7 +127,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawUpload();
+      initGetDataGateway();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -134,18 +135,31 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     }
   }
 
-  initGetRawUpload() async {
+  String getUploadUsing(int value) {
+    if (value == 0) {
+      return "Wifi";
+    } else if (value == 1) {
+      return "Sim800l";
+    } else if (value == 2) {
+      return "NB-Iot";
+    } else {
+      return "-";
+    }
+  }
+
+  initGetDataGateway() async {
     try {
       BLEResponse<GatewayModel> res = await Command().getGateway(bleProvider);
+      _progressDialog.hide();
       if (res.status) {
         setState(() {
-          serverTxt = res.data!.server;
-          portTxt = res.data!.port.toString();
-          uploadUsingTxt = res.data!.uploadUsing.toString();
+          serverTxt = res.data!.server.changeEmptyString();
+          portTxt = res.data!.port.toString().changeZeroString();
+          uploadUsingTxt = getUploadUsing(res.data!.uploadUsing);
           uploadInitialDelayTxt = res.data!.uploadInitialDelay.toString();
-          wifiSsidTxt = res.data!.wifiSSID;
-          wifiPasswordTxt = res.data!.wifiPassword;
-          modemApnTxt = res.data!.modemAPN;
+          wifiSsidTxt = res.data!.wifiSSID.changeEmptyString();
+          wifiPasswordTxt = res.data!.wifiPassword.changeEmptyString();
+          modemApnTxt = res.data!.modemAPN.changeEmptyString();
         });
       } else {
         Snackbar.show(ScreenSnackbar.uploadsettings, res.message,
@@ -422,27 +436,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         appBar: AppBar(
           title: const Text('Pengaturan Unggah'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -453,14 +446,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 // hasScrollBody: false,
                 child: Column(
                   children: [
-                    // SettingsContainer(
-                    //   title: "Status",
-                    //   data: statusTxt,
-                    //   onTap: () {},
-                    //   icon: const Icon(
-                    //     CupertinoIcons.settings,
-                    //   ),
-                    // ),
                     SettingsContainer(
                       title: "Server",
                       data: serverTxt,
@@ -721,7 +706,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               Icons.wifi_password_rounded,
                             ),
                           ),
-                    (uploadUsingTxt != "Wifi")
+                    (uploadUsingTxt != "Wifia")
                         ? const SizedBox()
                         : Padding(
                             padding: const EdgeInsets.only(

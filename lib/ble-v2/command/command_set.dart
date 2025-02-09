@@ -1,5 +1,6 @@
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
@@ -487,6 +488,38 @@ class CommandSet {
       }
     } catch (e) {
       return BLEResponse.error("Error ubah role : $e");
+    }
+  }
+
+  Future<BLEResponse> setBatteryVoltageCoef(
+      BLEProvider bleProvider, BatteryCoefficientModel b) async {
+    try {
+      int command = CommandCode.batteryVoltageCoefficient;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addFloat32(b.coefficient1, buffer);
+      messageV2.addFloat32(b.coefficient2, buffer);
+
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+
+      Header headerBLE =
+          Header(uniqueID: uniqueID, command: command, status: false);
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+      if (responseWrite.header.status) {
+        return BLEResponse.success("Sukses ubah baterai koefisien");
+      } else {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+    } catch (e) {
+      return BLEResponse.error("Error ubah koefisien tegangan");
     }
   }
 }

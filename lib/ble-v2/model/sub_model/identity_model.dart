@@ -1,7 +1,7 @@
 class IdentityModel {
-  final List<int> hardwareID;
-  final List<int> toppiID;
-  final bool isLicense;
+  List<int> hardwareID;
+  List<int> toppiID;
+  bool isLicense;
 
   IdentityModel(
       {required this.hardwareID,

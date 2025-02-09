@@ -159,9 +159,6 @@ class MessageV2 {
           status: false);
     }
 
-    log("buffer uniqueID : ${buffer.sublist(4, 6)}");
-    log("BUFFER HEADER : ${buffer}");
-    log("BUFFER STATUS : ${buffer[buffer.length - 5]}");
     return Header(
       dateTime: bytesToInt32(buffer.sublist(0, 4)),
       uniqueID: bytesToInt16(buffer.sublist(4, 6)),
