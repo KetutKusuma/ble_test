@@ -97,11 +97,15 @@ class BLEResponse<T> {
       }
       params.add(param);
     }
+    log("sampe sini params : $params");
+    if (params.length < 2) {
+      return BLEResponse.error("Gagal mengambil parameter, parameter kurang");
+    }
     int errorCode = ConvertV2().bufferToUint8(params[0], 0);
     String errorMsg = ConvertV2().bufferToString(params[1]);
-    log("Error dari BLE code : $errorCode message : $errorMsg");
+    log("Error dari BLE code : $errorCode, message : $errorMsg");
     return BLEResponse.error(
-      "Error dari BLE code : $errorCode message : $errorMsg",
+      "Error dari BLE code : $errorCode, message : $errorMsg",
     );
   }
 
@@ -110,8 +114,7 @@ class BLEResponse<T> {
     // TODO: implement toString
     return '''
 {
-status : $status \nmessage : $message \ndata : $data
-        }''';
+status : $status \nmessage : $message \ndata : $data}''';
   }
 }
 
@@ -336,16 +339,17 @@ class Command {
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
         List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
         if (param == null) {
-          throw Exception("Fail to retrieve parameter");
+          throw Exception("Gagal untuk mengembalikan parameter");
         }
         params.add(param);
       }
 
-      log("params : ${params}");
+      log("params identity : ${params}");
 
       int startIndex = 0;
       // identity
       List<int> hardwareID = params[startIndex];
+      log("- hardwareID : $hardwareID");
       List<int> toppiID = params[startIndex + 1];
       bool isLicensed = ConvertV2().bufferToBool(params[startIndex + 2], 0);
 
@@ -494,7 +498,10 @@ class Command {
 
       startIndex = 13;
       int dateTimeMiliSeconds =
-          ConvertV2().bufferToUint32(params[startIndex], 0) + 946659600;
+          ConvertV2().bufferToUint32(params[startIndex], 0) + (946659600);
+      // DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+      //     ConvertV2().bufferToUint32(params[startIndex], 0) +
+      //         (946659600 * 1000));
       DateTime dateTime =
           DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds);
 
@@ -1045,8 +1052,8 @@ class Command {
 
       int startIndex = 0;
 
-      int totalStorage = ConvertV2().bufferToUint16(params[startIndex], 0);
-      int usedStorage = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+      int totalStorage = ConvertV2().bufferToUint32(params[startIndex], 0);
+      int usedStorage = ConvertV2().bufferToUint32(params[startIndex + 1], 0);
 
       return BLEResponse.success(
         "Sukses dapat penyimpanan",

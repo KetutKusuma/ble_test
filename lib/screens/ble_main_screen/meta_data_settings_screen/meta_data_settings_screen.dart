@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:html';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +17,7 @@ import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../ble-v2/command/command_set.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
 
 class MetaDataSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -76,29 +77,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       },
     );
 
-    timeUTCTxtController.addListener(() {
-      final text = timeUTCTxtController.text;
-      if (text.isNotEmpty) {
-        final value = int.tryParse(text);
-        if (value != null) {
-          if (value < -12) {
-            // Otomatis set menjadi -12 jika kurang dari -12
-            timeUTCTxtController.text = '-12';
-            timeUTCTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: timeUTCTxtController
-                        .text.length)); // Memastikan cursor di akhir
-          } else if (value > 12) {
-            // Otomatis set menjadi 12 jika lebih dari 12
-            timeUTCTxtController.text = '12';
-            timeUTCTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: timeUTCTxtController
-                        .text.length)); // Memastikan cursor di akhir
-          }
-        }
-      }
-    });
     initGetMetaData();
   }
 
@@ -134,10 +112,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         if (response.status) {
           metaData = response.data!;
           setState(() {
-            meterModelTxt = response.data!.meterModel;
-            meterSnTxt = response.data!.meterSN;
-            meterSealTxt = response.data!.meterSeal;
-            timeUTCTxt = response.data!.timeUTC.toString();
+            meterModelTxt = response.data!.meterModel.changeEmptyString();
+            meterSnTxt = response.data!.meterSN.changeEmptyString();
+            meterSealTxt = response.data!.meterSeal.changeEmptyString();
+            timeUTCTxt = ConvertV2().uint8ToUtcString(response.data!.timeUTC);
             // idPelangganTxt = response.data!.idPelanggan;
           });
         } else {
@@ -219,14 +197,15 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                  signed: true, decimal: false),
+              keyboardType: TextInputType.text,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+                FilteringTextInputFormatter.allow(RegExp(r'[\d\-\+:]')),
               ],
               decoration: const InputDecoration(
-                labelText: 'Data antara -12 and 12',
+                labelText: 'Data antara -12:00 and 12:00',
                 border: OutlineInputBorder(),
+                hintText: "Contoh : +07:00",
+                hintStyle: TextStyle(fontSize: 13),
               ),
             ),
           ),
@@ -277,6 +256,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Model Meter",
                       data: meterModelTxt,
                       onTap: () async {
+                        meterModelTxtController.text = meterModelTxt;
                         String? input = await _showInputDialog(
                             meterModelTxtController, "Model Meter");
                         if (input != null && input.isNotEmpty) {
@@ -359,23 +339,47 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Time UTC",
+                      title: "Waktu UTC",
                       data: timeUTCTxt,
                       onTap: () async {
                         timeUTCTxtController.text = timeUTCTxt;
                         String? input =
                             await _showInputDialogTimeUTC(timeUTCTxtController);
+
                         if (input != null) {
-                          metaData.timeUTC = int.parse(input);
-                          BLEResponse resBLE = await _commandSet.setMetaData(
-                            bleProvider,
-                            metaData,
-                          );
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.metadatasettings,
-                            resBLE,
-                            onSuccess: onRefresh,
-                          );
+                          if (!input.contains("+") && !input.contains("-")) {
+                            Snackbar.show(
+                              ScreenSnackbar.metadatasettings,
+                              "Masukan data waktu UTC dengan benar, kurang - atau +",
+                              success: false,
+                            );
+                          }
+                          if (input.startsWith("-") || input.startsWith("+")) {
+                            Snackbar.show(
+                              ScreenSnackbar.metadatasettings,
+                              "Masukan data waktu UTC dengan benar, format anda salah",
+                              success: false,
+                            );
+                          }
+                          if (!input.contains(":")) {
+                            Snackbar.show(
+                              ScreenSnackbar.metadatasettings,
+                              "Masukan data waktu UTC dengan benar, kurang :",
+                              success: false,
+                            );
+                          } else {
+                            int data = ConvertV2().utcStringToUint8(input);
+                            metaData.timeUTC = data;
+                            BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider,
+                              metaData,
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.metadatasettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
                         }
                       },
                       icon: const Icon(

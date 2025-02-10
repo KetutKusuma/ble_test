@@ -22,7 +22,6 @@ enum ScreenSnackbar {
   storagescreen,
   devicescreen,
   batteryscreen,
-  passwordscreen,
 
   /// for new login
   loginscreen,
@@ -52,7 +51,6 @@ class Snackbar {
   static final snackBarKeyStorageScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyDeviceScreen = GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyBatteryScreen = GlobalKey<ScaffoldMessengerState>();
-  static final snackBarKeyPasswordScreen = GlobalKey<ScaffoldMessengerState>();
 
   static GlobalKey<ScaffoldMessengerState> getSnackbar(ScreenSnackbar ss) {
     switch (ss) {
@@ -96,8 +94,6 @@ class Snackbar {
         return snackBarKeyDeviceScreen;
       case ScreenSnackbar.batteryscreen:
         return snackBarKeyBatteryScreen;
-      case ScreenSnackbar.passwordscreen:
-        return snackBarKeyPasswordScreen;
     }
   }
 

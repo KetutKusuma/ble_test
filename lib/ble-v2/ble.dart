@@ -191,11 +191,12 @@ class BLEProvider with ChangeNotifier {
           headerRes.command == headerBLE.command) {
         return Response(headerRes, buffer);
       } else {
+        log("HEADER NOT MATCH");
         throw Exception("Header not match");
       }
     } catch (e) {
-      log("Error catch on receive : $e");
-      throw Exception("Error catch on receive : $e");
+      log("ERROR CATCH ON receive : $e");
+      return Response(headerBLE, []);
     }
   }
 

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
@@ -9,7 +8,6 @@ import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
-import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
@@ -23,6 +21,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -249,15 +248,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               adminResponse.data!.identityModel!.toppiID);
           voltCoef1Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient1
+              .toStringAsFixed(1)
               .toString();
           voltCoef2Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient2
+              .toStringAsFixed(1)
               .toString();
-          brightnessText =
-              adminResponse.data!.cameraModel!.brightness.toString();
-          contrastText = adminResponse.data!.cameraModel!.contrast.toString();
-          saturationText =
-              adminResponse.data!.cameraModel!.saturation.toString();
+
+          brightnessText = adminResponse.data!.cameraModel!.brightness
+              .toString()
+              .changeForCamera();
+          contrastText = adminResponse.data!.cameraModel!.contrast
+              .toString()
+              .changeForCamera();
+          saturationText = adminResponse.data!.cameraModel!.saturation
+              .toString()
+              .changeForCamera();
           specialEffectText = getSpecialEffectString(
               adminResponse.data!.cameraModel!.specialEffect);
           hMirrorText = adminResponse.data!.cameraModel!.hMirror.toString();
@@ -311,48 +317,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         return "Sepia";
       default:
         return "None";
-    }
-  }
-
-  /// ===== for connection ===================
-  Future onConnectPressed() async {
-    try {
-      await device.connectAndUpdateStream();
-      // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.login, "Connect: Success", success: true);
-    } catch (e) {
-      if (e is FlutterBluePlusException &&
-          e.code == FbpErrorCode.connectionCanceled.index) {
-        // ignore connections canceled by the user
-      } else {
-        Snackbar.show(
-            ScreenSnackbar.login, prettyException("Connect Error:", e),
-            success: false);
-        log(e.toString());
-      }
-    }
-  }
-
-  Future onCancelPressed() async {
-    try {
-      await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.login, "Cancel: Success", success: true);
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.login, prettyException("Cancel Error:", e),
-          success: false);
-      log(e.toString());
-    }
-  }
-
-  Future onDisconnectPressed() async {
-    try {
-      await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.login, "Disconnect: Success", success: true);
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Disconnect Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -569,6 +533,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           log("hasil data set : $dataSet");
                           IdentityModel identityUpdate =
                               adminModels.identityModel!;
+                          log("- identity : $identityUpdate");
                           identityUpdate.toppiID = dataSet;
                           BLEResponse resBLE = await _commandSet.setIdentity(
                             bleProvider,

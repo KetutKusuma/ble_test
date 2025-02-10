@@ -258,16 +258,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        DateTime subtraction =
-                            DateTime.utc(2000, 1, 1, 0, 0, 0);
-                        log("datetime of subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
+                        int substraction = 946659600;
+                        // log("datetime of subsctraction ${subtraction.millisecondsSinceEpoch ~/ 1000}");
                         DateTime dateTimeNow = DateTime.now()
                             .toUtc()
                             .add(const Duration(hours: 8));
                         log("datetime of now ${dateTimeNow.millisecondsSinceEpoch ~/ 1000}");
                         int result =
                             (dateTimeNow.millisecondsSinceEpoch ~/ 1000) -
-                                (subtraction.millisecondsSinceEpoch ~/ 1000);
+                                (946659600);
+                        // (subtraction.millisecondsSinceEpoch ~/ 1000);
                         log("result now $result");
                         int dataUpdate = result;
                         BLEResponse resBLE = await _commandSet.setDateTime(

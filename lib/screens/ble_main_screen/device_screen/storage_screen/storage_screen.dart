@@ -96,6 +96,8 @@ class _StorageScreenState extends State<StorageScreen> {
           success: false,
         );
       } else {
+        log("data total : ${storageResponse.data!.total}");
+        log("data used : ${storageResponse.data!.used}");
         getTotalBytesTxt = formatBytes(storageResponse.data!.total);
         getUsedBytesTxt = formatBytes(storageResponse.data!.used);
         setState(() {});

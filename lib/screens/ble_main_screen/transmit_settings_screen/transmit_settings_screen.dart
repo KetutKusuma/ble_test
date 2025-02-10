@@ -326,15 +326,14 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       TimePickerHelper.stringToTimeOfDay(
                           transmitScheduleTxtController.text));
 
-                  Navigator.of(context).pop(
-                      "transmit=${number + 1};$selectedChoice;$destinationId;$transmitSchedule");
-
                   TransmitModel transmitNew = TransmitModel(
                     enable: selectedChoice ?? false,
                     schedule: transmitSchedule,
                     destinationID: ConvertV2()
                         .stringHexAddressToArrayUint8(destinationId, 5),
                   );
+                  Navigator.of(context).pop(transmitNew);
+
                   destinationIDTxtController.clear();
                   transmitScheduleTxtController.clear();
                 }

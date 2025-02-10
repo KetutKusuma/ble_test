@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
@@ -12,6 +14,7 @@ import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:ble_test/utils/global.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
 
 class CommandSet {
   static final ivGlobal = InitConfig.data().IV;
@@ -198,9 +201,13 @@ class CommandSet {
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-
+      log("- hardwareID write : ${identity.hardwareID}");
+      messageV2.addArrayOfUint8(identity.hardwareID, buffer);
+      log("sampe sini ?");
       messageV2.addArrayOfUint8(identity.toppiID, buffer);
+      log("sampe sini ??");
       messageV2.addArrayOfUint8(identity.isLicense ? [1] : [0], buffer);
+      log("sampe sini ???");
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -208,14 +215,19 @@ class CommandSet {
         keyGlobal,
         ivGlobal,
       );
+      log("sampe sini ????");
 
       Header headerBLE =
           Header(uniqueID: uniqueID, command: command, status: false);
+      log("sampe sini ?????");
 
       Response responseWrite = await bleProvider.writeData(
         data,
         headerBLE,
       );
+      log("sampe sini ??????");
+
+      log("response write set identity : ${responseWrite}");
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah identitas", data: null);
@@ -223,7 +235,7 @@ class CommandSet {
         return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
-      return BLEResponse.error("Error ubah identitas : $e");
+      return BLEResponse.error("Error dapat ubah identitas : $e");
     }
   }
 
@@ -236,13 +248,13 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addString(gateway.server, buffer);
+      messageV2.addString(gateway.server.changeEmptyString(), buffer);
       messageV2.addUint16(gateway.port, buffer);
       messageV2.addUint8(gateway.uploadUsing, buffer);
       messageV2.addUint8(gateway.uploadInitialDelay, buffer);
-      messageV2.addString(gateway.wifiSSID, buffer);
-      messageV2.addString(gateway.wifiPassword, buffer);
-      messageV2.addString(gateway.modemAPN, buffer);
+      messageV2.addString(gateway.wifiSSID.changeEmptyString(), buffer);
+      messageV2.addString(gateway.wifiPassword.changeEmptyString(), buffer);
+      messageV2.addString(gateway.modemAPN.changeEmptyString(), buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -278,9 +290,9 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addString(meta.meterModel, buffer);
-      messageV2.addString(meta.meterSN, buffer);
-      messageV2.addString(meta.meterSeal, buffer);
+      messageV2.addString(meta.meterModel.changeEmptyString(), buffer);
+      messageV2.addString(meta.meterSN.changeEmptyString(), buffer);
+      messageV2.addString(meta.meterSeal.changeEmptyString(), buffer);
       messageV2.addUint8(meta.timeUTC, buffer);
 
       List<int> data = messageV2.createEnd(
@@ -377,12 +389,12 @@ class CommandSet {
       );
 
       if (responseWrite.header.status) {
-        return BLEResponse.success("Sukses ubah serial monitor", data: null);
+        return BLEResponse.success("Sukses ubah layar serial", data: null);
       } else {
         return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
-      return BLEResponse.error("Error ubah serial monitor : $e");
+      return BLEResponse.error("Error ubah layar serial : $e");
     }
   }
 

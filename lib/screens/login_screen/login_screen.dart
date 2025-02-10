@@ -1,18 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/search_screen/search_screen.dart';
-import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/crypto/crypto.dart';
-import 'package:ble_test/utils/enum/role.dart';
-import 'package:ble_test/utils/extra.dart';
-import 'package:ble_test/utils/global.dart';
-import 'package:ble_test/utils/salt.dart';
 import 'package:ble_test/utils/snackbar.dart';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -90,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (state) {
         // pd.show(message: "Scanning...");
       } else {
-        if (firstInt > 0) {
+        if (firstInt == 0) {
           if (!isFoundbyId && !isFoundbyMacAddress) {
             pd.hide();
             Snackbar.show(
@@ -515,7 +507,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Tolong isi sebelum login",
+                                    "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
                                     success: false);
                               }
                             },
@@ -585,7 +577,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Tolong isi sebelum login",
+                                    "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
                                     success: false);
                               }
                             },
@@ -644,7 +636,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               } else {
                                 Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Tolong isi sebelum login",
+                                    "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
                                     success: false);
                               }
                             },

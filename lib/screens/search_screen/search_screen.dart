@@ -51,6 +51,7 @@ class _SearchScreenState extends State<SearchScreen> {
         SimpleFontelicoProgressDialog(context: context, barrierDimisable: true);
 
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
+      _scanResults = results;
       if (mounted) {
         setState(() {});
       }
@@ -89,7 +90,11 @@ class _SearchScreenState extends State<SearchScreen> {
       log("error scan system connect to this device : $e");
     }
     try {
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 8));
+      await FlutterBluePlus.startScan(
+        timeout: const Duration(seconds: 8),
+        withNames: [],
+        withServices: [],
+      );
     } catch (e) {
       log("error scan result device : $e");
       if (e.toString() ==
@@ -116,6 +121,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void onConnectPressed(BluetoothDevice device) async {
+    Duration timeout = const Duration(seconds: 5);
+
     pd.show(message: "Proses masuk ...");
     await bleProvider.connect(device);
     Future.delayed(const Duration(seconds: 2, milliseconds: 500));
@@ -129,6 +136,15 @@ class _SearchScreenState extends State<SearchScreen> {
     BLEResponse resLogin = await Command()
         .login(device, bleProvider, userRole, password, challenge);
     log("resLogin : $resLogin");
+    // Timer tesTimeout = Timer(timeout, () {
+    //   pd.hide();
+    //   Snackbar.show(
+    //     ScreenSnackbar.searchscreen,
+    //     "Timeout",
+    //     success: false,
+    //   );
+    // });
+
     pd.hide();
     if (resLogin.status == false) {
       Snackbar.show(

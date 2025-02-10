@@ -161,7 +161,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
   onLogout() {
     List<int> list = utf8.encode("logout!");
     Uint8List bytes = Uint8List.fromList(list);
-    funcWrite(bytes, "Success Logout");
+    device.disconnect();
+    // funcWrite(bytes, "Success Logout");
     isLogout = true;
   }
 

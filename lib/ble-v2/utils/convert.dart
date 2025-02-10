@@ -64,7 +64,20 @@ class ConvertV2 {
     }
   }
 
+  String formatNumberForUTC(String input) {
+    // Cek apakah string diawali dengan "-" atau "+"
+    if (input.startsWith("-") || input.startsWith("+")) {
+      // Jika panjang string kurang dari 6, tambahkan "0" di index ke-1
+      if (input.length < 6) {
+        return input[0] + "0" + input.substring(1);
+      }
+    }
+    return input;
+  }
+
   int utcStringToUint8(String utc) {
+    utc = formatNumberForUTC(utc);
+
     RegExp regExp = RegExp(r"^[-+]?(0[0-9]|1[0-2]):(00|30)$");
     if (!regExp.hasMatch(utc)) {
       throw const FormatException("Invalid format");
