@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
-
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
-import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
@@ -105,6 +102,90 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     } catch (e) {
       log("Error on refresh : $e");
     }
+  }
+
+  Future<List<int>?> _showDateSelectionPopup(BuildContext context,
+      {List<int>? dateSelected}) async {
+    List<int> selectedNumbers =
+        dateSelected ?? []; // Menyimpan angka yang dipilih
+
+    return await showDialog<List<int>>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          // Digunakan untuk memperbarui state dalam dialog
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Pilih Tanggal untuk Pengambilan Gambar'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // GridView untuk angka 1-31
+                  SizedBox(
+                    width:
+                        MediaQuery.of(context).size.width * 0.7, // Batasi lebar
+                    height: 300, // Batasi tinggi agar tidak overflow
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5, // 5 kolom
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 1.2, // Rasio agar tidak gepeng
+                      ),
+                      itemCount: 31,
+                      itemBuilder: (context, index) {
+                        int number = index + 1;
+                        bool isSelected = selectedNumbers.contains(number);
+
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                selectedNumbers.remove(number);
+                              } else {
+                                selectedNumbers.add(number);
+                              }
+                            });
+                          },
+                          child: Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected ? Colors.blue : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              number.toString(),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Button Selesai
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(selectedNumbers);
+                    },
+                    child: const Text("Selesai"),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   initGetCapture() async {
@@ -454,14 +535,18 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        // ini agak special untuk updatenya
-                        Map? input = await _showInputSpecialCaptureDateDialog(
-                            "Tanggal Pengambilan Khusus");
-                        if (input != null) {
-                          // ini masih belum benar
-                          spCaptureDateTxtController.clear();
-                          captureModel.specialDate;
-                          captureModel.setSpecialDateString = input["date"];
+                        // ;
+                        List<int> spDateListSelected =
+                            spCaptureDateTxt.split(",").map(int.parse).toList();
+
+                        List<int>? result = await _showDateSelectionPopup(
+                          context,
+                          dateSelected: spDateListSelected,
+                        );
+                        if (result != null) {
+                          String resultString = result.join(",");
+                          captureModel.setSpecialDateString = resultString;
+                          log("sp capture date : ${captureModel.specialDate}");
                           BLEResponse resBLE = await _commandSet
                               .setCaptureSchedule(bleProvider, captureModel);
                           Snackbar.showHelperV2(
@@ -470,6 +555,23 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             onSuccess: onRefresh,
                           );
                         }
+
+                        // ini agak special untuk updatenya
+                        // Map? input = await _showInputSpecialCaptureDateDialog(
+                        //     "Tanggal Pengambilan Khusus");
+                        // if (input != null) {
+                        //   // ini masih belum benar
+                        //   spCaptureDateTxtController.clear();
+                        //   captureModel.specialDate;
+                        //   captureModel.setSpecialDateString = input["date"];
+                        //   BLEResponse resBLE = await _commandSet
+                        //       .setCaptureSchedule(bleProvider, captureModel);
+                        //   Snackbar.showHelperV2(
+                        //     ScreenSnackbar.capturesettings,
+                        //     resBLE,
+                        //     onSuccess: onRefresh,
+                        //   );
+                        // }
                       },
                       child: Container(
                         margin:

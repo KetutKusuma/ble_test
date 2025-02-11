@@ -104,10 +104,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
+          if (mounted) {
+            Navigator.popUntil(
+              context,
+              (route) => route.isFirst,
+            );
+          }
         }
         if (mounted) {
           setState(() {});
@@ -176,6 +178,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   void dispose() {
     isAdminSettings = false;
+    _connectionStateSubscription.cancel();
     super.dispose();
   }
 

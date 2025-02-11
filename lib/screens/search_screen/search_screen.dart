@@ -122,45 +122,69 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void onConnectPressed(BluetoothDevice device) async {
     Duration timeout = const Duration(seconds: 5);
+    try {
+      pd.show(message: "Proses masuk ...");
+      await bleProvider.connect(device).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () =>
+                throw TimeoutException("Gagal tersambung, coba lagi"),
+          );
+      Future.delayed(const Duration(seconds: 1, milliseconds: 500));
+      // login new v2
+      BLEResponse resHandshake =
+          await Command().handshake(device, bleProvider).timeout(
+                const Duration(seconds: 5),
+                onTimeout: () => throw TimeoutException(
+                  "Proses login gagal karena waktu habis, coba lagi",
+                ),
+              );
 
-    pd.show(message: "Proses masuk ...");
-    await bleProvider.connect(device);
-    Future.delayed(const Duration(seconds: 2, milliseconds: 500));
-    // login new v2
-    BLEResponse resHandshake = await Command().handshake(device, bleProvider);
-    log("resHandshake : $resHandshake");
-    if (resHandshake.status == false) {
-      return;
-    }
-    List<int> challenge = resHandshake.data!;
-    BLEResponse resLogin = await Command()
-        .login(device, bleProvider, userRole, password, challenge);
-    log("resLogin : $resLogin");
-    // Timer tesTimeout = Timer(timeout, () {
-    //   pd.hide();
-    //   Snackbar.show(
-    //     ScreenSnackbar.searchscreen,
-    //     "Timeout",
-    //     success: false,
-    //   );
-    // });
+      log("resHandshake : $resHandshake");
+      if (resHandshake.status == false) {
+        pd.hide();
+        Snackbar.show(
+          ScreenSnackbar.searchscreen,
+          resHandshake.message,
+          success: false,
+        );
+        return;
+      }
+      List<int> challenge = resHandshake.data!;
+      BLEResponse resLogin = await Command()
+          .login(
+            device,
+            bleProvider,
+            userRole,
+            password,
+            challenge,
+          )
+          .fbpTimeout(5, "Login gagal karena waktu habis, coba lagi");
+      log("resLogin : $resLogin");
 
-    pd.hide();
-    if (resLogin.status == false) {
+      pd.hide();
+      if (resLogin.status == false) {
+        Snackbar.show(
+          ScreenSnackbar.searchscreen,
+          resLogin.message,
+          success: false,
+        );
+      } else {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BleMainScreen(device: device),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      pd.hide();
       Snackbar.show(
         ScreenSnackbar.searchscreen,
-        resLogin.message,
+        e.toString(),
         success: false,
       );
-    } else {
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BleMainScreen(device: device),
-          ),
-        );
-      }
     }
   }
 

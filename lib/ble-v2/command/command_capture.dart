@@ -20,14 +20,14 @@ class CommandCapture {
   // image file prepare transmit []
 
   Future<BLEResponse<TestCaptureModel>> testCapture(
-      BLEProvider bleProvider, int bytePerChunck) async {
+      BLEProvider bleProvider, int bytePerChunk) async {
     try {
       int command = CommandCode.testCapture;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2.addUint8(bytePerChunck, buffer);
+      messageV2.addUint8(bytePerChunk, buffer);
       List<int> data = messageV2.createEnd(
         sessionID,
         buffer,
@@ -52,10 +52,13 @@ class CommandCapture {
       List<List<int>> params = [];
       for (var i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
         List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
-        if (param != null) {
-          throw Exception("Gagal untuk mengembalikan parameter");
+        if (param == null) {
+          return BLEResponse.error("Gagal untuk mengembalikan parameter");
         }
+        params.add(param);
       }
+
+      log("params test capture : $params");
 
       if (params.length != 3) {
         return BLEResponse.error(
@@ -72,14 +75,14 @@ class CommandCapture {
         crc32: crc32,
       );
 
-      return BLEResponse.success("Sukses tes pengambilan gambar",
+      return BLEResponse.success("Sukses pengambilan gambar",
           data: testCaptureModel);
     } catch (e) {
-      return BLEResponse.error("Error dapat tes pengambilan gambar");
+      return BLEResponse.error("Error dapat pengambilan gambar : $e");
     }
   }
 
-  Future<BLEResponse> dataBufferTransmit(BLEProvider bleProvider,
+  Future<BLEResponse<List<int>>> dataBufferTransmit(BLEProvider bleProvider,
       TestCaptureModel testCapture, int bytePerChunck) async {
     try {
       int command = CommandCode.dataBufferTransmit;
@@ -92,7 +95,7 @@ class CommandCapture {
 
           List<int> bufferTx = [];
           messageV2.createBegin(uniqueID, MessageV2.request, command, bufferTx);
-          messageV2.addUint16(i, buffer);
+          messageV2.addUint16(i, bufferTx);
 
           List<int> idata = messageV2.createEnd(
             sessionID,
@@ -122,7 +125,6 @@ class CommandCapture {
             }
             params.add(param);
           }
-
           if (params.length != 3) {
             throw Exception("Gagal buffer transmit : parameter tidak sesuai");
           }
@@ -131,14 +133,15 @@ class CommandCapture {
             throw Exception("melebihi batas nomor chunk sequence");
           }
 
-          int chunckCrc32 = ConvertV2().bufferToUint32(buffer, 0);
+          int chunckCrc32 = ConvertV2().bufferToUint32(params[2], 0);
           if (CryptoUtilsV2.crc32(params[1]) != chunckCrc32) {
             throw Exception("crc32 tidak sesuai");
           }
 
           int startIndex = i * bytePerChunck;
           int endIndex = (i + 1) * bytePerChunck;
-          params[1].addAll(buffer.sublist(startIndex, endIndex));
+          // buffer.setRange(startIndex, endIndex, params[1]);
+          buffer.addAll(params[1]);
           _success = true;
           break;
         }

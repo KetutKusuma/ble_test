@@ -50,8 +50,38 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   TextEditingController idPelangganTxtController = TextEditingController();
 
   late SimpleFontelicoProgressDialog _progressDialog;
+
+  // v2
   late MetaDataModel metaData;
   final _commandSet = CommandSet();
+
+  List<String> utcList = [
+    "+12:00",
+    "+11:00",
+    "+10:00",
+    "+09:00",
+    "+08:00",
+    "+07:00",
+    "+06:00",
+    "+05:00",
+    "+04:00",
+    "+03:00",
+    "+02:00",
+    "+01:00",
+    "00:00",
+    "-01:00",
+    "-02:00",
+    "-03:00",
+    "-04:00",
+    "-05:00",
+    "-06:00",
+    "-07:00",
+    "-08:00",
+    "-09:00",
+    "-10:00",
+    "-11:00",
+    "-12:00",
+  ];
 
   @override
   void initState() {
@@ -185,6 +215,54 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     );
 
     return input;
+  }
+
+  Future<String?> _showSelectionPopupUTC(
+      BuildContext context, List<String> dataList) async {
+    String? result = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Sebuah Opsi'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.4),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: dataList.map((item) {
+                  return ListTile(
+                    dense: false,
+                    visualDensity: const VisualDensity(vertical: -4),
+                    contentPadding: const EdgeInsets.all(0),
+                    horizontalTitleGap: 0,
+                    minVerticalPadding: 0,
+                    subtitle: Row(
+                      children: [
+                        const Icon(Icons.radio_button_checked_outlined),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          item,
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.of(context)
+                          .pop(item); // Return the selected item
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    return result;
   }
 
   Future<String?> _showInputDialogTimeUTC(
@@ -343,9 +421,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       data: timeUTCTxt,
                       onTap: () async {
                         timeUTCTxtController.text = timeUTCTxt;
+                        // String? input =
+                        //     await _showInputDialogTimeUTC(timeUTCTxtController);
                         String? input =
-                            await _showInputDialogTimeUTC(timeUTCTxtController);
-
+                            await _showSelectionPopupUTC(context, utcList);
                         if (input != null) {
                           if (!input.contains("+") && !input.contains("-")) {
                             Snackbar.show(
@@ -353,13 +432,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                               "Masukan data waktu UTC dengan benar, kurang - atau +",
                               success: false,
                             );
-                          }
-                          if (input.startsWith("-") || input.startsWith("+")) {
-                            Snackbar.show(
-                              ScreenSnackbar.metadatasettings,
-                              "Masukan data waktu UTC dengan benar, format anda salah",
-                              success: false,
-                            );
+                            return;
                           }
                           if (!input.contains(":")) {
                             Snackbar.show(

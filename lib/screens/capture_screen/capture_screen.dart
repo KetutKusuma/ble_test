@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_capture.dart';
-import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/converter/capture/capture.dart';
-import 'package:ble_test/utils/crc32.dart';
+import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
@@ -40,6 +37,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   // v2
   final _commandCapture = CommandCapture();
+  bool isCapturing = false;
+  bool isCaptureDone = false;
+  Uint8List imageBytes = Uint8List(0);
 
   @override
   void initState() {
@@ -65,6 +65,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   void dispose() {
+    _connectionStateSubscription.cancel();
     super.dispose();
   }
 
@@ -112,27 +113,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
           appBar: AppBar(
             title: const Text("Pengambilan Gambar"),
             elevation: 0,
-            // actions: [
-            //   Row(
-            //     children: [
-            //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-            //       TextButton(
-            //         onPressed: _isConnecting
-            //             ? onCancelPressed
-            //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-            //         child: Text(
-            //           _isConnecting
-            //               ? "CANCEL"
-            //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-            //           style: Theme.of(context)
-            //               .primaryTextTheme
-            //               .labelLarge
-            //               ?.copyWith(color: Colors.white),
-            //         ),
-            //       )
-            //     ],
-            //   ),
-            // ],
           ),
           body: CustomScrollView(
             slivers: [
@@ -142,7 +122,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Text("Value : $_value, ${_value.length}"),
                     Container(
                       margin: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 10),
@@ -153,13 +132,31 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         border: Border.all(color: Colors.black26),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: false
-                          ? const Icon(
-                              CupertinoIcons.photo,
-                              color: Colors.black45,
-                              size: 40,
-                            )
-                          : false
+                      child: !isCapturing
+                          ? (isCaptureDone
+                              ? (GestureDetector(
+                                  onTap: () {
+                                    _showZoomableImageDialog(
+                                      context,
+                                      Uint8List.fromList(imageBytes),
+                                    );
+                                  },
+                                  child: FittedBox(
+                                    child: Center(
+                                      child: Image.memory(
+                                        Uint8List.fromList(imageBytes),
+                                        fit: BoxFit.fill,
+                                        scale: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ))
+                              : const Icon(
+                                  CupertinoIcons.photo,
+                                  color: Colors.black45,
+                                  size: 40,
+                                ))
+                          : (isCapturing && !isCaptureDone)
                               ? const SizedBox(
                                   height: 30,
                                   width: 30,
@@ -168,25 +165,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                     child: CircularProgressIndicator(),
                                   ),
                                 )
-                              : GestureDetector(
-                                  onTap: () {
-                                    _showZoomableImageDialog(
-                                      context,
-                                      Uint8List.fromList([]),
-                                    );
-                                  },
-                                  child: FittedBox(
-                                    child: Center(
-                                      child: Image.memory(
-                                        Uint8List.fromList([]),
-                                        fit: BoxFit.fill,
-                                        scale: 1,
-                                      ),
-                                    ),
-                                  ),
+                              : const Icon(
+                                  CupertinoIcons.photo,
+                                  color: Colors.black45,
+                                  size: 40,
                                 ),
                     ),
-
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -198,18 +182,54 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         ),
                       ),
                       onPressed: () async {
+                        isCaptureDone = false;
+                        isCapturing = true;
+                        setState(() {});
+                        int bytePerChunk = 255;
                         try {
-                          setState(() {});
+                          BLEResponse<TestCaptureModel> bleResponse =
+                              await _commandCapture.testCapture(
+                                  bleProvider, bytePerChunk);
+                          log("test capture : $bleResponse");
 
-                          // diatas tes
+                          if (bleResponse.data == null) {
+                            isCapturing = false;
+                            setState(() {});
+                            Snackbar.show(ScreenSnackbar.capture,
+                                "Error Pengambilan gambar, data kosong",
+                                success: false);
+                          }
+                          if (!bleResponse.status) {
+                            isCapturing = false;
+                            setState(() {});
+                            Snackbar.show(
+                                ScreenSnackbar.capture, bleResponse.message,
+                                success: false);
+                          } else {
+                            BLEResponse<List<int>> data =
+                                await _commandCapture.dataBufferTransmit(
+                              bleProvider,
+                              bleResponse.data!,
+                              bytePerChunk,
+                            );
 
-                          await Future.delayed(
-                              const Duration(milliseconds: 300));
-                          List<int> list = utf8.encode("capture!500");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          BLEUtils.funcWrite(bytes, "Success Capture!", device);
+                            log("data buffer transmit : $data");
 
-                          await Future.delayed(const Duration(seconds: 6));
+                            if (!data.status) {
+                              isCapturing = false;
+                              setState(() {});
+                              Snackbar.show(
+                                  ScreenSnackbar.capture, data.message,
+                                  success: false);
+                            } else {
+                              isCaptureDone = true;
+                              isCapturing = false;
+                              setState(() {
+                                imageBytes =
+                                    Uint8List.fromList(data.data ?? [0]);
+                              });
+                            }
+                          }
                         } catch (e) {
                           Snackbar.show(
                               ScreenSnackbar.capture, "Error Capture! : $e",

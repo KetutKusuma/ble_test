@@ -499,11 +499,8 @@ class Command {
       startIndex = 13;
       int dateTimeMiliSeconds =
           ConvertV2().bufferToUint32(params[startIndex], 0) + (946659600);
-      // DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
-      //     ConvertV2().bufferToUint32(params[startIndex], 0) +
-      //         (946659600 * 1000));
       DateTime dateTime =
-          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds);
+          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000);
 
       DeviceStatusModels deviceStatusModels = DeviceStatusModels(
         firmwareModel: FirmwareModel(

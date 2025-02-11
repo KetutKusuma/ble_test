@@ -3,6 +3,16 @@ import 'dart:typed_data';
 import 'package:intl/intl.dart' as intl;
 
 class ConvertV2 {
+  int getTimeNowSeconds() {
+    intl.DateFormat format = intl.DateFormat("yyyy-MM-dd HH:mm:ss");
+    // DateTime dateTimeS = format.parseUtc(timeNow); // Force UTC parsing
+    DateTime dateTimeS = DateTime.now();
+
+    // Convert to Unix timestamp (in seconds)
+    int unixTimestampSS = dateTimeS.millisecondsSinceEpoch ~/ 1000;
+    return unixTimestampSS - 946659600;
+  }
+
   String minuteToDateTimeString(int minute) {
     int hh = minute ~/ 60;
     int mm = minute % 60;

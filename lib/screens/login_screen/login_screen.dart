@@ -76,29 +76,6 @@ class _LoginScreenState extends State<LoginScreen> {
     macAddressTxtConroller.addListener(() {
       _onTextChanged(macAddressTxtConroller);
     });
-
-    _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
-      // log("listen scanning : ${firstInt}");
-      if (state) {
-        // pd.show(message: "Scanning...");
-      } else {
-        if (firstInt == 0) {
-          if (!isFoundbyId && !isFoundbyMacAddress) {
-            pd.hide();
-            Snackbar.show(
-              ScreenSnackbar.loginscreen,
-              "Target Device Not Found",
-              success: false,
-            );
-          }
-        } else {
-          firstInt = 1;
-        }
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    });
   }
 
   @override
