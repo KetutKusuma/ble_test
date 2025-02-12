@@ -32,31 +32,42 @@ class CommandCode {
   static const int login = 12;
   static const int changePassword = 13;
   static const int formatFat = 14;
-  static const int dataBufferTransmit = 15;
-  static const int testCapture = 16;
-  static const int imageExplorerPrepareTransmit = 17;
-  static const int logFilePrepareTransmit = 18;
+  static const int forceTaskCapture = 15;
+  static const int forceTaskUpload = 16;
+  static const int dataBufferTransmit = 17;
+  static const int captureTest = 18;
+  static const int imageFileDelete = 19;
+  static const int imageFilePrepareTransmit = 20;
+  static const int logFilePrepareTransmit = 21;
+  static const int resetConfig = 22;
+  static const int radioTestAsReceiverStart = 23;
+  static const int radioTestAsReceiverStop = 24;
+  static const int radioTestAsTransmitterStart = 25;
+  static const int radioTestAsTransmitterSequence = 26;
+  static const int radioTestAsTransmitterStop = 27;
   static const int get = 99;
   static const int firmware = 101;
   static const int identity = 102;
   static const int role = 103;
   static const int enable = 104;
-  static const int printToSerialMonitor = 105;
-  static const int dateTime = 106;
-  static const int temperature = 107;
-  static const int batteryVoltage = 108;
-  static const int batteryVoltageCoefficient = 109;
-  static const int storage = 110;
-  static const int imageExplorer = 111;
-  static const int log = 112;
-  static const int cameraSetting = 113;
-  static const int captureSchedule = 114;
-  static const int transmitSchedule = 115;
-  static const int receiveSchedule = 116;
-  static const int uploadSchedule = 117;
-  static const int gateway = 118;
-  static const int metaData = 119;
-  static const int other = 120;
+  static const int enableModem = 105;
+  static const int availableMemory = 106;
+  static const int printToSerialMonitor = 107;
+  static const int dateTime = 108;
+  static const int temperature = 109;
+  static const int batteryVoltage = 110;
+  static const int batteryVoltageCoefficient = 111;
+  static const int storage = 112;
+  static const int imageExplorer = 113;
+  static const int logExplorer = 114;
+  static const int cameraSetting = 115;
+  static const int captureSchedule = 116;
+  static const int transmitSchedule = 117;
+  static const int receiveSchedule = 118;
+  static const int uploadSchedule = 119;
+  static const int gateway = 120;
+  static const int metaData = 121;
+  static const int other = 122;
 }
 
 class ParameterImageExplorerFilter {
@@ -147,10 +158,22 @@ class Command {
         idata,
         headerBLE,
       );
-      List<int>? challange = messageV2.getParameter(responseWrite.buffer, 0);
-      if (challange == null) {
-        return BLEResponse.error("Error handshake challange : $challange");
+
+      List<List<int>> params = [];
+      for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
+        List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
+        if (param == null) {
+          log("Gagal mengambil parameter - error dari BLE");
+          return BLEResponse.error(
+              "Gagal mengambil parameter - error dari BLE");
+        }
+        params.add(param);
       }
+
+      String firmware = ConvertV2().bufferToString(params[0]);
+      String version = ConvertV2().bufferToString(params[1]);
+      log("firmware : $firmware, version : $version");
+      List<int> challange = params[2];
 
       return BLEResponse.success("Sukses handshake", data: challange);
     } catch (e) {
@@ -484,10 +507,11 @@ class Command {
           ConvertV2().bufferToFloat32(params[startIndex + 2], 0);
 
       startIndex = 5;
-      int totalStorage = ConvertV2().bufferToUint32(params[startIndex], 0);
-      int usedStorage = ConvertV2().bufferToUint32(params[startIndex + 1], 0);
+      int sizeFlashMemory = ConvertV2().bufferToUint32(params[startIndex], 0);
+      int totalStorage = ConvertV2().bufferToUint32(params[startIndex + 1], 0);
+      int usedStorage = ConvertV2().bufferToUint32(params[startIndex + 2], 0);
 
-      startIndex = 7;
+      startIndex = 8;
       // image
       int allImage = ConvertV2().bufferToUint16(params[startIndex], 0);
       int allUnsent = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
@@ -513,6 +537,7 @@ class Command {
           batteryVoltage2: batteryVoltage2,
         ),
         storageModel: StorageModel(
+          sizeFlashMemory: sizeFlashMemory,
           total: totalStorage,
           used: usedStorage,
         ),
@@ -925,7 +950,8 @@ class Command {
       String meterModel = ConvertV2().bufferToString(params[startIndex]);
       String meterSN = ConvertV2().bufferToString(params[startIndex + 1]);
       String meterSeal = ConvertV2().bufferToString(params[startIndex + 2]);
-      int timeUTC = ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+      String custom = ConvertV2().bufferToString(params[startIndex + 3]);
+      int timeUTC = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
 
       return BLEResponse.success(
         "Sukses dapat meta data",
@@ -933,6 +959,7 @@ class Command {
           meterModel: meterModel,
           meterSN: meterSN,
           meterSeal: meterSeal,
+          custom: custom,
           timeUTC: timeUTC,
         ),
       );
@@ -1049,12 +1076,17 @@ class Command {
 
       int startIndex = 0;
 
-      int totalStorage = ConvertV2().bufferToUint32(params[startIndex], 0);
-      int usedStorage = ConvertV2().bufferToUint32(params[startIndex + 1], 0);
+      int sizeMemoryFlash = ConvertV2().bufferToUint32(params[startIndex], 0);
+      int totalStorage = ConvertV2().bufferToUint32(params[startIndex + 1], 0);
+      int usedStorage = ConvertV2().bufferToUint32(params[startIndex + 2], 0);
 
       return BLEResponse.success(
         "Sukses dapat penyimpanan",
-        data: StorageModel(total: totalStorage, used: usedStorage),
+        data: StorageModel(
+          sizeFlashMemory: sizeMemoryFlash,
+          total: totalStorage,
+          used: usedStorage,
+        ),
       );
     } catch (e) {
       return BLEResponse.error("Error dapat penyimpanan : $e");

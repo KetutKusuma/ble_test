@@ -15,14 +15,14 @@ class CommandCapture {
   static final messageV2 = MessageV2();
 
   // test capture [V]
-  // data buffer transmit []
+  // data buffer transmit [V]
   // get image file list []
   // image file prepare transmit []
 
   Future<BLEResponse<TestCaptureModel>> testCapture(
       BLEProvider bleProvider, int bytePerChunk) async {
     try {
-      int command = CommandCode.testCapture;
+      int command = CommandCode.captureTest;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];

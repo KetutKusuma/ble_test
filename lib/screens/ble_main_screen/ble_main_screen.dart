@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_radio_checker.dart';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
@@ -12,6 +15,7 @@ import 'package:ble_test/screens/ble_main_screen/set_password_screen/set_passwor
 import 'package:ble_test/screens/ble_main_screen/transmit_settings_screen/transmit_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_settings_screen.dart';
 import 'package:ble_test/screens/capture_screen/capture_screen.dart';
+import 'package:ble_test/screens/radio_test_as_transmit/radio_test_as_transmit.dart';
 import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
@@ -22,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class BleMainScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -33,6 +38,7 @@ class BleMainScreen extends StatefulWidget {
 }
 
 class _BleMainScreenState extends State<BleMainScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
@@ -51,6 +57,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
     // initMtuRequest();
     _connectionStateSubscription = device.connectionState.listen((state) async {
       _connectionState = state;
@@ -237,31 +244,61 @@ class _BleMainScreenState extends State<BleMainScreen> {
     }
   }
 
-  // Future onSubscribePressed(BluetoothCharacteristic c) async {
-  //   log("masuk sini tak ?");
-  //   try {
-  //     String op = c.isNotifying == false ? "Subscribe" : "Unubscribe";
-  //     await c.setNotifyValue(c.isNotifying == false);
-  //     // if (c.isNotifying) {
-  //     //   initLastValueSubscription(device);
-  //     // }
-  //     Snackbar.show(ScreenSnackbar.login, "$op : Success", success: true);
-  //     if (c.properties.read) {
-  //       await c.read();
-  //     }
-  //     log("set value notify success");
-  //     if (mounted) {
-  //       setState(() {
-  //         isNotifying = c.isNotifying;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     Snackbar.show(
-  //         ScreenSnackbar.login, prettyException("Subscribe Error:", e),
-  //         success: false);
-  //     log("notify set error : $e");
-  //   }
-  // }
+  Future<bool?> _showAdmitRadioReceiveDialog(
+      BuildContext context, String msg) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text(msg),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, true); // Return true
+              },
+              child: const Text('Ya'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, false); // Return false
+              },
+              child: const Text('Tidak'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return selectedValue;
+  }
+
+  Future<bool> _showStopRadioReceiveDialog(BuildContext context) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text(
+            "Sekarang radio sedang mendengarkan, tekan tombol stop untuk menghentikan radio",
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
+          children: [
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, true); // Return true
+              },
+              child: const Text(
+                'Stop',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return selectedValue ?? true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -387,26 +424,6 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       }
                     },
                   ),
-                  // FeatureWidget(
-                  //   visible: featureD.contains(roleUser),
-                  //   title: "Battery",
-                  //   onTap: () {
-                  //     if (isConnected) {
-                  //       Navigator.push(
-                  //         context,
-                  //         MaterialPageRoute(
-                  //           builder: (context) => BatteryScreen(device: device),
-                  //         ),
-                  //       );
-                  //     } else {
-                  //       Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                  //     }
-                  //   },
-                  //   icon: const Icon(
-                  //     CupertinoIcons.battery_charging,
-                  //   ),
-                  // ),
-
                   FeatureWidget(
                     visible: featureC.contains(roleUser),
                     title: "Status Perangkat",
@@ -424,6 +441,56 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                     icon: const Icon(
                       CupertinoIcons.device_phone_portrait,
+                    ),
+                  ),
+                  FeatureWidget(
+                    title: "Tes Radio sebagai Penerima",
+                    onTap: () async {
+                      bool? input = await _showAdmitRadioReceiveDialog(
+                          context, "Mulai tes radio sebagai penerima?");
+                      if (input != null) {
+                        if (input == true) {
+                          // lakukan start test radio sebagai penerima
+                          // muncul pop uup
+                          // jika selesai pencet tombol, lakukan stop test radio sebagai penerima
+
+                          BLEResponse resBLE = await CommandRadioChecker()
+                              .radioTestAsReceiverStart(bleProvider);
+
+                          if (!resBLE.status) {
+                            Snackbar.show(
+                                ScreenSnackbar.blemain, resBLE.message,
+                                success: false);
+                            return;
+                          }
+
+                          // ignore: use_build_context_synchronously
+                          bool input =
+                              await _showStopRadioReceiveDialog(context);
+                          if (input == true) {
+                            BLEResponse resBLE = await CommandRadioChecker()
+                                .radioTestAsReceiverStop(bleProvider);
+                            Snackbar.show(
+                                ScreenSnackbar.blemain, resBLE.message,
+                                success: resBLE.status);
+                          }
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.call_received_rounded),
+                  ),
+                  FeatureWidget(
+                    title: "Tes Radio sebagai Pengirim",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RadioTestAsTransmit(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.arrow_outward_rounded,
                     ),
                   ),
                   FeatureWidget(

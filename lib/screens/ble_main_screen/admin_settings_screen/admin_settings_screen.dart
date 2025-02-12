@@ -53,15 +53,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       cameraJpgQualityTxt = '-',
       roleTxt = '-';
 
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController idTxtController = TextEditingController();
+  TextEditingController licenseTxtController = TextEditingController();
   TextEditingController voltageCoefTxtController = TextEditingController();
   TextEditingController cameraJpegQualityController = TextEditingController();
 
   final List<Map<String, dynamic>> dataMapRole = [
-    {"title": "Tidak Terdefinisi", "value": 0},
-    {"title": "Regular", "value": 1},
-    {"title": "Gateway", "value": 2},
+    // {"title": "Tidak Terdefinisi", "value": 0},
+    {"title": "Regular", "value": 0},
+    {"title": "Gateway", "value": 1},
   ];
   final List<Map<String, dynamic>> dataMapBrightnessContrastSaturation = [
     {"title": "-2", "value": -2},
@@ -171,6 +171,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         }
       }
     });
+    // licenseTxtController.addListener(() {
+    //   _onTextChanged(licenseTxtController);
+    // });
 
     initGetAdmin();
   }
@@ -229,10 +232,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   String getRole(int role) {
     String roleS = "Tidak terdefinisi";
-    if (role == 1) {
+    if (role == 0) {
       roleS = "Regular";
     }
-    if (role == 2) {
+    if (role == 1) {
       roleS = "Gateway";
     }
     return roleS;
@@ -420,6 +423,114 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return input;
   }
 
+  Future<Map<String, dynamic>?> _showInputDialogForID({
+    TextInputType? keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? lengthTextNeed = 0,
+  }) async {
+    Map<String, dynamic>? input = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Masukan ID dan License"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Form(
+                child: TextFormField(
+                  controller: idTxtController,
+                  decoration: InputDecoration(
+                    labelText: "Masukan ID",
+                    border: const OutlineInputBorder(),
+                  ),
+                  keyboardType: keyboardType,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Tolong diisi sebuah data';
+                    }
+                    return null;
+                  },
+                  inputFormatters: inputFormatters,
+                ),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              Form(
+                child: TextFormField(
+                  controller: licenseTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan Lisensi",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: keyboardType,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Tolong diisi sebuah data';
+                    }
+                    return null;
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(8),
+                    // FilteringTextInputFormatter
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                idTxtController.clear();
+                licenseTxtController.clear();
+              },
+              child: const Text("Batalkan"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (idTxtController.text.isNotEmpty &&
+                    licenseTxtController.text.isNotEmpty) {
+                  Navigator.pop(context, {
+                    "id": idTxtController.text,
+                    "license": licenseTxtController.text
+                  });
+                  idTxtController.clear();
+                  licenseTxtController.clear();
+                  return;
+                }
+                if (licenseTxtController.text.length < 8) {
+                  Snackbar.show(
+                    ScreenSnackbar.adminsettings,
+                    "Lisensi Tidak Valid harus 8 karakter",
+                    success: false,
+                  );
+                }
+                if (idTxtController.text.isEmpty) {
+                  Snackbar.show(
+                    ScreenSnackbar.adminsettings,
+                    "ID Tidak Boleh Kosong",
+                    success: false,
+                  );
+                }
+                if (licenseTxtController.text.isEmpty) {
+                  Snackbar.show(
+                    ScreenSnackbar.adminsettings,
+                    "Lisensi Tidak Boleh Kosong",
+                    success: false,
+                  );
+                }
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return input;
+  }
+
   Future<String?> _showInputDialogVoltage(
       TextEditingController controller) async {
     String? input = await showDialog<String>(
@@ -518,10 +629,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       data: idTxt,
                       onTap: () async {
                         idTxtController.text = idTxt;
-                        String? input = await _showInputDialog(
-                          idTxtController,
-                          "New ID",
-                          label: 'New ID ',
+                        Map<String, dynamic>? input =
+                            await _showInputDialogForID(
                           keyboardType: TextInputType.text,
                           inputFormatters: [
                             LengthLimitingTextInputFormatter(14),
@@ -531,16 +640,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         );
                         log("input : $input");
                         if (input != null) {
-                          List<int> dataSet = ConvertV2()
-                              .stringHexAddressToArrayUint8(input, 5);
-                          log("hasil data set : $dataSet");
+                          List<int> dataSetID = ConvertV2()
+                              .stringHexAddressToArrayUint8(input['id'], 5);
+                          log("hasil data set : $dataSetID");
                           IdentityModel identityUpdate =
                               adminModels.identityModel!;
                           log("- identity : $identityUpdate");
-                          identityUpdate.toppiID = dataSet;
+                          identityUpdate.toppiID = dataSetID;
                           BLEResponse resBLE = await _commandSet.setIdentity(
                             bleProvider,
                             identityUpdate,
+                            input['license'],
                           );
                           Snackbar.showHelperV2(
                             ScreenSnackbar.adminsettings,

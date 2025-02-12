@@ -3,10 +3,11 @@ class IdentityModel {
   List<int> toppiID;
   bool isLicense;
 
-  IdentityModel(
-      {required this.hardwareID,
-      required this.toppiID,
-      required this.isLicense});
+  IdentityModel({
+    required this.hardwareID,
+    required this.toppiID,
+    required this.isLicense,
+  });
 
   @override
   String toString() {

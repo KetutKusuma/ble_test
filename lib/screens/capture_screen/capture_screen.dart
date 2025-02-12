@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_capture.dart';
+import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -10,6 +12,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
@@ -40,6 +43,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   bool isCapturing = false;
   bool isCaptureDone = false;
   Uint8List imageBytes = Uint8List(0);
+  ImageMetaData? _imageMetaData;
 
   @override
   void initState() {
@@ -63,10 +67,42 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
   }
 
+  Future<String> saveImage(Uint8List imageBytes, String fileName) async {
+    try {
+      // Dapatkan direktori penyimpanan lokal
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/$fileName';
+
+      // Tulis byte ke file
+      File file = File(path);
+      await file.writeAsBytes(imageBytes);
+
+      Snackbar.show(ScreenSnackbar.device, "Berkas disimapan di: $path",
+          success: true);
+
+      return path;
+    } catch (e) {
+      Snackbar.show(ScreenSnackbar.device, "Gagal menyimpan gambar : $e",
+          success: false);
+      return "";
+    }
+  }
+
   @override
   void dispose() {
     _connectionStateSubscription.cancel();
     super.dispose();
+  }
+
+  void _showMetaDataImageDialog(BuildContext context) {
+    showDialog(context: context, builder: (context) {
+      return SimpleDialog(
+        title: const Text("Meta Data"),
+        children: [
+          
+        ],
+      )
+    });
   }
 
   void _showZoomableImageDialog(BuildContext context, Uint8List imageBytes) {
@@ -171,75 +207,148 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                   size: 40,
                                 ),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 20),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              15), // Set the corner radius
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        imageBytes.isEmpty
+                            ? const SizedBox()
+                            : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber.shade800,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 20),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        15), // Set the corner radius
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  String datetimenow =
+                                      DateTime.now().toString();
+                                  String fileName = "TOPPI_${datetimenow}.png";
+                                  String hasil =
+                                      await saveImage(imageBytes, fileName);
+                                  if (hasil != "") {
+                                    Snackbar.show(
+                                      ScreenSnackbar.capture,
+                                      "Gambar tersimpan di $hasil",
+                                      success: true,
+                                    );
+                                  } else {
+                                    Snackbar.show(
+                                      ScreenSnackbar.capture,
+                                      "Gagal menyimpan gambar",
+                                      success: false,
+                                    );
+                                  }
+                                },
+                                child: Icon(
+                                  CupertinoIcons.arrow_down_doc,
+                                  size: 35,
+                                ),
+                              ),
+                        const SizedBox(
+                          width: 10,
                         ),
-                      ),
-                      onPressed: () async {
-                        isCaptureDone = false;
-                        isCapturing = true;
-                        setState(() {});
-                        int bytePerChunk = 255;
-                        try {
-                          BLEResponse<TestCaptureModel> bleResponse =
-                              await _commandCapture.testCapture(
-                                  bleProvider, bytePerChunk);
-                          log("test capture : $bleResponse");
-
-                          if (bleResponse.data == null) {
-                            isCapturing = false;
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 20),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  15), // Set the corner radius
+                            ),
+                          ),
+                          onPressed: () async {
+                            isCaptureDone = false;
+                            isCapturing = true;
+                            _imageMetaData = null;
+                            imageBytes = Uint8List(0);
                             setState(() {});
-                            Snackbar.show(ScreenSnackbar.capture,
-                                "Error Pengambilan gambar, data kosong",
-                                success: false);
-                          }
-                          if (!bleResponse.status) {
-                            isCapturing = false;
-                            setState(() {});
-                            Snackbar.show(
-                                ScreenSnackbar.capture, bleResponse.message,
-                                success: false);
-                          } else {
-                            BLEResponse<List<int>> data =
-                                await _commandCapture.dataBufferTransmit(
-                              bleProvider,
-                              bleResponse.data!,
-                              bytePerChunk,
-                            );
+                            int bytePerChunk = 255;
+                            try {
+                              BLEResponse<TestCaptureModel> bleResponse =
+                                  await _commandCapture.testCapture(
+                                      bleProvider, bytePerChunk);
+                              log("test capture : $bleResponse");
 
-                            log("data buffer transmit : $data");
+                              if (bleResponse.data == null) {
+                                isCapturing = false;
+                                setState(() {});
+                                Snackbar.show(ScreenSnackbar.capture,
+                                    "Error Pengambilan gambar, data kosong",
+                                    success: false);
+                              }
+                              if (!bleResponse.status) {
+                                isCapturing = false;
+                                setState(() {});
+                                Snackbar.show(
+                                    ScreenSnackbar.capture, bleResponse.message,
+                                    success: false);
+                              } else {
+                                BLEResponse<List<int>> data =
+                                    await _commandCapture.dataBufferTransmit(
+                                  bleProvider,
+                                  bleResponse.data!,
+                                  bytePerChunk,
+                                );
 
-                            if (!data.status) {
-                              isCapturing = false;
-                              setState(() {});
+                                log("data buffer transmit : $data");
+
+                                if (!data.status) {
+                                  isCapturing = false;
+                                  setState(() {});
+                                  Snackbar.show(
+                                      ScreenSnackbar.capture, data.message,
+                                      success: false);
+                                } else {
+                                  isCaptureDone = true;
+                                  isCapturing = false;
+                                  Map<String, dynamic> dataParse =
+                                      ImageMetaDataParse.parse(data.data!);
+
+                                  imageBytes = dataParse["img"];
+                                  _imageMetaData = dataParse['metaData'];
+                                  setState(() {});
+                                }
+                              }
+                            } catch (e) {
                               Snackbar.show(
-                                  ScreenSnackbar.capture, data.message,
+                                  ScreenSnackbar.capture, "Error Capture! : $e",
                                   success: false);
-                            } else {
-                              isCaptureDone = true;
-                              isCapturing = false;
-                              setState(() {
-                                imageBytes =
-                                    Uint8List.fromList(data.data ?? [0]);
-                              });
                             }
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                              ScreenSnackbar.capture, "Error Capture! : $e",
-                              success: false);
-                        }
-                      },
-                      child: const Icon(
-                        Icons.camera,
-                        size: 35,
-                      ),
+                          },
+                          child: const Icon(
+                            Icons.camera,
+                            size: 35,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        _imageMetaData == null
+                            ? const SizedBox()
+                            : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.indigoAccent,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 20),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        15), // Set the corner radius
+                                  ),
+                                ),
+                                onPressed: () {},
+                                child: const Icon(
+                                  Icons.info_outline,
+                                  size: 35,
+                                ),
+                              )
+                      ],
                     ),
                   ],
                 ),

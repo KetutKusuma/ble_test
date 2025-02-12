@@ -1,8 +1,13 @@
 class StorageModel {
   final int total;
   final int used;
+  final int sizeFlashMemory;
 
-  StorageModel({required this.total, required this.used});
+  StorageModel({
+    required this.total,
+    required this.used,
+    required this.sizeFlashMemory,
+  });
 
   @override
   String toString() {
@@ -12,5 +17,9 @@ class StorageModel {
 total : $total \nused : $used
       }
 ''';
+  }
+
+  int get getFree {
+    return total - used;
   }
 }

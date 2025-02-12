@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
-
 import 'package:ble_test/ble-v2/model/device_status_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
@@ -19,7 +16,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-import '../../../utils/ble.dart';
 import '../../../utils/enum/role.dart';
 import '../../../utils/snackbar.dart';
 import '../admin_settings_screen/admin_settings_screen.dart';

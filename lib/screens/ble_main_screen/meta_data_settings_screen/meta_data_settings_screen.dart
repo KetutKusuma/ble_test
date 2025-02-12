@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
@@ -13,9 +12,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-
 import '../../../ble-v2/command/command_set.dart';
-import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 import 'package:ble_test/utils/extension/string_extension.dart';
 
@@ -41,6 +38,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       meterSnTxt = '-',
       meterSealTxt = '-',
       timeUTCTxt = '-',
+      customTxt = "-",
       idPelangganTxt = '-';
   TextEditingController controller = TextEditingController();
   TextEditingController meterModelTxtController = TextEditingController();
@@ -145,6 +143,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
             meterModelTxt = response.data!.meterModel.changeEmptyString();
             meterSnTxt = response.data!.meterSN.changeEmptyString();
             meterSealTxt = response.data!.meterSeal.changeEmptyString();
+            customTxt = response.data!.custom.changeEmptyString();
             timeUTCTxt = ConvertV2().uint8ToUtcString(response.data!.timeUTC);
             // idPelangganTxt = response.data!.idPelanggan;
           });
@@ -398,18 +397,22 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "ID Pelanggan",
-                      data: idPelangganTxt,
+                      data: customTxt,
                       onTap: () async {
-                        idPelangganTxtController.text = idPelangganTxt;
+                        idPelangganTxtController.text = customTxt;
                         String? input = await _showInputDialog(
                             idPelangganTxtController, "Id Pelanggan");
                         if (input != null && input.isNotEmpty) {
-                          List<int> list =
-                              utf8.encode("meta_data_custom=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-
-                          BLEUtils.funcWrite(
-                              bytes, "Sukses Ubah ID Pelanggan", device);
+                          metaData.custom = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                            bleProvider,
+                            metaData,
+                          );
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(

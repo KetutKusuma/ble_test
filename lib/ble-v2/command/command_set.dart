@@ -12,6 +12,7 @@ import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/extension/string_extension.dart';
@@ -194,20 +195,17 @@ class CommandSet {
   }
 
   Future<BLEResponse> setIdentity(
-      BLEProvider bleProvider, IdentityModel identity) async {
+      BLEProvider bleProvider, IdentityModel identity, String license) async {
     try {
       int command = CommandCode.identity;
       int uniqueID = UniqueIDManager().getUniqueID();
 
+      List<int> licenseList = ConvertV2().stringHexToArrayUint8(license, 4);
+
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      log("- hardwareID write : ${identity.hardwareID}");
-      messageV2.addArrayOfUint8(identity.hardwareID, buffer);
-      log("sampe sini ?");
       messageV2.addArrayOfUint8(identity.toppiID, buffer);
-      log("sampe sini ??");
-      messageV2.addArrayOfUint8(identity.isLicense ? [1] : [0], buffer);
-      log("sampe sini ???");
+      messageV2.addArrayOfUint8(licenseList, buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -293,6 +291,7 @@ class CommandSet {
       messageV2.addString(meta.meterModel.changeEmptyString(), buffer);
       messageV2.addString(meta.meterSN.changeEmptyString(), buffer);
       messageV2.addString(meta.meterSeal.changeEmptyString(), buffer);
+      messageV2.addString(meta.custom.changeEmptyString(), buffer);
       messageV2.addUint8(meta.timeUTC, buffer);
 
       List<int> data = messageV2.createEnd(
