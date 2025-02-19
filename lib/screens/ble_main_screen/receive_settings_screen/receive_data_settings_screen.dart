@@ -5,7 +5,6 @@ import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_set
 import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/time_pick/time_pick.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -256,7 +255,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                   signed: false, decimal: false),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+                FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
               ],
               decoration: InputDecoration(
                 labelText: 'Value in $time',
@@ -297,27 +296,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         appBar: AppBar(
           title: const Text('Pengaturan Penerimaan'),
           elevation: 0,
-          // actions: [
-          //   Row(
-          //     children: [
-          //       if (_isConnecting || _isDisconnecting) buildSpinner(context),
-          //       TextButton(
-          //         onPressed: _isConnecting
-          //             ? onCancelPressed
-          //             : (isConnected ? onDisconnectPressed : onConnectPressed),
-          //         child: Text(
-          //           _isConnecting
-          //               ? "CANCEL"
-          //               : (isConnected ? "DISCONNECT" : "CONNECT"),
-          //           style: Theme.of(context)
-          //               .primaryTextTheme
-          //               .labelLarge
-          //               ?.copyWith(color: Colors.white),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -328,15 +306,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    // Text("VALUE : $_value"),
-                    // SettingsContainer(
-                    //   title: "Status",
-                    //   data: statusTxt,
-                    //   onTap: () {},
-                    //   icon: const Icon(
-                    //     CupertinoIcons.settings,
-                    //   ),
-                    // ),
                     SettingsContainer(
                       title: "Izinkan Penerimaan",
                       data: receiveEnableTxt == "true" ? "Ya" : "Tidak",
