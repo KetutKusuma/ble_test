@@ -62,15 +62,18 @@ class CaptureModel {
 
   set setSpecialDateString(String value) {
     int temp = 0;
-    List<String> arr = value.split(",");
-    for (String v in arr) {
-      int date = int.parse(v);
-      if (date >= 1 && date <= 31) {
-        temp = ConvertTime.setBit(temp, date - 1, true);
-      } else {
-        throw Exception("Invalid date");
+    if (value.isNotEmpty) {
+      List<String> arr = value.split(",");
+      for (String v in arr) {
+        int date = int.parse(v);
+        if (date >= 1 && date <= 31) {
+          temp = ConvertTime.setBit(temp, date - 1, true);
+        } else {
+          throw Exception("Invalid date");
+        }
       }
     }
+
     specialDate = temp;
   }
 

@@ -6,6 +6,7 @@ import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_capture.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
@@ -95,14 +96,43 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   void _showMetaDataImageDialog(BuildContext context) {
-    showDialog(context: context, builder: (context) {
-      return SimpleDialog(
-        title: const Text("Meta Data"),
-        children: [
-          
-        ],
-      )
-    });
+    showDialog(
+        context: context,
+        builder: (context) {
+          return SimpleDialog(
+            title: const Text("Meta Data"),
+            children: [
+              SimpleDialogOption(
+                child: Column(
+                  children: [
+                    Text(
+                      "ID : ${ConvertV2().arrayUint8ToStringHexAddress(_imageMetaData!.id)}",
+                    ),
+                    Text("ID Pelanggan : ${_imageMetaData!.custom}"),
+                    Text("Model Meter : ${_imageMetaData!.meterModel}"),
+                    Text("Nomor Seri Meter : ${_imageMetaData!.meterSN}"),
+                    Text("Segel Meter : ${_imageMetaData!.meterSeal}"),
+                    Text(
+                        "Tanggal Diambil : ${ConvertV2().minuteToDateTimeString(_imageMetaData!.dateTimeTaken)}"),
+                    Text(
+                      "Waktu UTC : ${ConvertV2().uint8ToUtcString(_imageMetaData!.timeUTC)}",
+                    ),
+                    Text(
+                      "Tegangan Baterai 1 : ${_imageMetaData!.voltageBattery1.toStringAsFixed(2)} Volt",
+                    ),
+                    Text(
+                      "Tegangan Baterai 2 : ${_imageMetaData!.voltageBattery2.toStringAsFixed(2)} Volt",
+                    ),
+                    Text(
+                      "Suhu : ${_imageMetaData!.temperature.toStringAsFixed(2)}°C",
+                    ),
+                  ],
+                ),
+                onPressed: () {},
+              )
+            ],
+          );
+        });
   }
 
   void _showZoomableImageDialog(BuildContext context, Uint8List imageBytes) {

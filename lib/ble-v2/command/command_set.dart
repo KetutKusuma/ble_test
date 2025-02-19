@@ -292,7 +292,7 @@ class CommandSet {
       messageV2.addString(meta.meterSN.changeEmptyString(), buffer);
       messageV2.addString(meta.meterSeal.changeEmptyString(), buffer);
       messageV2.addString(meta.custom.changeEmptyString(), buffer);
-      messageV2.addUint8(meta.timeUTC, buffer);
+      // messageV2.addUint8(meta.timeUTC, buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -335,6 +335,7 @@ class CommandSet {
       messageV2.addBool(camera.hMirror, buffer);
       messageV2.addBool(camera.vFlip, buffer);
       messageV2.addUint8(camera.jpegQuality, buffer);
+      messageV2.addUint16(camera.adjustImageRotation, buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -562,7 +563,32 @@ class CommandSet {
         return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
-      return BLEResponse.error("Error ubah password");
+      return BLEResponse.error("Error dapat ubah password");
+    }
+  }
+
+  Future<BLEResponse> setTimeUTC(BLEProvider bleProvider, int timeUTC) async {
+    try {
+      int command = CommandCode.timeUTC;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addUint8(timeUTC, buffer);
+      List<int> data =
+          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+
+      Header headerBLE =
+          Header(uniqueID: uniqueID, command: command, status: false);
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+      if (responseWrite.header.status) {
+        return BLEResponse.success("Sukses ubah waktu utc");
+      } else {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+    } catch (e) {
+      return BLEResponse.error("Error dapat ubah waktu utc");
     }
   }
 }

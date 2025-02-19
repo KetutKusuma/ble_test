@@ -13,6 +13,7 @@ import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/image_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/other_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/storage_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
@@ -45,6 +46,8 @@ class CommandCode {
   static const int radioTestAsTransmitterStart = 25;
   static const int radioTestAsTransmitterSequence = 26;
   static const int radioTestAsTransmitterStop = 27;
+  static const int commandClearNeodumiumNotRemovedCounter = 28;
+  static const int commandClearCriticalBatteryCounter = 29;
   static const int get = 99;
   static const int firmware = 101;
   static const int identity = 102;
@@ -54,20 +57,21 @@ class CommandCode {
   static const int availableMemory = 106;
   static const int printToSerialMonitor = 107;
   static const int dateTime = 108;
-  static const int temperature = 109;
-  static const int batteryVoltage = 110;
-  static const int batteryVoltageCoefficient = 111;
-  static const int storage = 112;
-  static const int imageExplorer = 113;
-  static const int logExplorer = 114;
-  static const int cameraSetting = 115;
-  static const int captureSchedule = 116;
-  static const int transmitSchedule = 117;
-  static const int receiveSchedule = 118;
-  static const int uploadSchedule = 119;
-  static const int gateway = 120;
-  static const int metaData = 121;
-  static const int other = 122;
+  static const int timeUTC = 109;
+  static const int temperature = 110;
+  static const int batteryVoltage = 111;
+  static const int batteryVoltageCoefficient = 112;
+  static const int storage = 113;
+  static const int imageExplorer = 114;
+  static const int logExplorer = 115;
+  static const int cameraSetting = 116;
+  static const int captureSchedule = 117;
+  static const int transmitSchedule = 118;
+  static const int receiveSchedule = 119;
+  static const int uploadSchedule = 120;
+  static const int gateway = 121;
+  static const int metaData = 122;
+  static const int other = 123;
 }
 
 class ParameterImageExplorerFilter {
@@ -313,14 +317,43 @@ class Command {
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses format FAT", data: null);
       } else {
-        return BLEResponse.error("Gagal format FAT");
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
-      return BLEResponse.error("Error format FAT : $e");
+      return BLEResponse.error("Error dapat format FAT : $e");
     }
   }
 
-  // Future<BLEResponse> reset
+  Future<BLEResponse> resetConfig(BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.resetConfig;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      List<int> idata =
+          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        idata,
+        headerBLE,
+      );
+
+      if (responseWrite.header.status) {
+        return BLEResponse.success("Sukses reset konfigurasi", data: null);
+      } else {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+    } catch (e) {
+      return BLEResponse.error("Error dapat reset konfigurasi : $e");
+    }
+  }
 
   Future<BLEResponse<AdminModels>> getAdminData(
       BluetoothDevice device, BLEProvider bleProvider) async {
@@ -331,14 +364,17 @@ class Command {
       int uniqueID = UniqueIDManager().getUniqueID();
       List<int> buffer = [];
       MessageV2().createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2.addArrayOfUint8([
-        CommandCode.identity,
-        CommandCode.batteryVoltageCoefficient,
-        CommandCode.cameraSetting,
-        CommandCode.role,
-        CommandCode.enable,
-        CommandCode.printToSerialMonitor
-      ], buffer);
+      messageV2.addArrayOfUint8(
+        [
+          CommandCode.identity,
+          CommandCode.batteryVoltageCoefficient,
+          CommandCode.cameraSetting,
+          CommandCode.role,
+          CommandCode.enable,
+          CommandCode.printToSerialMonitor
+        ],
+        buffer,
+      );
       List<int> idata = MessageV2().createEnd(
         sessionID,
         buffer,
@@ -392,17 +428,19 @@ class Command {
       bool hMirror = ConvertV2().bufferToBool(params[startIndex + 4], 0);
       bool vFlip = ConvertV2().bufferToBool(params[startIndex + 5], 0);
       int jpegQuality = ConvertV2().bufferToUint8(params[startIndex + 6], 0);
+      int adjustImageRotation =
+          ConvertV2().bufferToUint8(params[startIndex + 7], 0);
 
       // role
-      startIndex = 12;
+      startIndex = 13;
       int role = ConvertV2().bufferToUint8(params[startIndex], 0);
 
       // enable
-      startIndex = 13;
+      startIndex = 14;
       bool enable = ConvertV2().bufferToBool(params[startIndex], 0);
 
       // print to serial monitor
-      startIndex = 14;
+      startIndex = 15;
       bool printToSerialMonitor =
           ConvertV2().bufferToBool(params[startIndex], 0);
 
@@ -424,6 +462,7 @@ class Command {
           hMirror: hMirror,
           vFlip: vFlip,
           jpegQuality: jpegQuality,
+          adjustImageRotation: adjustImageRotation,
         ),
         role: role,
         enable: enable,
@@ -460,6 +499,8 @@ class Command {
         CommandCode.storage,
         CommandCode.imageExplorer,
         CommandCode.dateTime,
+        CommandCode.timeUTC,
+        CommandCode.other,
       ], buffer);
       List<int> idata = MessageV2().createEnd(
         sessionID,
@@ -494,18 +535,23 @@ class Command {
 
       log("params : ${params}");
 
+      /// firmware
       int startIndex = 0;
       String nameFirmware = ConvertV2().bufferToString(params[startIndex]);
       String versionFirmware =
           ConvertV2().bufferToString(params[startIndex + 1]);
 
+      /// temperature
       startIndex = 2;
       double temperature = ConvertV2().bufferToFloat32(params[startIndex], 0);
+
+      /// battery voltage
       double batteryVoltage1 =
           ConvertV2().bufferToFloat32(params[startIndex + 1], 0);
       double batteryVoltage2 =
           ConvertV2().bufferToFloat32(params[startIndex + 2], 0);
 
+      /// storage
       startIndex = 5;
       int sizeFlashMemory = ConvertV2().bufferToUint32(params[startIndex], 0);
       int totalStorage = ConvertV2().bufferToUint32(params[startIndex + 1], 0);
@@ -520,11 +566,27 @@ class Command {
       int nearAll = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
       int nearUnsent = ConvertV2().bufferToUint16(params[startIndex + 5], 0);
 
-      startIndex = 13;
+      startIndex = 14;
       int dateTimeMiliSeconds =
           ConvertV2().bufferToUint32(params[startIndex], 0) + (946659600);
       DateTime dateTime =
           DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000);
+
+      // time utc
+      startIndex = 15;
+      int timeUTC = ConvertV2().bufferToUint8(params[startIndex], 0);
+
+      // other
+      startIndex = 16;
+      bool format = ConvertV2().bufferToBool(params[startIndex], 0);
+      bool capture = ConvertV2().bufferToBool(params[startIndex + 1], 0);
+      bool upload = ConvertV2().bufferToBool(params[startIndex + 2], 0);
+      int neodymiumNotRemoveCounter =
+          ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+      int criticalBattery1Counter =
+          ConvertV2().bufferToUint8(params[startIndex + 4], 0);
+      int criticalBattery2Counter =
+          ConvertV2().bufferToUint8(params[startIndex + 5], 0);
 
       DeviceStatusModels deviceStatusModels = DeviceStatusModels(
         firmwareModel: FirmwareModel(
@@ -550,6 +612,17 @@ class Command {
           nearUnsent: nearUnsent,
         ),
         dateTime: dateTime,
+        timeUTC: timeUTC,
+        otherModel: OtherModel(
+          mustToDo: MustToDoModel(
+            format: format,
+            capture: capture,
+            upload: upload,
+          ),
+          neodymiumNotRemoveCounter: neodymiumNotRemoveCounter,
+          criticalBattery1Counter: criticalBattery1Counter,
+          criticalBattery2Counter: criticalBattery2Counter,
+        ),
       );
 
       return BLEResponse.success(
@@ -936,6 +1009,7 @@ class Command {
       log("response write get meta data : $responseWrite");
       // turn to a model
       List<List<int>> params = [];
+      log("parameter count : ${responseWrite.header.parameterCount}");
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
         List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
         if (param == null) {
@@ -944,14 +1018,12 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
-
       int startIndex = 0;
       String meterModel = ConvertV2().bufferToString(params[startIndex]);
       String meterSN = ConvertV2().bufferToString(params[startIndex + 1]);
       String meterSeal = ConvertV2().bufferToString(params[startIndex + 2]);
       String custom = ConvertV2().bufferToString(params[startIndex + 3]);
-      int timeUTC = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
+      // int timeUTC = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
 
       return BLEResponse.success(
         "Sukses dapat meta data",
@@ -960,7 +1032,6 @@ class Command {
           meterSN: meterSN,
           meterSeal: meterSeal,
           custom: custom,
-          timeUTC: timeUTC,
         ),
       );
     } catch (e) {
@@ -1090,6 +1161,74 @@ class Command {
       );
     } catch (e) {
       return BLEResponse.error("Error dapat penyimpanan : $e");
+    }
+  }
+
+  Future<BLEResponse> forceTaskCapture(BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.forceTaskCapture;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        buffer,
+        headerBLE,
+      );
+      log("response write force task capture : $responseWrite");
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(
+          responseWrite,
+        );
+      }
+      return BLEResponse.success(
+        "Sukses force task capture",
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat force task capture : $e");
+    }
+  }
+
+  Future<BLEResponse> forceTaskUpload(BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.forceTaskUpload;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        buffer,
+        headerBLE,
+      );
+      log("response write force task upload : $responseWrite");
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(
+          responseWrite,
+        );
+      }
+      return BLEResponse.success(
+        "Sukses force task upload",
+      );
+    } catch (e) {
+      return BLEResponse.error("Error dapat force task upload : $e");
     }
   }
 }

@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
-import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:flutter/material.dart';
@@ -37,14 +36,12 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   String meterModelTxt = '-',
       meterSnTxt = '-',
       meterSealTxt = '-',
-      timeUTCTxt = '-',
       customTxt = "-",
       idPelangganTxt = '-';
   TextEditingController controller = TextEditingController();
   TextEditingController meterModelTxtController = TextEditingController();
   TextEditingController meterSnTxtController = TextEditingController();
   TextEditingController meterSealTxtController = TextEditingController();
-  TextEditingController timeUTCTxtController = TextEditingController();
   TextEditingController idPelangganTxtController = TextEditingController();
 
   late SimpleFontelicoProgressDialog _progressDialog;
@@ -52,34 +49,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   // v2
   late MetaDataModel metaData;
   final _commandSet = CommandSet();
-
-  List<String> utcList = [
-    "+12:00",
-    "+11:00",
-    "+10:00",
-    "+09:00",
-    "+08:00",
-    "+07:00",
-    "+06:00",
-    "+05:00",
-    "+04:00",
-    "+03:00",
-    "+02:00",
-    "+01:00",
-    "00:00",
-    "-01:00",
-    "-02:00",
-    "-03:00",
-    "-04:00",
-    "-05:00",
-    "-06:00",
-    "-07:00",
-    "-08:00",
-    "-09:00",
-    "-10:00",
-    "-11:00",
-    "-12:00",
-  ];
 
   @override
   void initState() {
@@ -144,8 +113,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
             meterSnTxt = response.data!.meterSN.changeEmptyString();
             meterSealTxt = response.data!.meterSeal.changeEmptyString();
             customTxt = response.data!.custom.changeEmptyString();
-            timeUTCTxt = ConvertV2().uint8ToUtcString(response.data!.timeUTC);
-            // idPelangganTxt = response.data!.idPelanggan;
           });
         } else {
           Snackbar.show(
@@ -169,7 +136,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         List<TextInputFormatter>? inputFormatters = [
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
+          // FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
         ];
         if (addInputFormatters != null) {
           inputFormatters.addAll(addInputFormatters);
@@ -205,101 +172,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                     const SnackBar(content: Text("Input cannot be empty!")),
                   );
                 }
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
-
-    return input;
-  }
-
-  Future<String?> _showSelectionPopupUTC(
-      BuildContext context, List<String> dataList) async {
-    String? result = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pilih Sebuah Opsi'),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: dataList.map((item) {
-                  return ListTile(
-                    dense: false,
-                    visualDensity: const VisualDensity(vertical: -4),
-                    contentPadding: const EdgeInsets.all(0),
-                    horizontalTitleGap: 0,
-                    minVerticalPadding: 0,
-                    subtitle: Row(
-                      children: [
-                        const Icon(Icons.radio_button_checked_outlined),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        Text(
-                          item,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.black),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.of(context)
-                          .pop(item); // Return the selected item
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-    return result;
-  }
-
-  Future<String?> _showInputDialogTimeUTC(
-      TextEditingController controller) async {
-    String? input = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Masukan data Time UTC"),
-          content: Form(
-            child: TextFormField(
-              controller: controller,
-              keyboardType: TextInputType.text,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\d\-\+:]')),
-              ],
-              decoration: const InputDecoration(
-                labelText: 'Data antara -12:00 and 12:00',
-                border: OutlineInputBorder(),
-                hintText: "Contoh : +07:00",
-                hintStyle: TextStyle(fontSize: 13),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                controller.clear();
-                Navigator.of(context).pop();
-              },
-              child: const Text("Batalkan"),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  Navigator.pop(context, controller.text);
-                  controller.clear();
-                } else {}
               },
               child: const Text("OK"),
             ),
@@ -419,49 +291,49 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         Icons.description_rounded,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Waktu UTC",
-                      data: timeUTCTxt,
-                      onTap: () async {
-                        timeUTCTxtController.text = timeUTCTxt;
-                        // String? input =
-                        //     await _showInputDialogTimeUTC(timeUTCTxtController);
-                        String? input =
-                            await _showSelectionPopupUTC(context, utcList);
-                        if (input != null) {
-                          if (!input.contains("+") && !input.contains("-")) {
-                            Snackbar.show(
-                              ScreenSnackbar.metadatasettings,
-                              "Masukan data waktu UTC dengan benar, kurang - atau +",
-                              success: false,
-                            );
-                            return;
-                          }
-                          if (!input.contains(":")) {
-                            Snackbar.show(
-                              ScreenSnackbar.metadatasettings,
-                              "Masukan data waktu UTC dengan benar, kurang :",
-                              success: false,
-                            );
-                          } else {
-                            int data = ConvertV2().utcStringToUint8(input);
-                            metaData.timeUTC = data;
-                            BLEResponse resBLE = await _commandSet.setMetaData(
-                              bleProvider,
-                              metaData,
-                            );
-                            Snackbar.showHelperV2(
-                              ScreenSnackbar.metadatasettings,
-                              resBLE,
-                              onSuccess: onRefresh,
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.access_time,
-                      ),
-                    ),
+                    // SettingsContainer(
+                    //   title: "Waktu UTC",
+                    //   data: timeUTCTxt,
+                    //   onTap: () async {
+                    //     timeUTCTxtController.text = timeUTCTxt;
+                    //     // String? input =
+                    //     //     await _showInputDialogTimeUTC(timeUTCTxtController);
+                    //     String? input =
+                    //         await _showSelectionPopupUTC(context, utcList);
+                    //     if (input != null) {
+                    //       if (!input.contains("+") && !input.contains("-")) {
+                    //         Snackbar.show(
+                    //           ScreenSnackbar.metadatasettings,
+                    //           "Masukan data waktu UTC dengan benar, kurang - atau +",
+                    //           success: false,
+                    //         );
+                    //         return;
+                    //       }
+                    //       if (!input.contains(":")) {
+                    //         Snackbar.show(
+                    //           ScreenSnackbar.metadatasettings,
+                    //           "Masukan data waktu UTC dengan benar, kurang :",
+                    //           success: false,
+                    //         );
+                    //       } else {
+                    //         int data = ConvertV2().utcStringToUint8(input);
+                    //         // metaData.timeUTC = data;
+                    //         BLEResponse resBLE = await _commandSet.setMetaData(
+                    //           bleProvider,
+                    //           metaData,
+                    //         );
+                    //         Snackbar.showHelperV2(
+                    //           ScreenSnackbar.metadatasettings,
+                    //           resBLE,
+                    //           onSuccess: onRefresh,
+                    //         );
+                    //       }
+                    //     }
+                    //   },
+                    //   icon: const Icon(
+                    //     Icons.access_time,
+                    //   ),
+                    // ),
                   ],
                 ),
               )

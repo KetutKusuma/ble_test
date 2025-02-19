@@ -42,13 +42,42 @@ class _DeviceScreenState extends State<DeviceScreen> {
       temperatureTxt = "-",
       battery1Txt = "-",
       battery2Txt = "-",
-      critBattery1Counter = "-",
-      critBattery2Counter = "-";
+      critBattery1CounterTxt = "-",
+      critBattery2CounterTxt = "-",
+      timeUTCText = "-";
 
   TextEditingController controller = TextEditingController();
   late SimpleFontelicoProgressDialog _progressDialog;
   TextEditingController spCaptureDateTxtController = TextEditingController();
+  TextEditingController timeUTCTxtController = TextEditingController();
   final _commandSet = CommandSet();
+  List<String> utcList = [
+    "+12:00",
+    "+11:00",
+    "+10:00",
+    "+09:00",
+    "+08:00",
+    "+07:00",
+    "+06:00",
+    "+05:00",
+    "+04:00",
+    "+03:00",
+    "+02:00",
+    "+01:00",
+    "00:00",
+    "-01:00",
+    "-02:00",
+    "-03:00",
+    "-04:00",
+    "-05:00",
+    "-06:00",
+    "-07:00",
+    "-08:00",
+    "-09:00",
+    "-10:00",
+    "-11:00",
+    "-12:00",
+  ];
 
   @override
   void initState() {
@@ -107,20 +136,24 @@ class _DeviceScreenState extends State<DeviceScreen> {
       log("hasil get device status : $resDeviceStatus");
       _progressDialog.hide();
       if (resDeviceStatus.status) {
-        timeTxt =
-            ConvertTime.dateFormatDateTime(resDeviceStatus.data!.dateTime!);
-        firmwareTxt = resDeviceStatus.data!.firmwareModel!.name;
-        versionTxt = resDeviceStatus.data!.firmwareModel!.version;
-        temperatureTxt = resDeviceStatus.data!.temperature.toString();
-        battery1Txt = resDeviceStatus.data!.batteryVoltageModel!.batteryVoltage1
-            .toStringAsFixed(2);
+        if (resDeviceStatus.data != null) {
+          DeviceStatusModels dS = resDeviceStatus.data!;
+          timeTxt = ConvertTime.dateFormatDateTime(dS.dateTime!);
+          firmwareTxt = dS.firmwareModel!.name;
+          versionTxt = dS.firmwareModel!.version;
+          temperatureTxt = dS.temperature.toString();
+          battery1Txt =
+              dS.batteryVoltageModel!.batteryVoltage1.toStringAsFixed(2);
 
-        battery2Txt = resDeviceStatus.data!.batteryVoltageModel!.batteryVoltage2
-            .toStringAsFixed(2);
-
-        critBattery1Counter = "0";
-        critBattery2Counter = "0";
-        setState(() {});
+          battery2Txt =
+              dS.batteryVoltageModel!.batteryVoltage2.toStringAsFixed(2);
+          timeUTCText = ConvertV2().uint8ToUtcString(dS.timeUTC!);
+          critBattery1CounterTxt =
+              dS.otherModel!.criticalBattery1Counter.toString();
+          critBattery2CounterTxt =
+              dS.otherModel!.criticalBattery2Counter.toString();
+          setState(() {});
+        }
       } else {
         Snackbar.show(
           ScreenSnackbar.devicescreen,
@@ -135,6 +168,54 @@ class _DeviceScreenState extends State<DeviceScreen> {
         success: false,
       );
     }
+  }
+
+  Future<String?> _showSelectionPopupUTC(
+      BuildContext context, List<String> dataList) async {
+    String? result = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Sebuah Opsi'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.4),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: dataList.map((item) {
+                  return ListTile(
+                    dense: false,
+                    visualDensity: const VisualDensity(vertical: -4),
+                    contentPadding: const EdgeInsets.all(0),
+                    horizontalTitleGap: 0,
+                    minVerticalPadding: 0,
+                    subtitle: Row(
+                      children: [
+                        const Icon(Icons.radio_button_checked_outlined),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          item,
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.of(context)
+                          .pop(item); // Return the selected item
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    return result;
   }
 
   @override
@@ -182,10 +263,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     SettingsContainer(
                       title: "Baterai 1",
                       data: "$battery1Txt volt",
-                      description: critBattery1Counter == "0" ||
-                              critBattery1Counter == '-'
+                      description: critBattery1CounterTxt == "0" ||
+                              critBattery1CounterTxt == '-'
                           ? null
-                          : "(Jumlah hitungan kritis : $critBattery1Counter)",
+                          : "(Jumlah hitungan kritis : $critBattery1CounterTxt)",
                       onTap: () {},
                       icon: const Icon(
                         Icons.battery_5_bar_outlined,
@@ -194,10 +275,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     SettingsContainer(
                       title: "Baterai 2",
                       data: "$battery2Txt volt",
-                      description: critBattery2Counter == "0" ||
-                              critBattery2Counter == '-'
+                      description: critBattery2CounterTxt == "0" ||
+                              critBattery2CounterTxt == '-'
                           ? null
-                          : "(Jumlah hitungan kritis : $critBattery2Counter)",
+                          : "(Jumlah hitungan kritis : $critBattery2CounterTxt)",
                       onTap: () {},
                       icon: const Icon(
                         Icons.battery_full,
@@ -252,6 +333,31 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         CupertinoIcons.time,
                       ),
                     ),
+                    SettingsContainer(
+                      title: "Waktu UTC",
+                      data: timeUTCText,
+                      onTap: () async {
+                        timeUTCTxtController.text = timeUTCText;
+                        String? input =
+                            await _showSelectionPopupUTC(context, utcList);
+                        if (input != null) {
+                          int data = ConvertV2().utcStringToUint8(input);
+                          BLEResponse resBLE =
+                              await _commandSet.setTimeUTC(bleProvider, data);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.devicescreen,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.access_time,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
                     GestureDetector(
                       onTap: () async {
                         int timeNowSeconds = ConvertV2().getTimeNowSeconds();
@@ -259,11 +365,31 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         int dataUpdate = timeNowSeconds;
                         BLEResponse resBLE = await _commandSet.setDateTime(
                             bleProvider, dataUpdate);
-                        Snackbar.showHelperV2(
-                          ScreenSnackbar.devicescreen,
-                          resBLE,
-                          onSuccess: onRefresh,
-                        );
+                        if (resBLE.status) {
+                          DateTime now = DateTime.now();
+                          Duration offset = now.timeZoneOffset;
+
+                          // Format offset as +hh:mm or -hh:mm
+                          String formattedOffset =
+                              "${offset.isNegative ? "-" : "+"}${offset.inHours.abs().toString().padLeft(2, '0')}:${(offset.inMinutes.abs() % 60).toString().padLeft(2, '0')}";
+                          int timeUTC =
+                              ConvertV2().utcStringToUint8(formattedOffset);
+                          resBLE = await _commandSet.setTimeUTC(
+                            bleProvider,
+                            timeUTC,
+                          );
+                        }
+                        if (resBLE.status) {
+                          onRefresh();
+                          Snackbar.show(ScreenSnackbar.devicescreen,
+                              "Waktu berhasil diatur",
+                              success: true);
+                        } else {
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.devicescreen,
+                            resBLE,
+                          );
+                        }
                       },
                       child: Container(
                         margin:

@@ -3,14 +3,12 @@ class MetaDataModel {
   String meterSN;
   String meterSeal;
   String custom;
-  int timeUTC;
 
   MetaDataModel({
     required this.meterModel,
     required this.meterSN,
     required this.meterSeal,
     required this.custom,
-    required this.timeUTC,
   });
 
   @override
@@ -18,7 +16,7 @@ class MetaDataModel {
     // TODO: implement toString
     return '''
 {
-meterModel : $meterModel \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ncustom : $custom \ntimeUTC : $timeUTC
+meterModel : $meterModel \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ncustom : $custom 
       }
 ''';
   }

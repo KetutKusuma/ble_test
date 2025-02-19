@@ -424,73 +424,84 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       }
                     },
                   ),
-                  FeatureWidget(
+                  Visibility(
                     visible: featureC.contains(roleUser),
-                    title: "Status Perangkat",
-                    onTap: () {
-                      if (isConnected) {
+                    child: FeatureWidget(
+                      visible: featureC.contains(roleUser),
+                      title: "Status Perangkat",
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DeviceScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                      icon: const Icon(
+                        CupertinoIcons.device_phone_portrait,
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: featureA.contains(roleUser),
+                    child: FeatureWidget(
+                      title: "Tes Radio sebagai Penerima",
+                      onTap: () async {
+                        bool? input = await _showAdmitRadioReceiveDialog(
+                            context, "Mulai tes radio sebagai penerima?");
+                        if (input != null) {
+                          if (input == true) {
+                            // lakukan start test radio sebagai penerima
+                            // muncul pop uup
+                            // jika selesai pencet tombol, lakukan stop test radio sebagai penerima
+
+                            BLEResponse resBLE = await CommandRadioChecker()
+                                .radioTestAsReceiverStart(bleProvider);
+
+                            if (!resBLE.status) {
+                              Snackbar.show(
+                                  ScreenSnackbar.blemain, resBLE.message,
+                                  success: false);
+                              return;
+                            }
+
+                            // ignore: use_build_context_synchronously
+                            bool input =
+                                await _showStopRadioReceiveDialog(context);
+                            if (input == true) {
+                              BLEResponse resBLE = await CommandRadioChecker()
+                                  .radioTestAsReceiverStop(bleProvider);
+                              Snackbar.show(
+                                  ScreenSnackbar.blemain, resBLE.message,
+                                  success: resBLE.status);
+                            }
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.call_received_rounded),
+                    ),
+                  ),
+                  Visibility(
+                    visible: featureA.contains(roleUser),
+                    child: FeatureWidget(
+                      title: "Tes Radio sebagai Pengirim",
+                      onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DeviceScreen(device: device),
+                            builder: (context) => const RadioTestAsTransmit(),
                           ),
                         );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                    icon: const Icon(
-                      CupertinoIcons.device_phone_portrait,
-                    ),
-                  ),
-                  FeatureWidget(
-                    title: "Tes Radio sebagai Penerima",
-                    onTap: () async {
-                      bool? input = await _showAdmitRadioReceiveDialog(
-                          context, "Mulai tes radio sebagai penerima?");
-                      if (input != null) {
-                        if (input == true) {
-                          // lakukan start test radio sebagai penerima
-                          // muncul pop uup
-                          // jika selesai pencet tombol, lakukan stop test radio sebagai penerima
-
-                          BLEResponse resBLE = await CommandRadioChecker()
-                              .radioTestAsReceiverStart(bleProvider);
-
-                          if (!resBLE.status) {
-                            Snackbar.show(
-                                ScreenSnackbar.blemain, resBLE.message,
-                                success: false);
-                            return;
-                          }
-
-                          // ignore: use_build_context_synchronously
-                          bool input =
-                              await _showStopRadioReceiveDialog(context);
-                          if (input == true) {
-                            BLEResponse resBLE = await CommandRadioChecker()
-                                .radioTestAsReceiverStop(bleProvider);
-                            Snackbar.show(
-                                ScreenSnackbar.blemain, resBLE.message,
-                                success: resBLE.status);
-                          }
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.call_received_rounded),
-                  ),
-                  FeatureWidget(
-                    title: "Tes Radio sebagai Pengirim",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RadioTestAsTransmit(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.arrow_outward_rounded,
+                      },
+                      icon: const Icon(
+                        Icons.arrow_outward_rounded,
+                      ),
                     ),
                   ),
                   FeatureWidget(

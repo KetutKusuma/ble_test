@@ -536,8 +536,13 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     GestureDetector(
                       onTap: () async {
                         // ;
-                        List<int> spDateListSelected =
-                            spCaptureDateTxt.split(",").map(int.parse).toList();
+                        List<int> spDateListSelected = [];
+                        if (spCaptureDateTxt != "-") {
+                          spDateListSelected = spCaptureDateTxt
+                              .split(",")
+                              .map(int.parse)
+                              .toList();
+                        }
 
                         List<int>? result = await _showDateSelectionPopup(
                           context,

@@ -9,7 +9,6 @@ import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/enum/role.dart';
-import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
@@ -51,12 +50,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       hMirrorText = '-',
       vFlipText = '-',
       cameraJpgQualityTxt = '-',
-      roleTxt = '-';
+      adjustmentImageRotationTxt = "-",
+      roleTxt = '-',
+      hardwareIDTxt = "-";
 
   TextEditingController idTxtController = TextEditingController();
   TextEditingController licenseTxtController = TextEditingController();
   TextEditingController voltageCoefTxtController = TextEditingController();
   TextEditingController cameraJpegQualityController = TextEditingController();
+  TextEditingController adjustmentImageRotationController =
+      TextEditingController();
 
   final List<Map<String, dynamic>> dataMapRole = [
     // {"title": "Tidak Terdefinisi", "value": 0},
@@ -108,6 +111,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             Navigator.popUntil(
               context,
               (route) => route.isFirst,
+            );
+
+            Snackbar.show(
+              ScreenSnackbar.adminsettings,
+              "Perangkat Tidak Terhubung",
+              success: false,
             );
           }
         }
@@ -252,6 +261,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           adminModels = adminResponse.data!;
           idTxt = ConvertV2().arrayUint8ToStringHexAddress(
               adminResponse.data!.identityModel!.toppiID);
+          hardwareIDTxt = ConvertV2().arrayUint8ToString(
+              adminResponse.data!.identityModel!.hardwareID);
           voltCoef1Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient1
               .toStringAsFixed(1)
@@ -276,6 +287,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           vFlipText = adminResponse.data!.cameraModel!.vFlip.toString();
           cameraJpgQualityTxt =
               adminResponse.data!.cameraModel!.jpegQuality.toString();
+          adjustmentImageRotationTxt =
+              adminResponse.data!.cameraModel!.adjustImageRotation.toString();
           roleTxt = getRole(adminResponse.data!.role ?? 0);
           enableTxt = adminResponse.data!.enable.toString();
           printToSerialMonitorTxt =
@@ -362,6 +375,62 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return selectedValue;
   }
 
+  /// ya atau tidak untuk reset konfiguasi, format berkas
+  /// dan kembali ke pengaturan pabrik
+  Future<bool?> _showResetDialog(BuildContext context, String msg,
+      {String? description}) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  msg,
+                  style: const TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                description == null
+                    ? const SizedBox()
+                    : Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+              ],
+            ),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, true); // Return true
+                  },
+                  child: const Text('Ya'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, false); // Return false
+                  },
+                  child: const Text('Tidak'),
+                ),
+              ],
+            ));
+      },
+    );
+
+    return selectedValue;
+  }
+
   // Function to show a dialog for input
   Future<String?> _showInputDialog(
     TextEditingController controller,
@@ -432,16 +501,38 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Masukan ID dan License"),
+          /// maunya disini buat fungsi tersembunyi bisa ngehit si license
+          /// tapi entar aja
+          title: const Text("Masukan ID dan Lisensi"),
           content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              Text(
+                "ID Perangkat Keras : $hardwareIDTxt",
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(
+                height: 3,
+              ),
+              Text(
+                "Lisensi : ${adminModels.identityModel!.isLicense ? "Valid" : "Invalid"}",
+                style: const TextStyle(
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
               Form(
                 child: TextFormField(
                   controller: idTxtController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Masukan ID",
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(),
                   ),
                   keyboardType: keyboardType,
                   validator: (value) {
@@ -638,7 +729,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           ],
                           lengthTextNeed: 12,
                         );
-                        log("input : $input");
                         if (input != null) {
                           List<int> dataSetID = ConvertV2()
                               .stringHexAddressToArrayUint8(input['id'], 5);
@@ -659,6 +749,52 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           );
                         }
                       },
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.gear_big),
+                        title: "Role",
+                        data: roleTxt,
+                        onTap: () async {
+                          Map? input =
+                              await _showSelectionPopup(context, dataMapRole);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            BLEResponse resBLE = await _commandSet.setRole(
+                                bleProvider, dataUpdate);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: featureB.contains(roleUser),
+                      child: SettingsContainer(
+                        title: "Aktifkan Toppi",
+                        data: enableTxt == "true" ? "Ya" : "Tidak",
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Aktifkan Toppi");
+                          if (input != null) {
+                            BLEResponse resBLE =
+                                await _commandSet.setEnable(bleProvider, input);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.check_circle_outline_outlined,
+                        ),
+                      ),
                     ),
                     Visibility(
                       visible: featureA.contains(roleUser),
@@ -881,7 +1017,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           String? input = await _showInputDialog(
                             cameraJpegQualityController,
                             "Kualitas JPEG Kamera",
-                            label: '0 to 63',
+                            label: '5 to 63',
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(2),
@@ -904,51 +1040,41 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                       ),
                     ),
-
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
-                        icon: const Icon(CupertinoIcons.gear_big),
-                        title: "Role",
-                        data: roleTxt,
-                        onTap: () async {
-                          Map? input =
-                              await _showSelectionPopup(context, dataMapRole);
-                          if (input != null) {
-                            int dataUpdate = input['value'];
-                            BLEResponse resBLE = await _commandSet.setRole(
-                                bleProvider, dataUpdate);
-                            Snackbar.showHelperV2(
-                              ScreenSnackbar.adminsettings,
-                              resBLE,
-                              onSuccess: onRefresh,
-                            );
-                          }
-                        },
-                      ),
-                    ),
-
-                    Visibility(
-                      visible: featureB.contains(roleUser),
-                      child: SettingsContainer(
-                        title: "Aktifkan Toppi",
-                        data: enableTxt == "true" ? "Ya" : "Tidak",
-                        onTap: () async {
-                          bool? input = await _showTrueFalseDialog(
-                              context, "Aktifkan Toppi");
-                          if (input != null) {
-                            BLEResponse resBLE =
-                                await _commandSet.setEnable(bleProvider, input);
-                            Snackbar.showHelperV2(
-                              ScreenSnackbar.adminsettings,
-                              resBLE,
-                              onSuccess: onRefresh,
-                            );
-                          }
-                        },
                         icon: const Icon(
-                          Icons.check_circle_outline_outlined,
+                          Icons.high_quality_outlined,
                         ),
+                        title: "Penyesuaian Rotasi Gambar",
+                        data: "$adjustmentImageRotationTxt°",
+                        onTap: () async {
+                          adjustmentImageRotationController.text =
+                              adjustmentImageRotationTxt;
+                          String? input = await _showInputDialog(
+                            cameraJpegQualityController,
+                            "Penyesuaian Rotasi Gambar",
+                            label: "0° sampai 180°",
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                          );
+                          log("input : $input");
+                          if (input != null) {
+                            int dataUpdate = int.parse(input);
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.adjustImageRotation = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
                       ),
                     ),
 
@@ -986,19 +1112,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
                         onTap: () async {
-                          // BLEResponse resBLE =
-                          //     await _command(bleProvider, dataUpdate);
-                          // Snackbar.showHelperV2(
-                          //   ScreenSnackbar.adminsettings,
-                          //   resBLE,
-                          // );
+                          bool? input = await _showResetDialog(
+                            context,
+                            "Apa anda yakin ingin reset konfigurasi ? ",
+                          );
+                          if (input != null) {
+                            if (input) {
+                              BLEResponse resBLE =
+                                  await _command.resetConfig(bleProvider);
+                              if (!resBLE.status) {
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.adminsettings,
+                                  resBLE,
+                                );
+                                return;
+                              }
+
+                              Snackbar.show(
+                                ScreenSnackbar.adminsettings,
+                                "Sukses mengembalikan ke pengaturan pabrik",
+                                success: true,
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.amber.shade800,
+                            color: Colors.yellow.shade800,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           width: MediaQuery.of(context).size.width,
@@ -1014,7 +1157,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 width: 5,
                               ),
                               Text(
-                                "Reset",
+                                "Reset Konfigurasi",
                                 style: GoogleFonts.readexPro(
                                   fontSize: 16,
                                   color: Colors.white,
@@ -1032,12 +1175,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
                         onTap: () async {
-                          BLEResponse resBLE =
-                              await _command.formatFAT(device, bleProvider);
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.adminsettings,
-                            resBLE,
-                          );
+                          bool? input = await _showResetDialog(context,
+                              "Apakah anda yakin untuk format berkas ? ",
+                              description:
+                                  "Jika iya, anda akan keluar dari perangkat TOPPI");
+                          if (input != null) {
+                            if (input) {
+                              BLEResponse resBLE =
+                                  await _command.resetConfig(bleProvider);
+
+                              Snackbar.showHelperV2(
+                                ScreenSnackbar.adminsettings,
+                                resBLE,
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           margin: const EdgeInsets.only(
@@ -1045,7 +1197,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.redAccent.shade700,
+                            color: Colors.amber.shade800,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           width: MediaQuery.of(context).size.width,
@@ -1062,6 +1214,81 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                               ),
                               Text(
                                 "Format Berkas",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    /// FULL FACTORY RESET
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          bool? input = await _showResetDialog(
+                            context,
+                            "Apa anda yakin ingin mengembalikan ke setelan pabrik ? ",
+                            description:
+                                "Jika iya, anda akan keluar dari perangkat TOPPI",
+                          );
+                          if (input != null) {
+                            if (input) {
+                              BLEResponse resBLE =
+                                  await _command.resetConfig(bleProvider);
+                              if (!resBLE.status) {
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.adminsettings,
+                                  resBLE,
+                                );
+                                return;
+                              }
+                              resBLE =
+                                  await _command.formatFAT(device, bleProvider);
+                              if (!resBLE.status) {
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.adminsettings,
+                                  resBLE,
+                                );
+                                return;
+                              }
+
+                              Snackbar.show(
+                                ScreenSnackbar.adminsettings,
+                                "Sukses mengembalikan ke pengaturan pabrik",
+                                success: true,
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade700,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.flip_camera_android,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Kembali ke Pengaturan Pabrik",
                                 style: GoogleFonts.readexPro(
                                   fontSize: 16,
                                   color: Colors.white,

@@ -51,6 +51,10 @@ class ConvertV2 {
     return input.map((e) => e.toRadixString(16).padLeft(2, '0')).join(":");
   }
 
+  String arrayUint8ToString(List<int> input) {
+    return input.map((e) => e.toRadixString(16).padLeft(2, '0')).join("");
+  }
+
   List<int> stringHexToArrayUint8(String input, int byteLength) {
     int expectedLen = byteLength * 2;
     if (input.length != expectedLen) {
