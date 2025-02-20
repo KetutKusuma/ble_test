@@ -207,7 +207,12 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       onTap: () async {
                         meterModelTxtController.text = meterModelTxt;
                         String? input = await _showInputDialog(
-                            meterModelTxtController, "Model Meter");
+                          meterModelTxtController,
+                          "Model Meter",
+                          addInputFormatters: [
+                            LengthLimitingTextInputFormatter(16)
+                          ],
+                        );
                         if (input != null && input.isNotEmpty) {
                           metaData.meterModel = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(
@@ -229,7 +234,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       onTap: () async {
                         meterSnTxtController.text = meterSnTxt;
                         String? input = await _showInputDialog(
-                            meterSnTxtController, "Nomor Seri Meter");
+                            meterSnTxtController, "Nomor Seri Meter",
+                            addInputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ]);
                         if (input != null && input.isNotEmpty) {
                           metaData.meterSN = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(
@@ -251,7 +259,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       onTap: () async {
                         meterSealTxtController.text = meterSealTxt;
                         String? input = await _showInputDialog(
-                            meterSealTxtController, "Segel Meter");
+                            meterSealTxtController, "Segel Meter",
+                            addInputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ]);
                         if (input != null && input.isNotEmpty) {
                           metaData.meterSeal = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(
@@ -273,7 +284,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       onTap: () async {
                         idPelangganTxtController.text = customTxt;
                         String? input = await _showInputDialog(
-                            idPelangganTxtController, "Id Pelanggan");
+                            idPelangganTxtController, "Id Pelanggan",
+                            addInputFormatters: [
+                              LengthLimitingTextInputFormatter(32)
+                            ]);
                         if (input != null && input.isNotEmpty) {
                           metaData.custom = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(

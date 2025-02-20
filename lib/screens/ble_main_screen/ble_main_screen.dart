@@ -272,6 +272,38 @@ class _BleMainScreenState extends State<BleMainScreen> {
     return selectedValue;
   }
 
+  Future<int?> _showForceTaskDialog(BuildContext context, String msg) async {
+    int? selectedValue = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+            title: Text(msg),
+            actionsAlignment: MainAxisAlignment.start,
+            alignment: Alignment.center,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, 1); // Return true
+                  },
+                  child: const Text('Tugas Pengambilan Gambar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, 2); // Return false
+                  },
+                  child: const Text('Tugas Unggah'),
+                ),
+              ],
+            ));
+      },
+    );
+
+    return selectedValue;
+  }
+
   Future<bool> _showStopRadioReceiveDialog(BuildContext context) async {
     bool? selectedValue = await showDialog<bool>(
       context: context,
@@ -505,6 +537,32 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     ),
                   ),
                   FeatureWidget(
+                    visible: featureA.contains(roleUser),
+                    title: "Tugaskan Langsung",
+                    onTap: () async {
+                      /// tugas langsung
+                      int? input = await _showForceTaskDialog(
+                          context, "Pilih tugas yang akan dijalankan langsung");
+                      if (input != null) {
+                        if (input == 1) {
+                          // force task capture
+                          BLEResponse resBLE =
+                              await Command().forceTaskCapture(bleProvider);
+                          Snackbar.showHelperV2(ScreenSnackbar.blemain, resBLE);
+                        }
+                        if (input == 2) {
+                          /// force task upload
+                          BLEResponse resBLE =
+                              await Command().forceTaskUpload(bleProvider);
+                          Snackbar.showHelperV2(ScreenSnackbar.blemain, resBLE);
+                        }
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.task_outlined,
+                    ),
+                  ),
+                  FeatureWidget(
                     visible: featureC.contains(roleUser),
                     title: "Ubah Password",
                     onTap: () {
@@ -658,7 +716,7 @@ class FeatureWidget extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
+          margin: const EdgeInsets.only(top: 8, left: 10, right: 10),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           width: MediaQuery.of(context).size.width,
           decoration: BoxDecoration(

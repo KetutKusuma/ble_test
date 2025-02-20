@@ -129,6 +129,39 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
   }
 
+  Future<int?> _showClearCounterkDialog(
+      BuildContext context, String msg) async {
+    int? selectedValue = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+            title: Text(msg),
+            actionsAlignment: MainAxisAlignment.start,
+            alignment: Alignment.center,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, 1); // Return true
+                  },
+                  child: const Text('Hitungan magnet tidak diangkat'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, 2); // Return false
+                  },
+                  child: const Text('Hitungan baterai kritis'),
+                ),
+              ],
+            ));
+      },
+    );
+
+    return selectedValue;
+  }
+
   initGetDeviceStatus() async {
     try {
       BLEResponse<DeviceStatusModels> resDeviceStatus =
@@ -237,6 +270,40 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 child: Column(
                   children: [
                     SettingsContainer(
+                      title: "Bersihkan hitungan perangkat",
+                      data: "",
+                      onTap: () async {
+                        int? input = await _showClearCounterkDialog(
+                          context,
+                          "Pilih bersihkan hitungan",
+                        );
+                        if (input != null) {
+                          if (input == 1) {
+                            // magnet tidak diangkat
+                            BLEResponse resBLE = await Command()
+                                .clearNeodumiumNotRemovedCounter(bleProvider);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.devicescreen,
+                              resBLE,
+                            );
+                          }
+                          if (input == 2) {
+                            // baterai kritis
+                            BLEResponse resBLE = await Command()
+                                .clearCriticalBatteryCounter(bleProvider);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.devicescreen,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(
+                        CupertinoIcons.gobackward,
+                      ),
+                    ),
+                    SettingsContainer(
                       title: "Perangkat Tertanam",
                       data: firmwareTxt.trim(),
                       onTap: () {},
@@ -252,6 +319,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         Icons.settings_suggest_outlined,
                       ),
                     ),
+
                     SettingsContainer(
                       title: "Temperatur",
                       data: "$temperatureTxt °C",
@@ -260,29 +328,35 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         Icons.thermostat,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Baterai 1",
-                      data: "$battery1Txt volt",
-                      description: critBattery1CounterTxt == "0" ||
-                              critBattery1CounterTxt == '-'
-                          ? null
-                          : "(Jumlah hitungan kritis : $critBattery1CounterTxt)",
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.battery_5_bar_outlined,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Baterai 2",
-                      data: "$battery2Txt volt",
-                      description: critBattery2CounterTxt == "0" ||
-                              critBattery2CounterTxt == '-'
-                          ? null
-                          : "(Jumlah hitungan kritis : $critBattery2CounterTxt)",
-                      onTap: () {},
-                      icon: const Icon(
-                        Icons.battery_full,
-                      ),
+
+                    /// BATTERY
+                    Column(
+                      children: [
+                        SettingsContainer(
+                          title: "Baterai 1",
+                          data: "$battery1Txt volt",
+                          description: critBattery1CounterTxt == "0" ||
+                                  critBattery1CounterTxt == '-'
+                              ? null
+                              : "(Jumlah hitungan kritis : $critBattery1CounterTxt)",
+                          onTap: () {},
+                          icon: const Icon(
+                            Icons.battery_5_bar_outlined,
+                          ),
+                        ),
+                        SettingsContainer(
+                          title: "Baterai 2",
+                          data: "$battery2Txt volt",
+                          description: critBattery2CounterTxt == "0" ||
+                                  critBattery2CounterTxt == '-'
+                              ? null
+                              : "(Jumlah hitungan kritis : $critBattery2CounterTxt)",
+                          onTap: () {},
+                          icon: const Icon(
+                            Icons.battery_full,
+                          ),
+                        ),
+                      ],
                     ),
                     FeatureWidget(
                       visible: featureB.contains(roleUser),
@@ -307,7 +381,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     ),
                     FeatureWidget(
                       visible: featureB.contains(roleUser),
-                      title: "Berkas",
+                      title: "Berkas Gambar",
                       onTap: () {
                         if (isConnected) {
                           Navigator.push(
@@ -322,7 +396,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.insert_drive_file_outlined,
+                        Icons.image_outlined,
                       ),
                     ),
                     SettingsContainer(

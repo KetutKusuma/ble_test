@@ -46,8 +46,8 @@ class CommandCode {
   static const int radioTestAsTransmitterStart = 25;
   static const int radioTestAsTransmitterSequence = 26;
   static const int radioTestAsTransmitterStop = 27;
-  static const int commandClearNeodumiumNotRemovedCounter = 28;
-  static const int commandClearCriticalBatteryCounter = 29;
+  static const int clearNeodumiumNotRemovedCounter = 28;
+  static const int clearCriticalBatteryCounter = 29;
   static const int get = 99;
   static const int firmware = 101;
   static const int identity = 102;
@@ -1172,7 +1172,8 @@ class Command {
       List<int> buffer = [];
 
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data =
+          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -1181,7 +1182,7 @@ class Command {
       );
 
       Response responseWrite = await bleProvider.writeData(
-        buffer,
+        data,
         headerBLE,
       );
       log("response write force task capture : $responseWrite");
@@ -1206,7 +1207,8 @@ class Command {
       List<int> buffer = [];
 
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data =
+          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -1215,7 +1217,7 @@ class Command {
       );
 
       Response responseWrite = await bleProvider.writeData(
-        buffer,
+        data,
         headerBLE,
       );
       log("response write force task upload : $responseWrite");
@@ -1229,6 +1231,82 @@ class Command {
       );
     } catch (e) {
       return BLEResponse.error("Error dapat force task upload : $e");
+    }
+  }
+
+  Future<BLEResponse> clearNeodumiumNotRemovedCounter(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.clearCriticalBatteryCounter;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      List<int> data =
+          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        data,
+        headerBLE,
+      );
+      log("response write clear neodumium not removed counter : $responseWrite");
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(
+          responseWrite,
+        );
+      } else {
+        return BLEResponse.success(
+          "Sukses membersihkan hitungan neodium",
+        );
+      }
+    } catch (e) {
+      return BLEResponse.error(
+          "Error dapat membersihkan hitungan neodium tidak diangkat");
+    }
+  }
+
+  Future<BLEResponse> clearCriticalBatteryCounter(
+      BLEProvider bleProvider) async {
+    try {
+      int command = CommandCode.clearCriticalBatteryCounter;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      List<int> data =
+          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
+
+      Response responseWrite = await bleProvider.writeData(
+        data,
+        headerBLE,
+      );
+      log("response write clear critical battery counter : $responseWrite");
+      if (!responseWrite.header.status) {
+        return BLEResponse.errorFromBLE(
+          responseWrite,
+        );
+      } else {
+        return BLEResponse.success(
+          "Sukses membersihkan hitungan baterai kritis",
+        );
+      }
+    } catch (e) {
+      return BLEResponse.error(
+          "Error dapat membersihkan hitungan baterai kritis : $e");
     }
   }
 }

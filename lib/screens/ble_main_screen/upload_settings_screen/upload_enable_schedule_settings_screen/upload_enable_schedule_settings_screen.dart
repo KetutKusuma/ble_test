@@ -393,70 +393,70 @@ class _UploadEnableScheduleSettingScreenState
                               ),
                             ],
                           ),
+                          GestureDetector(
+                            onTap: () async {
+                              selectedChoice = uploadScheduleList[index].enable;
+                              uploadScheduleTxtController.text =
+                                  TimePickerHelper.formatTimeOfDay(
+                                      TimePickerHelper.minutesToTimeOfDay(
+                                          uploadScheduleList[index].schedule));
+                              UploadModel? result =
+                                  await showSetupUploadDialog(context, index);
+                              if (result != null) {
+                                // do your magic
+                                uploadScheduleList[index] = result;
+                                BLEResponse resBLE = await CommandSet()
+                                    .setUploadSchedule(
+                                        bleProvider, uploadScheduleList);
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.uploadsettings,
+                                  resBLE,
+                                  onSuccess: onRefresh,
+                                );
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                  left: 0, right: 0, top: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                  color: Colors.blue.shade600,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      spreadRadius: 1,
+                                      blurRadius: 1,
+                                      offset: const Offset(
+                                          0, 1), // changes position of shadow
+                                    ),
+                                  ]),
+                              width: MediaQuery.of(context).size.width,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.update,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(
+                                    "Ubah Jadwal dan Aktivasi Unggah ${index + 1}",
+                                    style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        selectedChoice = uploadScheduleList[index].enable;
-                        uploadScheduleTxtController.text =
-                            TimePickerHelper.formatTimeOfDay(
-                                TimePickerHelper.minutesToTimeOfDay(
-                                    uploadScheduleList[index].schedule));
-                        UploadModel? result =
-                            await showSetupUploadDialog(context, index);
-                        if (result != null) {
-                          // do your magic
-                          uploadScheduleList[index] = result;
-                          BLEResponse resBLE = await CommandSet()
-                              .setUploadSchedule(
-                                  bleProvider, uploadScheduleList);
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.uploadsettings,
-                            resBLE,
-                            onSuccess: onRefresh,
-                          );
-                        }
-                      },
-                      child: Container(
-                        margin:
-                            const EdgeInsets.only(left: 10, right: 10, top: 5),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                            color: Colors.blue.shade600,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.5),
-                                spreadRadius: 1,
-                                blurRadius: 1,
-                                offset: const Offset(
-                                    0, 1), // changes position of shadow
-                              ),
-                            ]),
-                        width: MediaQuery.of(context).size.width,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.update,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Ubah Jadwal dan Aktivasi Unggah ${index + 1}",
-                              style: GoogleFonts.readexPro(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ],

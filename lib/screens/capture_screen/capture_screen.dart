@@ -44,7 +44,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   bool isCapturing = false;
   bool isCaptureDone = false;
   Uint8List imageBytes = Uint8List(0);
-  ImageMetaData? _imageMetaData;
+  ImageMetaDataModel? _imageMetaData;
 
   @override
   void initState() {
@@ -91,6 +91,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   void dispose() {
+    imageBytes.clear();
     _connectionStateSubscription.cancel();
     super.dispose();
   }
@@ -104,27 +105,37 @@ class _CaptureScreenState extends State<CaptureScreen> {
             children: [
               SimpleDialogOption(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "ID : ${ConvertV2().arrayUint8ToStringHexAddress(_imageMetaData!.id)}",
+                      "ID : ${ConvertV2().arrayUint8ToStringHexAddress((_imageMetaData!.id ?? []))}",
                     ),
+                    const SizedBox(height: 3),
                     Text("ID Pelanggan : ${_imageMetaData!.custom}"),
+                    const SizedBox(height: 3),
                     Text("Model Meter : ${_imageMetaData!.meterModel}"),
+                    const SizedBox(height: 3),
                     Text("Nomor Seri Meter : ${_imageMetaData!.meterSN}"),
+                    const SizedBox(height: 3),
                     Text("Segel Meter : ${_imageMetaData!.meterSeal}"),
+                    const SizedBox(height: 3),
                     Text(
-                        "Tanggal Diambil : ${ConvertV2().minuteToDateTimeString(_imageMetaData!.dateTimeTaken)}"),
+                        "Tanggal Diambil : ${(_imageMetaData!.getDateTimeTakenString())}"),
+                    const SizedBox(height: 3),
                     Text(
-                      "Waktu UTC : ${ConvertV2().uint8ToUtcString(_imageMetaData!.timeUTC)}",
+                      "Waktu UTC : ${ConvertV2().uint8ToUtcString((_imageMetaData!.timeUTC ?? 0))}",
                     ),
+                    const SizedBox(height: 3),
                     Text(
-                      "Tegangan Baterai 1 : ${_imageMetaData!.voltageBattery1.toStringAsFixed(2)} Volt",
+                      "Tegangan Baterai 1 : ${(_imageMetaData!.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
                     ),
+                    const SizedBox(height: 3),
                     Text(
-                      "Tegangan Baterai 2 : ${_imageMetaData!.voltageBattery2.toStringAsFixed(2)} Volt",
+                      "Tegangan Baterai 2 : ${(_imageMetaData!.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
                     ),
+                    const SizedBox(height: 3),
                     Text(
-                      "Suhu : ${_imageMetaData!.temperature.toStringAsFixed(2)}°C",
+                      "Suhu : ${(_imageMetaData!.temperature ?? 0).toStringAsFixed(2)}°C",
                     ),
                   ],
                 ),
@@ -166,12 +177,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
     // log("isCapture = $isCaptureDone");
     return WillPopScope(
       onWillPop: () async {
-        return true;
-        // if (isCaptureDone) {
-        //   return true;
-        // } else {
-        //   return false;
-        // }
+        // return true;
+        if (!isCapturing) {
+          return true;
+        } else {
+          return false;
+        }
       },
       child: ScaffoldMessenger(
         key: Snackbar.snackBarCapture,
@@ -257,7 +268,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                 onPressed: () async {
                                   String datetimenow =
                                       DateTime.now().toString();
-                                  String fileName = "TOPPI_${datetimenow}.png";
+                                  String fileName = "TOPPI_$datetimenow.png";
                                   String hasil =
                                       await saveImage(imageBytes, fileName);
                                   if (hasil != "") {
@@ -274,7 +285,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                     );
                                   }
                                 },
-                                child: Icon(
+                                child: const Icon(
                                   CupertinoIcons.arrow_down_doc,
                                   size: 35,
                                 ),
@@ -338,7 +349,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                   isCaptureDone = true;
                                   isCapturing = false;
                                   Map<String, dynamic> dataParse =
-                                      ImageMetaDataParse.parse(data.data!);
+                                      ImageMetaDataModelParse.parse(data.data!);
 
                                   imageBytes = dataParse["img"];
                                   _imageMetaData = dataParse['metaData'];
@@ -372,7 +383,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                         15), // Set the corner radius
                                   ),
                                 ),
-                                onPressed: () {},
+                                onPressed: () {
+                                  _showMetaDataImageDialog(context);
+                                },
                                 child: const Icon(
                                   Icons.info_outline,
                                   size: 35,

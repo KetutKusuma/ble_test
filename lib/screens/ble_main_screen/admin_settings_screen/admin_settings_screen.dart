@@ -1141,7 +1141,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.yellow.shade800,
+                            color: const Color(0xFFFFB200),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           width: MediaQuery.of(context).size.width,
@@ -1197,7 +1197,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.amber.shade800,
+                            color: const Color(0xFFEB5B00),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           width: MediaQuery.of(context).size.width,
@@ -1272,7 +1272,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade700,
+                            color: const Color(0xFFE52020),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           width: MediaQuery.of(context).size.width,
@@ -1281,7 +1281,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const Icon(
-                                Icons.flip_camera_android,
+                                Icons.factory_outlined,
                                 color: Colors.white,
                               ),
                               const SizedBox(
@@ -1336,7 +1336,7 @@ class SettingsContainer extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(top: 7, left: 10, right: 10),
+        margin: const EdgeInsets.only(top: 6, left: 10, right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(

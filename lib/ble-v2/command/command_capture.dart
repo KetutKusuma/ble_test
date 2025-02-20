@@ -9,6 +9,8 @@ import 'package:ble_test/ble-v2/utils/crypto.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:ble_test/utils/global.dart';
 
+/// this command capture and explorer (image and log explorer)
+/// and delete image file
 class CommandCapture {
   static final ivGlobal = InitConfig.data().IV;
   static final keyGlobal = InitConfig.data().KEY;

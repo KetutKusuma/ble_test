@@ -28,7 +28,7 @@ class _StorageScreenState extends State<StorageScreen> {
       _connectionStateSubscription;
 
   final RefreshController _refreshController = RefreshController();
-  String getTotalBytesTxt = "-", getUsedBytesTxt = "-";
+  String getTotalBytesTxt = "-", getUsedBytesTxt = "-", getFreeBytesTxt = "-";
 
   TextEditingController controller = TextEditingController();
   late SimpleFontelicoProgressDialog _progressDialog;
@@ -100,6 +100,9 @@ class _StorageScreenState extends State<StorageScreen> {
         log("data used : ${storageResponse.data!.used}");
         getTotalBytesTxt = formatBytes(storageResponse.data!.total);
         getUsedBytesTxt = formatBytes(storageResponse.data!.used);
+        getFreeBytesTxt = formatBytes(
+            storageResponse.data!.total - storageResponse.data!.used);
+
         setState(() {});
       }
     } catch (e) {
@@ -130,7 +133,7 @@ class _StorageScreenState extends State<StorageScreen> {
       key: Snackbar.snackBarKeyStorageScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Storage'),
+          title: const Text('Penyimpanan'),
           elevation: 0,
         ),
         body: SmartRefresher(
@@ -162,6 +165,14 @@ class _StorageScreenState extends State<StorageScreen> {
                             Icons.storage_outlined,
                           ),
                         ),
+                        SettingsContainer(
+                          title: "Sisa Penyimpanan",
+                          data: getFreeBytesTxt,
+                          onTap: () {},
+                          icon: const Icon(
+                            Icons.storage_rounded,
+                          ),
+                        )
                       ],
                     ),
                   ),

@@ -1,76 +1,91 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/crypto.dart';
 import 'package:intl/intl.dart';
 
 const int MARKER = 255;
 
-class ImageMetaData {
-  List<int> id;
-  int dateTimeTaken;
-  double temperature;
-  double voltageBattery1;
-  double voltageBattery2;
-  String meterModel;
-  String meterSN;
-  String meterSeal;
-  String custom;
-  int timeUTC;
+class ImageMetaDataModel {
+  String? firmware;
+  String? version;
+  List<int>? id;
+  int? dateTimeTaken;
+  int? timeUTC;
+  double? temperature;
+  double? voltageBattery1;
+  double? voltageBattery2;
+  int? adjustmentRotation;
+  String? meterModel;
+  String? meterSN;
+  String? meterSeal;
+  String? custom;
 
-  ImageMetaData({
-    required this.id,
-    required this.dateTimeTaken,
-    required this.temperature,
-    required this.voltageBattery1,
-    required this.voltageBattery2,
-    required this.meterModel,
-    required this.meterSN,
-    required this.meterSeal,
-    required this.custom,
-    required this.timeUTC,
+  ImageMetaDataModel({
+    this.firmware,
+    this.version,
+    this.id,
+    this.dateTimeTaken,
+    this.temperature,
+    this.voltageBattery1,
+    this.voltageBattery2,
+    this.adjustmentRotation,
+    this.meterModel,
+    this.meterSN,
+    this.meterSeal,
+    this.custom,
+    this.timeUTC,
   });
 
   String getIDString() {
-    return id.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
+    if (id == null) return '';
+    return id!.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
   }
 
   String getDateTimeTakenString() {
-    DateTime dateTime =
-        DateTime.fromMillisecondsSinceEpoch(dateTimeTaken * 1000);
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+        (dateTimeTaken! + 946659600) * 1000);
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 
   String getTemperatureString() {
-    return '${temperature.toStringAsFixed(1)}°C';
+    if (temperature == null) return '-';
+    return '${temperature!.toStringAsFixed(1)}°C';
   }
 
   String getVoltageBattery1String() {
-    return '${voltageBattery1.toStringAsFixed(2)} Volt';
+    if (voltageBattery1 == null) return '-';
+    return '${voltageBattery1!.toStringAsFixed(2)} Volt';
   }
 
   String getVoltageBattery2String() {
-    return '${voltageBattery2.toStringAsFixed(2)} Volt';
+    if (voltageBattery2 == null) return '-';
+    return '${voltageBattery2!.toStringAsFixed(2)} Volt';
   }
 
   String getMeterModelString() {
-    return meterModel.trim().isEmpty ? '-' : meterModel;
+    if (meterModel == null) return '-';
+    return meterModel!.trim().isEmpty ? '-' : meterModel!;
   }
 
   String getMeterSNString() {
-    return meterSN.trim().isEmpty ? '-' : meterSN;
+    if (meterSN == null) return '-';
+    return meterSN!.trim().isEmpty ? '-' : meterSN!;
   }
 
   String getMeterSealString() {
-    return meterSeal.trim().isEmpty ? '-' : meterSeal;
+    if (meterSeal == null) return '-';
+    return meterSeal!.trim().isEmpty ? '-' : meterSeal!;
   }
 
   String getCustomString() {
-    return custom.trim().isEmpty ? '-' : custom;
+    if (custom == null) return '-';
+    return custom!.trim().isEmpty ? '-' : custom!;
   }
 }
 
-class ImageMetaDataParse {
+class ImageMetaDataModelParse {
   static Map<String, dynamic> parse(
     List<int> data,
   ) {
@@ -126,7 +141,6 @@ class ImageMetaDataParse {
       4,
       14
     ];
-    log("#@#@ data : $data");
     try {
       List<int> temp2 = CryptoUtilsV2.aesDecrypt(
         Uint8List.fromList(data),
@@ -167,56 +181,54 @@ class ImageMetaDataParse {
           'metaData': null,
         };
       } else if (version == 2) {
-        log("## sampai sini kahh ?");
+        // [0:1]   marker begin
+        // [1:5]   id
+        // [6:4]   date time taken
+        // [10:4]  temperature
+        // [14:4]  voltage battery1
+        // [18:4]  voltage battery2
+        // [22:16] INDEX_METER_MODEL
+        // [38:16] INDEX_METER_SN
+        // [54:16] INDEX_METER_SEAL
+        // [70:32] INDEX_CUSTOM
+        // [102:1] INDEX_TIME_UTC
+        // [103:2] start index of meta data
+        // [105:1] meta data version
+        // [106:1] marker end
         Uint8List metaData = temp.sublist(startIndex);
-        log("## sampai sini kahh ??");
         Uint8List img = temp.sublist(0, startIndex);
-        log("## sampai sini kahh ???");
         int index = 0;
 
         List<int> id = metaData.sublist(0, 5);
-        log("## sampai sini kahh ????");
         index += 5;
         int dateTimeTaken =
             metaData.buffer.asByteData().getUint32(index, Endian.little);
-        log("## sampai sini kahh ?????");
         index += 4;
         double temperature =
             metaData.buffer.asByteData().getFloat32(index, Endian.little);
-        log("## sampai sini kahh ??????");
         index += 4;
         double voltageBattery1 =
             metaData.buffer.asByteData().getFloat32(index, Endian.little);
-        log("## sampai sini kahh ???????");
         index += 4;
         double voltageBattery2 =
             metaData.buffer.asByteData().getFloat32(index, Endian.little);
-        log("## sampai sini kahh 4");
-        log("## sampai sini kahh 5");
         index += 4;
         String meterModel =
             utf8.decode(metaData.sublist(index, index + 16)).trim();
-        log("## sampai sini kahh 6");
         index += 16;
         String meterSN =
             utf8.decode(metaData.sublist(index, index + 16)).trim();
-        log("## sampai sini kahh 7");
         index += 16;
         String meterSeal =
             utf8.decode(metaData.sublist(index, index + 16)).trim();
-        log("hasil lala1 : ${metaData.sublist(index, index + 16)}");
         index += 16;
         Uint8List lala = metaData.sublist(index, index + 32);
 
-        log("hasil lala : $lala");
-
         String custom = utf8.decode(lala, allowMalformed: true).trim();
-        log("## sampai sini kahh 9");
         index += 32;
         int timeUTC = metaData[index];
-        log("## sampai sini kahh 10");
 
-        ImageMetaData meta = ImageMetaData(
+        ImageMetaDataModel meta = ImageMetaDataModel(
           id: id,
           dateTimeTaken: dateTimeTaken,
           temperature: temperature,
@@ -227,6 +239,77 @@ class ImageMetaDataParse {
           meterSeal: meterSeal,
           custom: custom,
           timeUTC: timeUTC,
+        );
+        return {
+          'img': img,
+          'metaData': meta,
+        };
+      } else if (version == 3) {
+        // tambahkan meta data:
+        // [0:1]   marker begin
+        // [1:16]  firmware
+        // [17:8]  version
+        // [25:5]  id
+        // [30:4]  date time
+        // [34:1]  time utc
+        // [35:4]  temperature
+        // [39:4]  voltage battery1
+        // [42:4]  voltage battery2
+        // [46:2]  adjust image rotation
+        // [48:16] INDEX_METER_MODEL
+        // [64:16] INDEX_METER_SN
+        // [80:16] INDEX_METER_SEAL
+        // [96:32] INDEX_CUSTOM
+        // [128:2] start index of meta data
+        // [130:1] meta data version
+        // [131:1] marker end
+        Uint8List metaData = temp.sublist(startIndex);
+        Uint8List img = temp.sublist(0, startIndex);
+        int index = 0;
+
+        String firmware =
+            ConvertV2().bufferToStringUsingIndex(metaData, index, 16);
+        index += 16;
+        String version =
+            ConvertV2().bufferToStringUsingIndex(metaData, index, 8);
+        index += 8;
+        List<int> id = metaData.sublist(index, index + 5);
+        index += 5;
+        int dateTime = ConvertV2().bufferToUint32(metaData, index);
+        index += 4;
+        int timeUTC = ConvertV2().bufferToUint8(metaData, index);
+        index += 1;
+        double temperature = ConvertV2().bufferToFloat32(metaData, index);
+        index += 4;
+        double voltageBattery1 = ConvertV2().bufferToFloat32(metaData, index);
+        index += 4;
+        double voltageBattery2 = ConvertV2().bufferToFloat32(metaData, index);
+        index += 4;
+        int adjustmentRotation = ConvertV2().bufferToUint16(metaData, index);
+        index += 2;
+        String meterModel = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String meterSN = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String meterSeal = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String custom = ConvertV2().bufferToStringUTF8(metaData, index, 32);
+        index += 32;
+
+        ImageMetaDataModel meta = ImageMetaDataModel(
+          firmware: firmware,
+          version: version,
+          id: id,
+          dateTimeTaken: dateTime,
+          timeUTC: timeUTC,
+          temperature: temperature,
+          voltageBattery1: voltageBattery1,
+          voltageBattery2: voltageBattery2,
+          adjustmentRotation: adjustmentRotation,
+          meterModel: meterModel,
+          meterSN: meterSN,
+          meterSeal: meterSeal,
+          custom: custom,
         );
         return {
           'img': img,

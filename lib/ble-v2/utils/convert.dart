@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:intl/intl.dart' as intl;
@@ -123,6 +124,32 @@ class ConvertV2 {
 
   String bufferToString(List<int> buffer) {
     return String.fromCharCodes(buffer);
+  }
+
+  String bufferToStringUsingIndex(
+      List<int> buffer, int startIndex, int length) {
+    int endIndex = buffer.length;
+    if (length > 0) {
+      endIndex = startIndex + length;
+    }
+    return String.fromCharCodes(buffer.sublist(startIndex, endIndex));
+  }
+
+  String bufferToStringUTF8(List<int> listData, int index, int length) {
+    List<int> lala = listData
+        .sublist(
+          index,
+          index + length,
+        )
+        .toList();
+
+    lala.removeWhere((element) => element == 0);
+    if (lala.isEmpty) {
+      return "";
+    }
+    String custom = utf8.decode(lala).trim();
+
+    return custom;
   }
 
   bool bufferToBool(List<int> buffer, int startIndex) {
