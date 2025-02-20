@@ -126,7 +126,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

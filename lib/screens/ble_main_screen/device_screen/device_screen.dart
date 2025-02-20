@@ -6,7 +6,6 @@ import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/device_status_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
-import 'package:ble_test/screens/ble_main_screen/device_screen/file_screen/file_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/storage_screen/storage_screen.dart';
 import 'package:ble_test/utils/global.dart';
 import 'package:flutter/cupertino.dart';
@@ -115,7 +114,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 
@@ -379,26 +378,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         Icons.sd_storage_outlined,
                       ),
                     ),
-                    FeatureWidget(
-                      visible: featureB.contains(roleUser),
-                      title: "Berkas Gambar",
-                      onTap: () {
-                        if (isConnected) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FilesScreen(device: device),
-                            ),
-                          );
-                        } else {
-                          Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.image_outlined,
-                      ),
-                    ),
+
                     SettingsContainer(
                       title: "Waktu",
                       data: timeTxt,

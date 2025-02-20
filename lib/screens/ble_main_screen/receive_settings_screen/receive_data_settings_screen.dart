@@ -90,7 +90,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

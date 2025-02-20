@@ -9,18 +9,18 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-import '../../admin_settings_screen/admin_settings_screen.dart';
+import '../admin_settings_screen/admin_settings_screen.dart';
 
-class FilesScreen extends StatefulWidget {
+class ImageExplorerScreen extends StatefulWidget {
   final BluetoothDevice device;
 
-  const FilesScreen({super.key, required this.device});
+  const ImageExplorerScreen({super.key, required this.device});
 
   @override
-  State<FilesScreen> createState() => _FilesScreenState();
+  State<ImageExplorerScreen> createState() => _ImageExplorerScreenState();
 }
 
-class _FilesScreenState extends State<FilesScreen> {
+class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
   late BLEProvider bleProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
@@ -74,7 +74,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

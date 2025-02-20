@@ -86,7 +86,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

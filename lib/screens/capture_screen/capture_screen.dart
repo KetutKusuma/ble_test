@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
-import 'package:ble_test/ble-v2/command/command_capture.dart';
+import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
@@ -40,7 +40,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   Timer? debounceTimer;
 
   // v2
-  final _commandCapture = CommandCapture();
+  final _CommandImageFile = CommandImageFile();
   bool isCapturing = false;
   bool isCaptureDone = false;
   Uint8List imageBytes = Uint8List(0);
@@ -311,8 +311,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             setState(() {});
                             int bytePerChunk = 255;
                             try {
-                              BLEResponse<TestCaptureModel> bleResponse =
-                                  await _commandCapture.testCapture(
+                              BLEResponse<ToppiFileModel> bleResponse =
+                                  await _CommandImageFile.testCapture(
                                       bleProvider, bytePerChunk);
                               log("test capture : $bleResponse");
 
@@ -331,7 +331,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                     success: false);
                               } else {
                                 BLEResponse<List<int>> data =
-                                    await _commandCapture.dataBufferTransmit(
+                                    await _CommandImageFile.dataBufferTransmit(
                                   bleProvider,
                                   bleResponse.data!,
                                   bytePerChunk,

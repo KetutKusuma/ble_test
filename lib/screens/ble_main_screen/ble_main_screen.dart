@@ -9,6 +9,7 @@ import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/device_screen/device_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/image_explorer_screen/image_explorer_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/meta_data_settings_screen/meta_data_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/receive_settings_screen/receive_data_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/set_password_screen/set_password_screen.dart';
@@ -560,6 +561,26 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     },
                     icon: const Icon(
                       Icons.task_outlined,
+                    ),
+                  ),
+                  FeatureWidget(
+                    visible: featureB.contains(roleUser),
+                    title: "Berkas Gambar",
+                    onTap: () {
+                      if (isConnected) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ImageExplorerScreen(device: device),
+                          ),
+                        );
+                      } else {
+                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.image_outlined,
                     ),
                   ),
                   FeatureWidget(

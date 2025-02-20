@@ -109,7 +109,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

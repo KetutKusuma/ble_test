@@ -115,7 +115,7 @@ class _UploadEnableScheduleSettingScreenState
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

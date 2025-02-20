@@ -70,7 +70,7 @@ class _StorageScreenState extends State<StorageScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 

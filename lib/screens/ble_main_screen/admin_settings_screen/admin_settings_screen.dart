@@ -8,6 +8,7 @@ import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -196,7 +197,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   void _showLoading() {
     _progressDialog.show(
-      message: "Please wait...",
+      message: "Harap Tunggu...",
     );
   }
 
@@ -1101,6 +1102,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         icon: const Icon(
                           Icons.print_outlined,
                         ),
+                      ),
+                    ),
+                    FeatureWidget(
+                      title: "Log Explorer",
+                      onTap: () {},
+                      icon: const Icon(
+                        Icons.history_edu_rounded,
                       ),
                     ),
                     const SizedBox(
