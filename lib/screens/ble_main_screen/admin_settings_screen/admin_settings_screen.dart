@@ -8,6 +8,7 @@ import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/log_explorer_screen/log_explorer_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/global.dart';
@@ -1105,8 +1106,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                     ),
                     FeatureWidget(
-                      title: "Log Explorer",
-                      onTap: () {},
+                      title: "Catatan Sistem",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LogExplorerScreen(
+                              device: device,
+                            ),
+                          ),
+                        );
+                      },
                       icon: const Icon(
                         Icons.history_edu_rounded,
                       ),

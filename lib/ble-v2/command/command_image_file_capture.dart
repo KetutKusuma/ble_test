@@ -398,17 +398,13 @@ class CommandImageFile {
   }
 
   Future<BLEResponse<ToppiFileModel>> logFilePrepareTransmit(
-      BLEProvider bleProvider,
-      int flagDir,
-      List<int> fileName,
-      int bytePerChunk) async {
+      BLEProvider bleProvider, List<int> fileName, int bytePerChunk) async {
     try {
       int command = CommandCode.logFilePrepareTransmit;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2.addUint8(flagDir, buffer);
       messageV2.addArrayOfUint8(fileName, buffer);
       messageV2.addUint8(bytePerChunk, buffer);
 
