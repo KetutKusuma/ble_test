@@ -73,6 +73,12 @@ class _FlutterBlueAppState extends State<FlutterBlueApp> {
         scaffoldBackgroundColor: const Color.fromARGB(255, 246, 246, 255),
         textTheme: GoogleFonts.readexProTextTheme(),
       ),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          child: child!,
+        );
+      },
       debugShowCheckedModeBanner: false,
       color: Colors.lightBlue,
       home: screen,

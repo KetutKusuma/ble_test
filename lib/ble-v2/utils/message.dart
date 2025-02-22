@@ -189,7 +189,7 @@ class MessageV2 {
   Future<bool> parse(
       List<int> data, List<int> key, List<int> iv, List<int> buffer) async {
     try {
-      log("datanya yg mau di parse : $data");
+      // log("datanya yg mau di parse : $data");
       buffer.clear();
       buffer.addAll(CryptoUtilsV2.aesDecrypt(data, key, iv));
       if (buffer.length < 4) {

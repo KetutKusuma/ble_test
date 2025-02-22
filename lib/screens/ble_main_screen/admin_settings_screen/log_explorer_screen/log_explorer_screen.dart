@@ -3,19 +3,17 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
+import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
 import 'package:ble_test/ble-v2/model/sub_model/explorer/log_explorer.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/snackbar.dart';
-import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -40,11 +38,9 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  bool isGetting = true;
   late SimpleFontelicoProgressDialog _progressDialog;
   CommandImageFile commandImageFile = CommandImageFile();
   List<LogExplorerModel> listLogExplorer = [];
-  String textLog = "";
 
   @override
   void initState() {
@@ -162,7 +158,7 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
   Future getBufferDataLogFile(List<int> fileName, String fileNameString) async {
     try {
       _progressDialog.show(
-        message: "Tunggu sedang mengambil data log ...",
+        message: "Tunggu sedang mengambil data catatan ...",
         width: MediaQuery.of(context).size.width / 2,
         textStyle: const TextStyle(
           color: Colors.white,
@@ -239,7 +235,7 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
                   const SizedBox(
                     height: 10,
                   ),
-                  Container(
+                  SizedBox(
                     height: MediaQuery.of(context).size.height * 0.8,
                     child: SingleChildScrollView(
                       child: Text(
@@ -268,14 +264,16 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
                           DateTime dateTime = DateTime.now();
                           String datetimenow =
                               DateFormat('yyyy-MM-dd_HH#mm').format(dateTime);
-                          String fileName = "log_${datetimenow}.txt";
-                          // String hasil = await saveImage(dataGzip, fileName);
-                          String pathDownload = await ExternalPath
-                              .getExternalStoragePublicDirectory(
-                                  ExternalPath.DIRECTORY_DOWNLOADS);
-
-                          String path = "$pathDownload/$fileName";
-                          await saveToDownload(dataGzip, fileName);
+                          String fileName = "log_$datetimenow.txt";
+                          if (mounted) {
+                            Navigator.pop(context);
+                            await DownloadUtils.saveToDownload(
+                              context,
+                              ScreenSnackbar.logexplorerscreen,
+                              dataGzip,
+                              fileName,
+                            );
+                          }
                         } catch (e) {
                           log("error : $e");
                           Snackbar.show(
@@ -320,62 +318,12 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
     }
   }
 
-  /// TEST
-  Future saveToDownload(Uint8List data, String fileName) async {
-    try {
-      if (mounted) {
-        Navigator.pop(context);
-      }
-      // Minta izin storage
-      if (await Permission.storage.request().isDenied) {
-        Snackbar.show(
-          ScreenSnackbar.logexplorerscreen,
-          "Izin penyimpanan ditolak",
-          success: false,
-        );
-        return null;
-      }
-
-      // Dapatkan path folder Download
-      String path = await ExternalPath.getExternalStoragePublicDirectory(
-          ExternalPath.DIRECTORY_DOWNLOADS);
-
-      // buat folder
-      Directory customDir = Directory("$path/Toppi");
-      if (!customDir.existsSync()) {
-        customDir.createSync(recursive: true);
-      }
-
-      String filePath = "${customDir.path}/$fileName";
-
-      // Simpan file di folder Download
-      File file = File(filePath);
-      await file.writeAsBytes(data);
-
-      bool ex = await file.exists();
-
-      if (ex) {
-        Snackbar.show(
-          ScreenSnackbar.logexplorerscreen,
-          "Berkas disimpan di: $filePath",
-          success: true,
-        );
-      } else {
-        Snackbar.show(
-          ScreenSnackbar.logexplorerscreen,
-          "Berkas gagal disimpan di: $filePath",
-          success: false,
-        );
-      }
-      return;
-    } catch (e) {
-      Snackbar.show(
-        ScreenSnackbar.logexplorerscreen,
-        "Gagal menyimpan gambar : $e",
-        success: false,
-      );
-      return;
-    }
+  Future<void> onRefresh() async {
+    setState(() {
+      listLogExplorer.clear();
+      initGetLogExplorer();
+    });
+    _refreshController.refreshCompleted();
   }
 
   @override
@@ -389,104 +337,114 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
             "Daftar Catatan",
           ),
         ),
-        body: CustomScrollView(
-          slivers: [
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      getBufferDataLogFile(listLogExplorer[index].filename,
-                          listLogExplorer[index].getFilenameString());
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.grey,
+        body: SmartRefresher(
+          controller: _refreshController,
+          onRefresh: onRefresh,
+          child: CustomScrollView(
+            slivers: [
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        getBufferDataLogFile(listLogExplorer[index].filename,
+                            listLogExplorer[index].getFilenameString());
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      margin: const EdgeInsets.only(top: 8, left: 5, right: 5),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 8),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.radio_button_checked,
-                            color: Colors.grey.shade700,
-                          ),
-                          const SizedBox(
-                            width: 7,
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  listLogExplorer[index].getFilenameString(),
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                                const SizedBox(
-                                  height: 5,
-                                ),
-                                Row(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.calendar_today_outlined,
-                                          size: 15,
-                                        ),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: Text(
-                                            listLogExplorer[index]
-                                                .getDateString(),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.insert_drive_file_outlined,
-                                          size: 15,
-                                        ),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: Text(
-                                            listLogExplorer[index]
-                                                .getFileSizeString(),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                )
-                              ],
+                        margin:
+                            const EdgeInsets.only(top: 8, left: 5, right: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.radio_button_checked,
+                              color: Colors.grey.shade700,
                             ),
-                          ),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                          ),
-                        ],
+                            const SizedBox(
+                              width: 7,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    listLogExplorer[index].getFilenameString(),
+                                    style: const TextStyle(fontSize: 15),
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Row(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.calendar_today_outlined,
+                                            size: 15,
+                                          ),
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              listLogExplorer[index]
+                                                  .getDateString(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.insert_drive_file_outlined,
+                                            size: 15,
+                                          ),
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              listLogExplorer[index]
+                                                  .getFileSizeString(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-                childCount: listLogExplorer.length,
+                    );
+                  },
+                  childCount: listLogExplorer.length,
+                ),
               ),
-            )
-          ],
+              const SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 15,
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

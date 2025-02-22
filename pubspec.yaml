@@ -51,6 +51,7 @@ dependencies:
   intl: ^0.18.1
   path_provider: ^2.1.1
   external_path: ^2.0.1
+  http: ^0.13.6
 
 dev_dependencies:
   flutter_test:

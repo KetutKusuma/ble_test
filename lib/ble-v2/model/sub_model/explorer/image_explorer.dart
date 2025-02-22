@@ -1,12 +1,12 @@
 import 'package:intl/intl.dart';
 
-class Model {
+class ImageExplorerModel {
   DateTime dateTime;
   List<int> filename;
   int dirIndex;
   int fileSize;
 
-  Model({
+  ImageExplorerModel({
     required this.dateTime,
     required this.filename,
     required this.dirIndex,
@@ -18,7 +18,7 @@ class Model {
   }
 
   String getDirIndexString() {
-    return dirIndex == 1 ? '/near/' : '/img/';
+    return dirIndex == 1 ? 'Gambar Toppi lain' : 'Gambar Toppi ini';
   }
 
   String getFilenameString() {
@@ -43,7 +43,7 @@ class Model {
     return "${fileSize.toStringAsFixed(2)} ${suffixes[i]}";
   }
 
-  static void sort(List<Model> models, bool ascending) {
+  static void sort(List<ImageExplorerModel> models, bool ascending) {
     models.sort((a, b) => ascending
         ? a.dateTime.compareTo(b.dateTime)
         : b.dateTime.compareTo(a.dateTime));

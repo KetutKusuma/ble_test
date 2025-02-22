@@ -186,6 +186,13 @@ class ConvertV2 {
         (buffer[startIndex + 3] << 24);
   }
 
+  int bufferToUint32BigEndian(List<int> buffer, int startIndex) {
+    return (buffer[startIndex + 3]) |
+        (buffer[startIndex + 2] << 8) |
+        (buffer[startIndex + 1] << 16) |
+        (buffer[startIndex] << 24);
+  }
+
   double bufferToFloat32(List<int> buffer, int startIndex) {
     final byteData = ByteData.sublistView(
         Uint8List.fromList(buffer), startIndex, startIndex + 4);
@@ -197,6 +204,30 @@ class ConvertV2 {
       return -((255 - i + 1));
     }
     return i;
+  }
+
+  void insertInt8ToBuffer(int data, Uint8List buffer, int startIndex) {
+    buffer[startIndex] = data & 0xFF;
+  }
+
+  void insertUint16ToBuffer(int data, Uint8List buffer, int startIndex) {
+    buffer[startIndex] = data & 0x00FF;
+    buffer[startIndex + 1] = (data >> 8) & 0xFF;
+  }
+
+  void insertUint32ToBuffer(int data, List<int> buffer, int startIndex) {
+    buffer[startIndex] = data & 0x000000FF;
+    buffer[startIndex + 1] = (data >> 8) & 0x0000FF;
+    buffer[startIndex + 2] = (data >> 16) & 0x00FF;
+    buffer[startIndex + 3] = (data >> 24) & 0xFF;
+  }
+
+  void insertFloat32ToBuffer(double data, Uint8List buffer, int startIndex) {
+    var byteData = ByteData(4);
+    byteData.setFloat32(0, data, Endian.little);
+    for (int i = 0; i < 4; i++) {
+      buffer[startIndex + i] = byteData.getUint8(i);
+    }
   }
 
   bool getBit(int data, int index) {

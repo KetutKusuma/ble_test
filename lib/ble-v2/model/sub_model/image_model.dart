@@ -1,18 +1,24 @@
 class ImageModel {
-  int allImage;
-  int allUnsent;
-  int selfAll;
-  int selfUnsent;
-  int nearAll;
-  int nearUnsent;
+  int? allImage;
+  int? allSent;
+  int? allUnsent;
+  int? selfAll;
+  int? selfSent;
+  int? selfUnsent;
+  int? nearAll;
+  int? nearSent;
+  int? nearUnsent;
 
   ImageModel({
-    required this.allImage,
-    required this.allUnsent,
-    required this.selfAll,
-    required this.selfUnsent,
-    required this.nearAll,
-    required this.nearUnsent,
+    this.allImage,
+    this.allSent,
+    this.allUnsent,
+    this.selfAll,
+    this.selfSent,
+    this.selfUnsent,
+    this.nearAll,
+    this.nearSent,
+    this.nearUnsent,
   });
 
   @override

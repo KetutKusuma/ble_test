@@ -6,6 +6,9 @@ class InitConfig {
   final List<int> SALT1;
   final List<int> SALT2;
   final List<int> SALT3;
+  final List<int> md5Salt;
+  final List<int> keyAlpha;
+  final List<int> ivAlpha;
 
   InitConfig({
     required this.KEY,
@@ -13,6 +16,9 @@ class InitConfig {
     required this.SALT1,
     required this.SALT2,
     required this.SALT3,
+    required this.md5Salt,
+    required this.keyAlpha,
+    required this.ivAlpha,
   });
 
   factory InitConfig.data() {
@@ -165,6 +171,89 @@ class InitConfig {
       60,
       203,
       162
+    ], md5Salt: [
+      62,
+      99,
+      129,
+      39,
+      81,
+      53,
+      144,
+      201,
+      2,
+      108,
+      21,
+      55,
+      3,
+      86,
+      132,
+      98,
+      50,
+      100,
+      98,
+      11,
+      78,
+      80,
+      37,
+      165,
+      0,
+      190,
+      58,
+      206,
+      2,
+      61,
+      38,
+      178
+    ], keyAlpha: [
+      149,
+      166,
+      176,
+      42,
+      217,
+      111,
+      235,
+      140,
+      228,
+      62,
+      243,
+      217,
+      69,
+      126,
+      159,
+      243,
+      214,
+      53,
+      76,
+      5,
+      146,
+      78,
+      78,
+      139,
+      127,
+      179,
+      168,
+      188,
+      100,
+      94,
+      41,
+      21
+    ], ivAlpha: [
+      248,
+      142,
+      14,
+      144,
+      102,
+      122,
+      162,
+      91,
+      27,
+      177,
+      4,
+      82,
+      238,
+      178,
+      4,
+      14
     ]);
   }
 }

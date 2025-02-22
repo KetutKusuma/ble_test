@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/image_model.dart';
+import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/image_explorer_screen/list_image_explorer_screen.dart/list_image_explorer_screen.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -28,11 +30,15 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
       _connectionStateSubscription;
 
   final RefreshController _refreshController = RefreshController();
-  String dirNearTxt = "-",
-      dirNearUnsetTxt = "-",
-      dirImageTxt = "-",
-      dirImageUnsetTxt = "-",
-      dirLogTxt = "-";
+  String dirAllTxt = "-",
+      dirAllSentTxt = "-",
+      dirAllUnsentTxt = "-",
+      dirNearAllTxt = "-",
+      dirNearSentTxt = "-",
+      dirNearUnsentTxt = "-",
+      dirImageAllTxt = "-",
+      dirImageSentTxt = "-",
+      dirImageUnsentTxt = "-";
 
   TextEditingController controller = TextEditingController();
   late SimpleFontelicoProgressDialog _progressDialog;
@@ -94,10 +100,12 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
       _progressDialog.hide();
       if (res.status) {
         setState(() {
-          dirNearTxt = res.data!.nearAll.toString();
-          dirNearUnsetTxt = res.data!.nearUnsent.toString();
-          dirImageTxt = res.data!.selfAll.toString();
-          dirImageUnsetTxt = res.data!.selfUnsent.toString();
+          dirAllTxt = res.data!.allImage.toString();
+          dirAllSentTxt = res.data!.allSent.toString();
+          dirNearSentTxt = res.data!.nearAll.toString();
+          dirNearUnsentTxt = res.data!.nearUnsent.toString();
+          dirImageSentTxt = res.data!.selfAll.toString();
+          dirImageUnsentTxt = res.data!.selfUnsent.toString();
           // dirLogTxt = res.data!.dirLogTxt!;
         });
       } else {
@@ -116,7 +124,7 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
       key: Snackbar.snackBarKeyFileScreen,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Files'),
+          title: const Text('Berkas Gambar'),
           elevation: 0,
         ),
         body: SmartRefresher(
@@ -132,44 +140,167 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                         vertical: 5.0, horizontal: 0),
                     child: Column(
                       children: [
-                        SettingsContainer(
-                          title: "Gambar Toppi Lain",
-                          data: dirNearTxt,
-                          onTap: () {},
+                        FeatureWidget(
+                          title: "Semua Gambar",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.allFile;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Semua Gambar",
+                                    device: device),
+                              ),
+                            );
+                          },
                           icon: const Icon(
                             Icons.folder_open,
                           ),
                         ),
-                        SettingsContainer(
-                          title: "Gambar Toppi Lain Belum Terkirim",
-                          data: dirNearUnsetTxt,
-                          onTap: () {},
-                          icon: const Icon(Icons.folder),
+                        FeatureWidget(
+                          title: "Semua Gambar Terkirim",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.allSent;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Semua Gambar Terkirim",
+                                    device: device),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.folder_open,
+                          ),
                         ),
-                        SettingsContainer(
-                          title: "Gambar Toppi Ini",
-                          data: dirImageTxt,
-                          onTap: () {},
+                        FeatureWidget(
+                          title: "Semua Gambar Belum Terkirim",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.allUnsent;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Semua Gambar Belum Terkirim",
+                                    device: device),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.folder_open,
+                          ),
+                        ),
+                        FeatureWidget(
+                          title: "Semua Gambar Toppi Ini",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.imgAll;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Semua Gambar Toppi Ini",
+                                    device: device),
+                              ),
+                            );
+                          },
                           icon: const Icon(
                             Icons.folder_special_outlined,
                           ),
                         ),
-                        SettingsContainer(
-                          title: "Gambar Toppi Ini Belum Terkirim",
-                          data: dirImageUnsetTxt,
-                          onTap: () {},
+                        FeatureWidget(
+                          title: "Gambar Toppi Ini Terkirim",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.imgSent;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Gambar Ini Terkirim",
+                                    device: device),
+                              ),
+                            );
+                          },
                           icon: const Icon(
-                            Icons.folder_special_rounded,
+                            Icons.folder_special_outlined,
                           ),
                         ),
-                        SettingsContainer(
-                          title: "Catatan Gambar",
-                          data: dirLogTxt,
-                          onTap: () {},
+                        FeatureWidget(
+                          title: "Gambar Toppi Ini Belum Terkirim",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.imgUnsent;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Gambar Toppi Ini Belum Terkirim",
+                                    device: device),
+                              ),
+                            );
+                          },
                           icon: const Icon(
-                            Icons.snippet_folder_outlined,
+                            Icons.folder_special_outlined,
                           ),
-                        )
+                        ),
+                        FeatureWidget(
+                          title: "Semua Gambar Toppi Lain",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.nearAll;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Semua Gambar Toppi Lain",
+                                    device: device),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.folder_outlined,
+                          ),
+                        ),
+                        FeatureWidget(
+                          title: "Gambar Toppi Lain Terkirim",
+                          onTap: () {
+                            int filter = ParameterImageExplorerFilter.nearSent;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Gambar Toppi Lain Terkirim",
+                                    device: device),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.folder_outlined,
+                          ),
+                        ),
+                        FeatureWidget(
+                          title: "Gambar Toppi Lain Belum Terkirim",
+                          onTap: () {
+                            int filter =
+                                ParameterImageExplorerFilter.nearUnsent;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListImageExplorerScreen(
+                                    filter: filter,
+                                    title: "Gambar Toppi Lain Belum Terkirim",
+                                    device: device),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.folder_outlined),
+                        ),
                       ],
                     ),
                   ),

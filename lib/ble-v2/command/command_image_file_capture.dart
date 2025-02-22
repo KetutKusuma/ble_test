@@ -101,7 +101,7 @@ class CommandImageFile {
   }
 
   Future<BLEResponse<List<int>>> dataBufferTransmit(BLEProvider bleProvider,
-      ToppiFileModel toppiFileModel, int bytePerChunck) async {
+      ToppiFileModel toppiFileModel, int bytePerChunk) async {
     try {
       int command = CommandCode.dataBufferTransmit;
 
@@ -156,8 +156,8 @@ class CommandImageFile {
             throw Exception("crc32 tidak sesuai");
           }
 
-          int startIndex = i * bytePerChunck;
-          int endIndex = (i + 1) * bytePerChunck;
+          int startIndex = i * bytePerChunk;
+          int endIndex = (i + 1) * bytePerChunk;
           // buffer.setRange(startIndex, endIndex, params[1]);
           buffer.addAll(params[1]);
           _success = true;

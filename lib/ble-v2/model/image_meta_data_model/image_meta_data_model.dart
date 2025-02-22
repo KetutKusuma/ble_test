@@ -267,11 +267,9 @@ class ImageMetaDataModelParse {
         Uint8List img = temp.sublist(0, startIndex);
         int index = 0;
 
-        String firmware =
-            ConvertV2().bufferToStringUsingIndex(metaData, index, 16);
+        String firmware = ConvertV2().bufferToStringUTF8(metaData, index, 16);
         index += 16;
-        String version =
-            ConvertV2().bufferToStringUsingIndex(metaData, index, 8);
+        String version = ConvertV2().bufferToStringUTF8(metaData, index, 8);
         index += 8;
         List<int> id = metaData.sublist(index, index + 5);
         index += 5;

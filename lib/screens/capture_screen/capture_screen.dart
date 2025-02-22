@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/ble_url/ble_url.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
+import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
+import 'package:ble_test/ble-v2/ocr/ocr.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/snackbar.dart';
@@ -16,6 +19,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 class CaptureScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -38,18 +42,24 @@ class _CaptureScreenState extends State<CaptureScreen> {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   Timer? debounceTimer;
+  late SimpleFontelicoProgressDialog _progressDialog;
 
   // v2
   final _CommandImageFile = CommandImageFile();
   bool isCapturing = false;
   bool isCaptureDone = false;
   Uint8List imageBytes = Uint8List(0);
+  List<int> bufferData = [];
   ImageMetaDataModel? _imageMetaData;
 
   @override
   void initState() {
     super.initState();
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    _progressDialog = SimpleFontelicoProgressDialog(
+      context: context,
+      barrierDimisable: true,
+    );
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
@@ -68,30 +78,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
   }
 
-  Future<String> saveImage(Uint8List imageBytes, String fileName) async {
-    try {
-      // Dapatkan direktori penyimpanan lokal
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/$fileName';
-
-      // Tulis byte ke file
-      File file = File(path);
-      await file.writeAsBytes(imageBytes);
-
-      Snackbar.show(ScreenSnackbar.device, "Berkas disimapan di: $path",
-          success: true);
-
-      return path;
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.device, "Gagal menyimpan gambar : $e",
-          success: false);
-      return "";
-    }
-  }
-
   @override
   void dispose() {
-    imageBytes.clear();
     _connectionStateSubscription.cancel();
     super.dispose();
   }
@@ -107,6 +95,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text("Firmware : ${_imageMetaData!.firmware}"),
+                    const SizedBox(height: 3),
+                    Text("Version : ${_imageMetaData!.version}"),
+                    const SizedBox(height: 3),
                     Text(
                       "ID : ${ConvertV2().arrayUint8ToStringHexAddress((_imageMetaData!.id ?? []))}",
                     ),
@@ -133,6 +125,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     Text(
                       "Tegangan Baterai 2 : ${(_imageMetaData!.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
                     ),
+                    const SizedBox(height: 3),
+                    Text(
+                        "Rotasi Kamera : ${_imageMetaData!.adjustmentRotation}"),
                     const SizedBox(height: 3),
                     Text(
                       "Suhu : ${(_imageMetaData!.temperature ?? 0).toStringAsFixed(2)}°C",
@@ -248,59 +243,222 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                   size: 40,
                                 ),
                     ),
-                    Row(
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        imageBytes.isEmpty
-                            ? const SizedBox()
-                            : ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber.shade800,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 20),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        15), // Set the corner radius
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10.0, vertical: 2),
+                          child: Column(
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  imageBytes.isEmpty
+                                      ? const SizedBox()
+                                      : Expanded(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blue,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 20),
+                                              elevation: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(
+                                                    10), // Set the corner radius
+                                              ),
+                                            ),
+                                            onPressed: () async {
+                                              String datetimenow =
+                                                  DateTime.now().toString();
+                                              String fileName =
+                                                  "TOPPI_$datetimenow.png";
+                                              String hasil = await DownloadUtils
+                                                  .saveToDownload(
+                                                context,
+                                                ScreenSnackbar.capture,
+                                                imageBytes,
+                                                fileName,
+                                              );
+                                              if (hasil != "") {
+                                                Snackbar.show(
+                                                  ScreenSnackbar.capture,
+                                                  "Gambar tersimpan di $hasil",
+                                                  success: true,
+                                                );
+                                              } else {
+                                                Snackbar.show(
+                                                  ScreenSnackbar.capture,
+                                                  "Gagal menyimpan gambar",
+                                                  success: false,
+                                                );
+                                              }
+                                            },
+                                            child: const Text("Simpan"),
+                                          ),
+                                        ),
+                                  const SizedBox(
+                                    width: 5,
                                   ),
-                                ),
-                                onPressed: () async {
-                                  String datetimenow =
-                                      DateTime.now().toString();
-                                  String fileName = "TOPPI_$datetimenow.png";
-                                  String hasil =
-                                      await saveImage(imageBytes, fileName);
-                                  if (hasil != "") {
-                                    Snackbar.show(
-                                      ScreenSnackbar.capture,
-                                      "Gambar tersimpan di $hasil",
-                                      success: true,
-                                    );
-                                  } else {
-                                    Snackbar.show(
-                                      ScreenSnackbar.capture,
-                                      "Gagal menyimpan gambar",
-                                      success: false,
-                                    );
-                                  }
-                                },
-                                child: const Icon(
-                                  CupertinoIcons.arrow_down_doc,
-                                  size: 35,
-                                ),
+                                  _imageMetaData == null
+                                      ? const SizedBox()
+                                      : Expanded(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.blue.shade700,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 20),
+                                              elevation: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(
+                                                    10), // Set the corner radius
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              _showMetaDataImageDialog(context);
+                                            },
+                                            child: const Text(
+                                              "Info",
+                                            ),
+                                          ),
+                                        ),
+                                ],
                               ),
-                        const SizedBox(
-                          width: 10,
+                              Row(
+                                children: [
+                                  imageBytes.isEmpty
+                                      ? const SizedBox()
+                                      : Expanded(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.amber.shade800,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 20),
+                                              elevation: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                  10,
+                                                ), // Set the corner radius
+                                              ),
+                                            ),
+                                            onPressed: () async {
+                                              try {} catch (e) {
+                                                Snackbar.show(
+                                                  ScreenSnackbar.capture,
+                                                  "Error dapat rotasi : $e",
+                                                  success: false,
+                                                );
+                                              }
+                                            },
+                                            child: const Text("Rotasi"),
+                                          ),
+                                        ),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  imageBytes.isEmpty
+                                      ? const SizedBox()
+                                      : Expanded(
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 20),
+                                              elevation: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(
+                                                    10), // Set the corner radius
+                                              ),
+                                            ),
+                                            onPressed: () async {
+                                              try {
+                                                _progressDialog.show(
+                                                    message:
+                                                        "Harap tunggu hasil OCR...");
+
+                                                String resultOCR =
+                                                    await OCRBLE().ocr(
+                                                  BLEUrl.testOCR,
+                                                  bufferData,
+                                                  // dataParse['img'],
+                                                );
+
+                                                _progressDialog.hide();
+
+                                                String newResultFormat = OCRBLE
+                                                    .formatResponse(resultOCR);
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return SimpleDialog(
+                                                      title: const Text(
+                                                          "Hasil OCR"),
+                                                      children: [
+                                                        SimpleDialogOption(
+                                                          child: Text(
+                                                            newResultFormat,
+                                                          ),
+                                                        )
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                              } catch (e) {
+                                                _progressDialog.hide();
+                                                showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return SimpleDialog(
+                                                        title: const Text(
+                                                            "Hasil OCR"),
+                                                        children: [
+                                                          SimpleDialogOption(
+                                                            child: Text(
+                                                                "Error dapat OCR : $e"),
+                                                          )
+                                                        ],
+                                                      );
+                                                    });
+                                              }
+                                            },
+                                            child: const Text("Tes OCR"),
+                                          ),
+                                        ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 20),
+                              vertical: 10,
+                              horizontal: 10,
+                            ),
+                            backgroundColor: Colors.transparent,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
+                              side: const BorderSide(
+                                color: Colors.black,
+                                width: 2.0,
+                              ),
                               borderRadius: BorderRadius.circular(
-                                  15), // Set the corner radius
+                                100,
+                              ),
+                              // Set the corner radius
                             ),
                           ),
                           onPressed: () async {
@@ -337,7 +495,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                   bytePerChunk,
                                 );
 
-                                log("data buffer transmit : $data");
+                                // log("data buffer transmit : $data");
 
                                 if (!data.status) {
                                   isCapturing = false;
@@ -348,9 +506,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                 } else {
                                   isCaptureDone = true;
                                   isCapturing = false;
+
                                   Map<String, dynamic> dataParse =
                                       ImageMetaDataModelParse.parse(data.data!);
 
+                                  bufferData = data.data ?? [];
                                   imageBytes = dataParse["img"];
                                   _imageMetaData = dataParse['metaData'];
                                   setState(() {});
@@ -363,34 +523,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             }
                           },
                           child: const Icon(
-                            Icons.camera,
+                            Icons.camera_outlined,
+                            color: Colors.black,
                             size: 35,
                           ),
                         ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        _imageMetaData == null
-                            ? const SizedBox()
-                            : ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.indigoAccent,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 20),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        15), // Set the corner radius
-                                  ),
-                                ),
-                                onPressed: () {
-                                  _showMetaDataImageDialog(context);
-                                },
-                                child: const Icon(
-                                  Icons.info_outline,
-                                  size: 35,
-                                ),
-                              )
                       ],
                     ),
                   ],
@@ -422,15 +559,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Connect: Success",
-          success: true);
+      Snackbar.show(ScreenSnackbar.capture, "Connect: Success", success: true);
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(ScreenSnackbar.transmitsettings,
-            prettyException("Connect Error:", e),
+        Snackbar.show(
+            ScreenSnackbar.capture, prettyException("Connect Error:", e),
             success: false);
         log(e.toString());
       }
@@ -440,11 +576,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Cancel: Success",
-          success: true);
+      Snackbar.show(ScreenSnackbar.capture, "Cancel: Success", success: true);
     } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.transmitsettings, prettyException("Cancel Error:", e),
+      Snackbar.show(ScreenSnackbar.capture, prettyException("Cancel Error:", e),
           success: false);
       log(e.toString());
     }
@@ -453,11 +587,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Disconnect: Success",
+      Snackbar.show(ScreenSnackbar.capture, "Disconnect: Success",
           success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.transmitsettings,
-          prettyException("Disconnect Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.capture, prettyException("Disconnect Error:", e),
           success: false);
       log(e.toString());
     }

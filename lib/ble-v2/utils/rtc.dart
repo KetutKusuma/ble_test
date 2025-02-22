@@ -1,6 +1,14 @@
 class RTC {
   static int getSeconds() {
-    return DateTime.now().millisecondsSinceEpoch ~/ 1000 - 946659600;
+    int seconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    if (seconds > 946659600) {
+      seconds -= 946659600;
+    } else {
+      seconds = 0;
+    }
+
+    return seconds;
   }
 
   static DateTime getTimeFromSeconds(int seconds) {
