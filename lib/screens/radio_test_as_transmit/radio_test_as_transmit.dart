@@ -121,23 +121,35 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
                             style: TextStyle(fontSize: 15, color: Colors.white),
                           ),
                         ),
-                        //hasilnya
-                        for (int i = 0; i < resultList.length; i++)
-                          Container(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            child: Row(
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          child: SingleChildScrollView(
+                            child: Column(
                               children: [
-                                Text(
-                                  resultList[i],
-                                  style: const TextStyle(),
-                                ),
+                                //hasilnya
+                                for (int i = 0; i < resultList.length; i++)
+                                  Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            resultList[i],
+                                            style: const TextStyle(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                const SizedBox(
+                                  height: 20,
+                                )
                               ],
                             ),
                           ),
-                        const SizedBox(
-                          height: 20,
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -258,6 +270,9 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
                                   return;
                                 }
 
+                                /// init repeat as repeat txt controller
+                                repeat = int.parse(repeatTxtController.text);
+
                                 for (var i = 0; i < repeat; i++) {
                                   log("i : $i == repeat : $repeat");
 
@@ -302,8 +317,8 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
                                     await radioTransmitStop();
                                     break;
                                   }
-                                  await Future.delayed(Duration(
-                                      milliseconds: intervalMs + 10000));
+                                  await Future.delayed(
+                                      Duration(milliseconds: intervalMs + 500));
                                 }
                               } else {
                                 // ini untuk stop

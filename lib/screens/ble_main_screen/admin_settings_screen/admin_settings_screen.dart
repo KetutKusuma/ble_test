@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
@@ -23,6 +24,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
 import 'package:ble_test/utils/extension/string_extension.dart';
+import 'package:http/http.dart' as http;
 
 class AdminSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -494,6 +496,35 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return input;
   }
 
+  void sendRequest(String hardwareID, String toppiID) async {
+    final url = Uri.parse('https://toppi-admin.bimasaktisanjaya.com/license');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({
+      "HardwareID": hardwareID,
+      "ToppiID": toppiID,
+    });
+
+    log('Body: $body');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          licenseTxtController.text = jsonDecode(response.body)["message"];
+        });
+      } else {
+        log('Error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      log('Error dapat send request: $e');
+    }
+  }
+
   Future<Map<String, dynamic>?> _showInputDialogForID({
     TextInputType? keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
@@ -505,7 +536,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         return AlertDialog(
           /// maunya disini buat fungsi tersembunyi bisa ngehit si license
           /// tapi entar aja
-          title: const Text("Masukan ID dan Lisensi"),
+          title: Row(
+            children: [
+              const Text("Masukan ID dan "),
+              GestureDetector(
+                onLongPress: () {
+                  sendRequest(hardwareIDTxt, idTxtController.text);
+                  setState(() {
+                    licenseTxtController.text = "12345678";
+                  });
+                },
+                child: const Text(
+                  "Lisensi",
+                ),
+              ),
+            ],
+          ),
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

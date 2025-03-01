@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
   static int firstInt = 0;
 
   // version app
-  String versionApp = "1.0.0";
+  String versionApp = "2.0.0";
 
   // eye
   bool isObscureText = true;
@@ -99,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void getAppInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
     versionApp = packageInfo.version;
+    setState(() {});
   }
 
   /// #2
