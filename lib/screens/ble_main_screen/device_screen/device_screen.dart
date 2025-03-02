@@ -268,38 +268,41 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    SettingsContainer(
-                      title: "Bersihkan hitungan perangkat",
-                      data: "",
-                      onTap: () async {
-                        int? input = await _showClearCounterkDialog(
-                          context,
-                          "Pilih bersihkan hitungan",
-                        );
-                        if (input != null) {
-                          if (input == 1) {
-                            // magnet tidak diangkat
-                            BLEResponse resBLE = await Command()
-                                .clearNeodumiumNotRemovedCounter(bleProvider);
-                            Snackbar.showHelperV2(
-                              ScreenSnackbar.devicescreen,
-                              resBLE,
-                            );
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        title: "Bersihkan hitungan perangkat",
+                        data: "",
+                        onTap: () async {
+                          int? input = await _showClearCounterkDialog(
+                            context,
+                            "Pilih bersihkan hitungan",
+                          );
+                          if (input != null) {
+                            if (input == 1) {
+                              // magnet tidak diangkat
+                              BLEResponse resBLE = await Command()
+                                  .clearNeodumiumNotRemovedCounter(bleProvider);
+                              Snackbar.showHelperV2(
+                                ScreenSnackbar.devicescreen,
+                                resBLE,
+                              );
+                            }
+                            if (input == 2) {
+                              // baterai kritis
+                              BLEResponse resBLE = await Command()
+                                  .clearCriticalBatteryCounter(bleProvider);
+                              Snackbar.showHelperV2(
+                                ScreenSnackbar.devicescreen,
+                                resBLE,
+                                onSuccess: onRefresh,
+                              );
+                            }
                           }
-                          if (input == 2) {
-                            // baterai kritis
-                            BLEResponse resBLE = await Command()
-                                .clearCriticalBatteryCounter(bleProvider);
-                            Snackbar.showHelperV2(
-                              ScreenSnackbar.devicescreen,
-                              resBLE,
-                              onSuccess: onRefresh,
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(
-                        CupertinoIcons.gobackward,
+                        },
+                        icon: const Icon(
+                          CupertinoIcons.gobackward,
+                        ),
                       ),
                     ),
                     SettingsContainer(
@@ -391,6 +394,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
                       title: "Waktu UTC",
                       data: timeUTCText,
                       onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
                         timeUTCTxtController.text = timeUTCText;
                         String? input =
                             await _showSelectionPopupUTC(context, utcList);
@@ -412,69 +418,72 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     const SizedBox(
                       height: 5,
                     ),
-                    GestureDetector(
-                      onTap: () async {
-                        int timeNowSeconds = ConvertV2().getTimeNowSeconds();
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          int timeNowSeconds = ConvertV2().getTimeNowSeconds();
 
-                        int dataUpdate = timeNowSeconds;
-                        BLEResponse resBLE = await _commandSet.setDateTime(
-                            bleProvider, dataUpdate);
-                        if (resBLE.status) {
-                          DateTime now = DateTime.now();
-                          Duration offset = now.timeZoneOffset;
+                          int dataUpdate = timeNowSeconds;
+                          BLEResponse resBLE = await _commandSet.setDateTime(
+                              bleProvider, dataUpdate);
+                          if (resBLE.status) {
+                            DateTime now = DateTime.now();
+                            Duration offset = now.timeZoneOffset;
 
-                          // Format offset as +hh:mm or -hh:mm
-                          String formattedOffset =
-                              "${offset.isNegative ? "-" : "+"}${offset.inHours.abs().toString().padLeft(2, '0')}:${(offset.inMinutes.abs() % 60).toString().padLeft(2, '0')}";
-                          int timeUTC =
-                              ConvertV2().utcStringToUint8(formattedOffset);
-                          resBLE = await _commandSet.setTimeUTC(
-                            bleProvider,
-                            timeUTC,
-                          );
-                        }
-                        if (resBLE.status) {
-                          onRefresh();
-                          Snackbar.show(ScreenSnackbar.devicescreen,
-                              "Waktu berhasil diatur",
-                              success: true);
-                        } else {
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.devicescreen,
-                            resBLE,
-                          );
-                        }
-                      },
-                      child: Container(
-                        margin:
-                            const EdgeInsets.only(left: 10, right: 10, top: 5),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade600,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        width: MediaQuery.of(context).size.width,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.check_circle_outline,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Atur Waktu",
-                              style: GoogleFonts.readexPro(
-                                fontSize: 16,
+                            // Format offset as +hh:mm or -hh:mm
+                            String formattedOffset =
+                                "${offset.isNegative ? "-" : "+"}${offset.inHours.abs().toString().padLeft(2, '0')}:${(offset.inMinutes.abs() % 60).toString().padLeft(2, '0')}";
+                            int timeUTC =
+                                ConvertV2().utcStringToUint8(formattedOffset);
+                            resBLE = await _commandSet.setTimeUTC(
+                              bleProvider,
+                              timeUTC,
+                            );
+                          }
+                          if (resBLE.status) {
+                            onRefresh();
+                            Snackbar.show(ScreenSnackbar.devicescreen,
+                                "Waktu berhasil diatur",
+                                success: true);
+                          } else {
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.devicescreen,
+                              resBLE,
+                            );
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade600,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ],
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Atur Waktu",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

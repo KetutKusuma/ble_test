@@ -337,7 +337,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 }
               },
               child: Text(
-                'Update',
+                'Perbarui',
                 style: GoogleFonts.readexPro(),
               ),
             ),
@@ -348,7 +348,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                'Batalkan',
                 style: GoogleFonts.readexPro(),
               ),
             ),

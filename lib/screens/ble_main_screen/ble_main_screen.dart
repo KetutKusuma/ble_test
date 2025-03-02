@@ -565,7 +565,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     ),
                   ),
                   FeatureWidget(
-                    visible: featureB.contains(roleUser),
+                    visible: featureA.contains(roleUser),
                     title: "Berkas Gambar",
                     onTap: () {
                       if (isConnected) {

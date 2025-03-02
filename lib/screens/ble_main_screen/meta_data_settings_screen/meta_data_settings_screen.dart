@@ -4,7 +4,9 @@ import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -205,6 +207,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Model Meter",
                       data: meterModelTxt,
                       onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
                         meterModelTxtController.text = meterModelTxt;
                         String? input = await _showInputDialog(
                           meterModelTxtController,
@@ -232,6 +237,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Nomor Seri Meter",
                       data: meterSnTxt,
                       onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
                         meterSnTxtController.text = meterSnTxt;
                         String? input = await _showInputDialog(
                             meterSnTxtController, "Nomor Seri Meter",
@@ -257,6 +265,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "Segel Meter",
                       data: meterSealTxt,
                       onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
                         meterSealTxtController.text = meterSealTxt;
                         String? input = await _showInputDialog(
                             meterSealTxtController, "Segel Meter",
@@ -282,6 +293,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                       title: "ID Pelanggan",
                       data: customTxt,
                       onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
                         idPelangganTxtController.text = customTxt;
                         String? input = await _showInputDialog(
                             idPelangganTxtController, "Id Pelanggan",
@@ -371,51 +385,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         ),
       ),
     );
-  }
-
-  Future onConnectPressed() async {
-    try {
-      // initDiscoverServices();
-      await device.connectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Connect: Success",
-          success: true);
-    } catch (e) {
-      if (e is FlutterBluePlusException &&
-          e.code == FbpErrorCode.connectionCanceled.index) {
-        // ignore connections canceled by the user
-      } else {
-        Snackbar.show(ScreenSnackbar.metadatasettings,
-            prettyException("Connect Error:", e),
-            success: false);
-        log(e.toString());
-      }
-    }
-  }
-
-  Future onCancelPressed() async {
-    try {
-      await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Cancel: Success",
-          success: true);
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.metadatasettings, prettyException("Cancel Error:", e),
-          success: false);
-      log(e.toString());
-    }
-  }
-
-  Future onDisconnectPressed() async {
-    try {
-      await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Disconnect: Success",
-          success: true);
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.metadatasettings,
-          prettyException("Disconnect Error:", e),
-          success: false);
-      log(e.toString());
-    }
   }
 
   // GET

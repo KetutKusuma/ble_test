@@ -10,13 +10,17 @@ import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_mode
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/ble-v2/ocr/ocr.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
@@ -273,28 +277,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                               ),
                                             ),
                                             onPressed: () async {
+                                              DateTime dateTime =
+                                                  DateTime.now();
                                               String datetimenow =
-                                                  DateTime.now().toString();
+                                                  DateFormat('yyyy-MM-dd_HH#mm')
+                                                      .format(dateTime);
                                               String fileName =
-                                                  "TOPPI_$datetimenow.png";
-                                              String hasil = await DownloadUtils
-                                                  .saveToDownload(
+                                                  "img_$datetimenow.jpg";
+
+                                              String? hasil =
+                                                  await DownloadUtils
+                                                      .saveToDownload(
                                                 context,
                                                 ScreenSnackbar.capture,
                                                 imageBytes,
                                                 fileName,
                                               );
-                                              if (hasil != "") {
+                                              if (hasil != null) {
                                                 Snackbar.show(
                                                   ScreenSnackbar.capture,
                                                   "Gambar tersimpan di $hasil",
                                                   success: true,
-                                                );
-                                              } else {
-                                                Snackbar.show(
-                                                  ScreenSnackbar.capture,
-                                                  "Gagal menyimpan gambar",
-                                                  success: false,
                                                 );
                                               }
                                             },
@@ -331,94 +334,80 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                         ),
                                 ],
                               ),
-                              Row(
-                                children: [
-                                  imageBytes.isEmpty
-                                      ? const SizedBox()
-                                      : Expanded(
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.amber.shade800,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 20),
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                  10,
-                                                ), // Set the corner radius
+                              Visibility(
+                                visible: featureA.contains(roleUser),
+                                child: Row(
+                                  children: [
+                                    imageBytes.isEmpty
+                                        ? const SizedBox()
+                                        : Expanded(
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.amber.shade800,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 10,
+                                                        horizontal: 20),
+                                                elevation: 0,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                    10,
+                                                  ), // Set the corner radius
+                                                ),
                                               ),
+                                              onPressed: () async {
+                                                try {} catch (e) {
+                                                  Snackbar.show(
+                                                    ScreenSnackbar.capture,
+                                                    "Error dapat rotasi : $e",
+                                                    success: false,
+                                                  );
+                                                }
+                                              },
+                                              child: const Text("Rotasi"),
                                             ),
-                                            onPressed: () async {
-                                              try {} catch (e) {
-                                                Snackbar.show(
-                                                  ScreenSnackbar.capture,
-                                                  "Error dapat rotasi : $e",
-                                                  success: false,
-                                                );
-                                              }
-                                            },
-                                            child: const Text("Rotasi"),
                                           ),
-                                        ),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  imageBytes.isEmpty
-                                      ? const SizedBox()
-                                      : Expanded(
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 20),
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                    10), // Set the corner radius
+                                    const SizedBox(
+                                      width: 5,
+                                    ),
+                                    imageBytes.isEmpty
+                                        ? const SizedBox()
+                                        : Expanded(
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.green,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 10,
+                                                        horizontal: 20),
+                                                elevation: 0,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10), // Set the corner radius
+                                                ),
                                               ),
-                                            ),
-                                            onPressed: () async {
-                                              try {
-                                                _progressDialog.show(
-                                                    message:
-                                                        "Harap tunggu hasil OCR...");
+                                              onPressed: () async {
+                                                try {
+                                                  _progressDialog.show(
+                                                      message:
+                                                          "Harap tunggu hasil OCR...");
 
-                                                String resultOCR =
-                                                    await OCRBLE().ocr(
-                                                  BLEUrl.testOCR,
-                                                  bufferData,
-                                                  // dataParse['img'],
-                                                );
+                                                  String resultOCR =
+                                                      await OCRBLE().ocr(
+                                                    BLEUrl.testOCR,
+                                                    bufferData,
+                                                    // dataParse['img'],
+                                                  );
 
-                                                _progressDialog.hide();
+                                                  _progressDialog.hide();
 
-                                                String newResultFormat = OCRBLE
-                                                    .formatResponse(resultOCR);
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) {
-                                                    return SimpleDialog(
-                                                      title: const Text(
-                                                          "Hasil OCR"),
-                                                      children: [
-                                                        SimpleDialogOption(
-                                                          child: Text(
-                                                            newResultFormat,
-                                                          ),
-                                                        )
-                                                      ],
-                                                    );
-                                                  },
-                                                );
-                                              } catch (e) {
-                                                _progressDialog.hide();
-                                                showDialog(
+                                                  String newResultFormat =
+                                                      OCRBLE.formatResponse(
+                                                          resultOCR);
+                                                  showDialog(
                                                     context: context,
                                                     builder: (context) {
                                                       return SimpleDialog(
@@ -427,17 +416,36 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                         children: [
                                                           SimpleDialogOption(
                                                             child: Text(
-                                                                "Error dapat OCR : $e"),
+                                                              newResultFormat,
+                                                            ),
                                                           )
                                                         ],
                                                       );
-                                                    });
-                                              }
-                                            },
-                                            child: const Text("Tes OCR"),
+                                                    },
+                                                  );
+                                                } catch (e) {
+                                                  _progressDialog.hide();
+                                                  showDialog(
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return SimpleDialog(
+                                                          title: const Text(
+                                                              "Hasil OCR"),
+                                                          children: [
+                                                            SimpleDialogOption(
+                                                              child: Text(
+                                                                  "Error dapat OCR : $e"),
+                                                            )
+                                                          ],
+                                                        );
+                                                      });
+                                                }
+                                              },
+                                              child: const Text("Tes OCR"),
+                                            ),
                                           ),
-                                        ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),

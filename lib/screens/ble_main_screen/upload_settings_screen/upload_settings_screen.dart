@@ -208,7 +208,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -217,7 +217,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                   controller.clear();
                 }
               },
-              child: const Text("OK"),
+              child: const Text("Simpan"),
             ),
           ],
         );
@@ -414,7 +414,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 }
               },
               child: Text(
-                'Update',
+                'Perbarui',
                 style: GoogleFonts.readexPro(),
               ),
             ),
@@ -424,7 +424,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                'Batalkan',
                 style: GoogleFonts.readexPro(),
               ),
             ),

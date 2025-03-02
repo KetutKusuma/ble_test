@@ -351,9 +351,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            height: 3,
-                          ),
                           Row(
                             children: [
                               Expanded(
@@ -378,9 +375,6 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            height: 5,
-                          ),
                           Row(
                             children: [
                               Expanded(
@@ -404,6 +398,9 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(
+                            height: 5,
                           ),
                           SizedBox(
                             width: MediaQuery.of(context).size.width,
