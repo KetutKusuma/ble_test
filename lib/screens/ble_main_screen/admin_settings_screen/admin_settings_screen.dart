@@ -767,34 +767,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       title: "ID",
                       data: idTxt,
                       onTap: () async {
-                        idTxtController.text = idTxt;
-                        Map<String, dynamic>? input =
-                            await _showInputDialogForID(
-                          keyboardType: TextInputType.text,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(14),
-                            // FilteringTextInputFormatter
-                          ],
-                          lengthTextNeed: 12,
-                        );
-                        if (input != null) {
-                          List<int> dataSetID = ConvertV2()
-                              .stringHexAddressToArrayUint8(input['id'], 5);
-                          log("hasil data set : $dataSetID");
-                          IdentityModel identityUpdate =
-                              adminModels.identityModel!;
-                          log("- identity : $identityUpdate");
-                          identityUpdate.toppiID = dataSetID;
-                          BLEResponse resBLE = await _commandSet.setIdentity(
-                            bleProvider,
-                            identityUpdate,
-                            input['license'],
+                        if (featureA.contains(roleUser)) {
+                          idTxtController.text = idTxt;
+                          Map<String, dynamic>? input =
+                              await _showInputDialogForID(
+                            keyboardType: TextInputType.text,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(14),
+                              // FilteringTextInputFormatter
+                            ],
+                            lengthTextNeed: 12,
                           );
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.adminsettings,
-                            resBLE,
-                            onSuccess: onRefresh,
-                          );
+                          if (input != null) {
+                            List<int> dataSetID = ConvertV2()
+                                .stringHexAddressToArrayUint8(input['id'], 5);
+                            log("hasil data set : $dataSetID");
+                            IdentityModel identityUpdate =
+                                adminModels.identityModel!;
+                            log("- identity : $identityUpdate");
+                            identityUpdate.toppiID = dataSetID;
+                            BLEResponse resBLE = await _commandSet.setIdentity(
+                              bleProvider,
+                              identityUpdate,
+                              input['license'],
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
                         }
                       },
                     ),
@@ -1151,20 +1153,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                     ),
-                    FeatureWidget(
-                      title: "Catatan Sistem",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LogExplorerScreen(
-                              device: device,
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Catatan Sistem",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LogExplorerScreen(
+                                device: device,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.history_edu_rounded,
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.history_edu_rounded,
+                        ),
                       ),
                     ),
                     const SizedBox(

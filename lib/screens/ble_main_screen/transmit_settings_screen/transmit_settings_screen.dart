@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
@@ -16,7 +15,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
 class TransmitSettingsScreen extends StatefulWidget {
@@ -512,32 +510,26 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 8),
                                   decoration: BoxDecoration(
-                                      color: Colors.blue.shade600,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.grey.withOpacity(0.5),
-                                          spreadRadius: 1,
-                                          blurRadius: 1,
-                                          offset: const Offset(0,
-                                              1), // changes position of shadow
-                                        ),
-                                      ]),
+                                    color: Colors.blue.shade600,
+                                    borderRadius: BorderRadius.circular(10),
+                                    // boxShadow: [
+                                    //   BoxShadow(
+                                    //     color: Colors.grey.withOpacity(0.5),
+                                    //     spreadRadius: 1,
+                                    //     blurRadius: 1,
+                                    //     offset: const Offset(
+                                    //         0, 1), // changes position of shadow
+                                    //   ),
+                                    // ],
+                                  ),
                                   width: MediaQuery.of(context).size.width,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
-                                      const Icon(
-                                        Icons.update,
-                                        color: Colors.white,
-                                      ),
-                                      const SizedBox(
-                                        width: 5,
-                                      ),
                                       Text(
-                                        "Update Tujuan ${index + 1}",
+                                        "Perbarui Tujuan ",
                                         style: GoogleFonts.readexPro(
                                           fontSize: 14,
                                           color: Colors.white,

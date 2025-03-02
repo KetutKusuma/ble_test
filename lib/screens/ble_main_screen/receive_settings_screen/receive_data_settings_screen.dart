@@ -11,6 +11,7 @@ import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
@@ -125,260 +126,122 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     }
   }
 
-  Future showSetupUploadDialog(
-    BuildContext context,
-    int number,
-  ) async {
-    return AlertDialog(
-      title: Text("Atur Penerimaan ${number + 1}"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextFormField(
-            readOnly: true,
-            onTap: () async {
-              TimeOfDay? result =
-                  await TimePickerHelper.pickTime(context, null);
-              if (result != null) {
-                setState(() {
-                  receiveScheduleTxtController.text =
-                      TimePickerHelper.formatTimeOfDay(result);
-                });
-              }
-            },
-            controller: receiveScheduleTxtController,
-            decoration: const InputDecoration(
-              labelText: "Masukan Jadwal Penerimaan",
-              hintText: "00.00-23.59",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-            ),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          TextFormField(
-            controller: receiveTimeAdjustTxtController,
-            keyboardType: const TextInputType.numberWithOptions(
-                signed: false, decimal: false),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
-            ],
-            decoration: const InputDecoration(
-              labelText: "Masukan Penyesuaian Waktu Penerimaan (detik)",
-              border: OutlineInputBorder(),
-            ),
-          ),
-
-          // for destination enable
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const Text(
-                  "Aktifkan Penerimaan ?",
-                ),
-                const SizedBox(
-                  height: 5,
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: () => setState(
-                        () => selectedChoice = true,
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: selectedChoice == true
-                                ? Colors.green
-                                : Colors.grey,
-                            radius: 12,
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Ya',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    GestureDetector(
-                      onTap: () => setState(() => selectedChoice = false),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: selectedChoice == false
-                                ? Colors.red
-                                : Colors.grey,
-                            radius: 12,
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Tidak',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            receiveEnableTxtController.clear();
-            receiveScheduleTxtController.clear();
-            receiveTimeAdjustTxtController.clear();
-            Navigator.of(context).pop();
-          },
-          child: const Text("Batalkan"),
-        ),
-        TextButton(
-          onPressed: () {
-            if (selectedChoice != null &&
-                receiveScheduleTxtController.text.isNotEmpty &&
-                receiveTimeAdjustTxtController.text.isNotEmpty) {
-              int receiveSchedule = TimePickerHelper.timeOfDayStringToMinutes(
-                  receiveScheduleTxtController.text);
-              ReceiveModel receiveModel = ReceiveModel(
-                enable: selectedChoice ?? false,
-                schedule: receiveSchedule,
-                timeAdjust: int.parse(receiveTimeAdjustTxtController.text),
-              );
-              receiveEnableTxtController.clear();
-              receiveScheduleTxtController.clear();
-              receiveTimeAdjustTxtController.clear();
-              Navigator.pop(context, receiveModel);
-            }
-          },
-          child: const Text("Simpan"),
-        ),
-      ],
-    );
-  }
-
   Future<ReceiveModel?> _showSetupReceiveDialog(
     BuildContext context,
     int number,
   ) async {
     return await showDialog<ReceiveModel>(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Atur Penerimaan ${number + 1}"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                readOnly: true,
-                onTap: () async {
-                  TimeOfDay? result =
-                      await TimePickerHelper.pickTime(context, null);
-                  if (result != null) {
-                    setState(() {
-                      receiveScheduleTxtController.text =
-                          TimePickerHelper.formatTimeOfDay(result);
-                    });
-                  }
-                },
-                controller: receiveScheduleTxtController,
-                decoration: const InputDecoration(
-                  labelText: "Masukan Jadwal Penerimaan",
-                  hintText: "00.00-23.59",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
+          content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  readOnly: true,
+                  onTap: () async {
+                    TimeOfDay? result =
+                        await TimePickerHelper.pickTime(context, null);
+                    if (result != null) {
+                      setState(() {
+                        receiveScheduleTxtController.text =
+                            TimePickerHelper.formatTimeOfDay(result);
+                      });
+                    }
+                  },
+                  controller: receiveScheduleTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan Jadwal Penerimaan",
+                    hintText: "00.00-23.59",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextFormField(
+                  controller: receiveTimeAdjustTxtController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      signed: false, decimal: false),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: "Masukan Penyesuaian Waktu Penerimaan (detik)",
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              TextFormField(
-                controller: receiveTimeAdjustTxtController,
-                keyboardType: const TextInputType.numberWithOptions(
-                    signed: false, decimal: false),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: "Masukan Penyesuaian Waktu Penerimaan (detik)",
-                  border: OutlineInputBorder(),
+                const SizedBox(
+                  height: 5,
                 ),
-              ),
-
-              // for destination enable
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Aktifkan Penerimaan ?",
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: () => setState(
-                            () => selectedChoice = true,
+                // for destination enable
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Aktifkan Penerimaan ?",
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => setState(
+                              () => selectedChoice = true,
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: selectedChoice == true
+                                      ? Colors.green
+                                      : Colors.grey,
+                                  radius: 12,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Ya',
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: selectedChoice == true
-                                    ? Colors.green
-                                    : Colors.grey,
-                                radius: 12,
-                              ),
-                              const SizedBox(width: 10),
-                              const Text(
-                                'Ya',
-                              ),
-                            ],
+                          const SizedBox(width: 20),
+                          GestureDetector(
+                            onTap: () => setState(() => selectedChoice = false),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: selectedChoice == false
+                                      ? Colors.red
+                                      : Colors.grey,
+                                  radius: 12,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Tidak',
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 20),
-                        GestureDetector(
-                          onTap: () => setState(() => selectedChoice = false),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: selectedChoice == false
-                                    ? Colors.red
-                                    : Colors.grey,
-                                radius: 12,
-                              ),
-                              const SizedBox(width: 10),
-                              const Text(
-                                'Tidak',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
           actions: [
             TextButton(
               onPressed: () {
@@ -434,137 +297,158 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                 delegate: SliverChildBuilderDelegate(
                   childCount: listReceive.length,
                   (context, index) {
-                    return GestureDetector(
-                      onDoubleTap: () {
-                        showSetupUploadDialog(context, 1);
-                      },
-                      onTap: () async {
-                        // ReceiveModel receivemodel = listReceive[index];
-                        selectedChoice = listReceive[index].enable;
-                        receiveScheduleTxtController.text =
-                            TimePickerHelper.formatTimeOfDay(
-                                TimePickerHelper.minutesToTimeOfDay(
-                                    listReceive[index].schedule));
-                        receiveTimeAdjustTxtController.text =
-                            listReceive[index].timeAdjust.toString();
-                        ReceiveModel? resilt = await _showSetupReceiveDialog(
-                          context,
-                          index,
-                        );
+                    return Container(
+                      margin: const EdgeInsets.only(
+                        top: 15,
+                        left: 10,
+                        right: 10,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 10),
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          )),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Pengaturan Jadwal Penerimaan ${index + 1}",
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Aktifkan Penerimaan : ",
+                                  style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      listReceive[index].enable
+                                          ? "Ya"
+                                          : "Tidak",
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 3,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Jadwal Penerimaan : ",
+                                  style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      ConvertTime.minuteToDateTimeString(
+                                          listReceive[index].schedule),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Penyesuaian Waktu Penerimaan (detik) : ",
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      listReceive[index].timeAdjust.toString(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    10,
+                                  ), // Rounded corners
+                                ),
+                              ),
+                              onPressed: () async {
+                                // ReceiveModel receivemodel = listReceive[index];
+                                selectedChoice = listReceive[index].enable;
+                                receiveScheduleTxtController.text =
+                                    TimePickerHelper.formatTimeOfDay(
+                                        TimePickerHelper.minutesToTimeOfDay(
+                                            listReceive[index].schedule));
+                                receiveTimeAdjustTxtController.text =
+                                    listReceive[index].timeAdjust.toString();
+                                ReceiveModel? resilt =
+                                    await _showSetupReceiveDialog(
+                                  context,
+                                  index,
+                                );
 
-                        if (resilt != null) {
-                          listReceive[index] = resilt;
-                          BLEResponse resBLE = await _commandSet
-                              .setReceiveSchedule(bleProvider, listReceive);
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.receivesettings,
-                            resBLE,
-                            onSuccess: onRefresh,
-                          );
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(
-                          top: 15,
-                          left: 10,
-                          right: 10,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 10),
-                        width: MediaQuery.of(context).size.width,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
-                            )),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Pengaturan Jadwal Penerimaan ${index + 1}",
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                if (resilt != null) {
+                                  listReceive[index] = resilt;
+                                  BLEResponse resBLE =
+                                      await _commandSet.setReceiveSchedule(
+                                          bleProvider, listReceive);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.receivesettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                "Perbarui Penerimaan",
                               ),
                             ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            Row(
-                              children: [
-                                const Expanded(
-                                  child: Text(
-                                    "Aktifkan Penerimaan : ",
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        listReceive[index].enable
-                                            ? "Ya"
-                                            : "Tidak",
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 3,
-                            ),
-                            Row(
-                              children: [
-                                const Expanded(
-                                  child: Text(
-                                    "Jadwal Penerimaan : ",
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        ConvertTime.minuteToDateTimeString(
-                                            listReceive[index].schedule),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 5,
-                            ),
-                            Row(
-                              children: [
-                                const Expanded(
-                                  child: Text(
-                                    "Penyesuaian Waktu Penerimaan (detik) : ",
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        listReceive[index]
-                                            .timeAdjust
-                                            .toString(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                          )
+                        ],
                       ),
                     );
                   },

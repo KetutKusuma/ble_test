@@ -8,11 +8,25 @@ import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
 
+/// none = 0
+/// admin = 1
+/// operator = 2
+/// guest = 3
+/// forgetPassword = 4
 class LoginAs {
+  /// none = 0
   static const none = 0;
+
+  /// admin = 1
   static const admin = 1;
+
+  /// operator = 2
   static const operator = 2;
+
+  /// guest = 3
   static const guest = 3;
+
+  /// forgetPassword = 4
   static const forgetPassword = 4;
 }
 

@@ -267,7 +267,7 @@ class Command {
       log("logisAs : $logisAs");
       log("sessionID : $sessionIDNow");
 
-      _setRoleLoginAs(1);
+      _setRoleLoginAs(logisAs);
       sessionID = sessionIDNow;
 
       return BLEResponse.success("Sukses login", data: null);
@@ -469,7 +469,7 @@ class Command {
         printToSerialMonitor: printToSerialMonitor,
       );
 
-      log("admin model : $adminModels");
+      // log("admin model : $adminModels");
 
       if (responseWrite.header.status) {
         return BLEResponse.success(

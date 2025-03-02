@@ -335,6 +335,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    log("ROLE : $roleUser");
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(

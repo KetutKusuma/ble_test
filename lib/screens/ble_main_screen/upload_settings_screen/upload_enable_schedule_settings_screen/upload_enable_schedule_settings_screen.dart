@@ -310,7 +310,7 @@ class _UploadEnableScheduleSettingScreenState
         appBar: AppBar(
           elevation: 0,
           title: Text(
-            "Pengaturan Jadwal dan Aktivasi Unggah",
+            "Pengaturan Jadwal Unggah",
             style: GoogleFonts.readexPro(),
           ),
         ),
@@ -427,31 +427,25 @@ class _UploadEnableScheduleSettingScreenState
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
-                                    color: Colors.blue.shade600,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        spreadRadius: 1,
-                                        blurRadius: 1,
-                                        offset: const Offset(
-                                            0, 1), // changes position of shadow
-                                      ),
-                                    ]),
+                                  color: Colors.blue.shade600,
+                                  borderRadius: BorderRadius.circular(10),
+                                  // boxShadow: [
+                                  //   BoxShadow(
+                                  //     color: Colors.grey.withOpacity(0.5),
+                                  //     spreadRadius: 1,
+                                  //     blurRadius: 1,
+                                  //     offset: const Offset(
+                                  //         0, 1), // changes position of shadow
+                                  //   ),
+                                  // ],
+                                ),
                                 width: MediaQuery.of(context).size.width,
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const Icon(
-                                      Icons.update,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(
-                                      width: 5,
-                                    ),
                                     Text(
-                                      "Ubah Jadwal dan Aktivasi Unggah ${index + 1}",
+                                      "Perbarui Jadwal Unggah",
                                       style: GoogleFonts.readexPro(
                                         fontSize: 14,
                                         color: Colors.white,
