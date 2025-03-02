@@ -111,7 +111,7 @@ class CommandSet {
   }
 
   Future<BLEResponse> setReceiveSchedule(
-      BLEProvider bleProvider, ReceiveModel receive) async {
+      BLEProvider bleProvider, List<ReceiveModel> listReceive) async {
     try {
       int command = CommandCode.receiveSchedule;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -119,11 +119,11 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addBool(receive.enable, buffer);
-      messageV2.addUint16(receive.schedule, buffer);
-      messageV2.addUint8(receive.count, buffer);
-      messageV2.addUint16(receive.interval, buffer);
-      messageV2.addUint8(receive.timeAdjust, buffer);
+      for (var i = 0; i < 16; i++) {
+        messageV2.addBool(listReceive[i].enable, buffer);
+        messageV2.addUint16(listReceive[i].schedule, buffer);
+        messageV2.addUint8(listReceive[i].timeAdjust, buffer);
+      }
 
       List<int> data = messageV2.createEnd(
         sessionID,

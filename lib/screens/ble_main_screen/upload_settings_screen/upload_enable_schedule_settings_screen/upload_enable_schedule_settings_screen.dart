@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
-import 'package:ble_test/utils/ble.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -149,7 +147,9 @@ class _UploadEnableScheduleSettingScreenState
   }
 
   Future<UploadModel?> showSetupUploadDialog(
-      BuildContext context, int number) async {
+    BuildContext context,
+    int number,
+  ) async {
     return await showDialog(
       context: context,
       barrierDismissible: false,
@@ -304,170 +304,177 @@ class _UploadEnableScheduleSettingScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(
-          "Pengaturan Jadwal dan Aktivasi Unggah",
-          style: GoogleFonts.readexPro(),
+    return ScaffoldMessenger(
+      key: Snackbar.snackBarListUploadScreen,
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: Text(
+            "Pengaturan Jadwal dan Aktivasi Unggah",
+            style: GoogleFonts.readexPro(),
+          ),
         ),
-      ),
-      body: SmartRefresher(
-        controller: _refreshController,
-        onRefresh: onRefresh,
-        child: CustomScrollView(
-          slivers: [
-            SliverList(
-                delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return Column(
-                  children: [
-                    Container(
-                      margin:
-                          const EdgeInsets.only(top: 15, left: 10, right: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 10),
-                      width: MediaQuery.of(context).size.width,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: borderColor,
-                          width: 1,
+        body: SmartRefresher(
+          controller: _refreshController,
+          onRefresh: onRefresh,
+          child: CustomScrollView(
+            slivers: [
+              SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return Column(
+                    children: [
+                      Container(
+                        margin:
+                            const EdgeInsets.only(top: 15, left: 10, right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Pengaturan Jadwal dan Aktivasi Unggah ${index + 1}",
-                            style: GoogleFonts.readexPro(
-                                fontSize: 18, fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(
-                            height: 8,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  "Aktifkan Unggah : ",
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Pengaturan Jadwal dan Aktivasi Unggah ${index + 1}",
+                              style: GoogleFonts.readexPro(
+                                  fontSize: 18, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Aktifkan Unggah : ",
+                                    style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        uploadScheduleList[index].enable
+                                            ? "Ya"
+                                            : "Tidak",
+                                        style: GoogleFonts.readexPro(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Jadwal Unggah : ",
                                   style: GoogleFonts.readexPro(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500),
                                 ),
-                              ),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      uploadScheduleList[index].enable
-                                          ? "Ya"
-                                          : "Tidak",
-                                      style: GoogleFonts.readexPro(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Jadwal Unggah : ",
-                                style: GoogleFonts.readexPro(
-                                    fontSize: 14, fontWeight: FontWeight.w500),
-                              ),
-                              Text(
-                                TimePickerHelper.formatTimeOfDay(
-                                    TimePickerHelper.minutesToTimeOfDay(
-                                        uploadScheduleList[index].schedule)),
-                                style: GoogleFonts.readexPro(
-                                    fontSize: 14, fontWeight: FontWeight.w400),
-                              ),
-                            ],
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              selectedChoice = uploadScheduleList[index].enable;
-                              uploadScheduleTxtController.text =
+                                Text(
                                   TimePickerHelper.formatTimeOfDay(
                                       TimePickerHelper.minutesToTimeOfDay(
-                                          uploadScheduleList[index].schedule));
-                              UploadModel? result =
-                                  await showSetupUploadDialog(context, index);
-                              if (result != null) {
-                                // do your magic
-                                uploadScheduleList[index] = result;
-                                BLEResponse resBLE = await CommandSet()
-                                    .setUploadSchedule(
-                                        bleProvider, uploadScheduleList);
-                                Snackbar.showHelperV2(
-                                  ScreenSnackbar.uploadsettings,
-                                  resBLE,
-                                  onSuccess: onRefresh,
-                                );
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                  left: 0, right: 0, top: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 8),
-                              decoration: BoxDecoration(
-                                  color: Colors.blue.shade600,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.5),
-                                      spreadRadius: 1,
-                                      blurRadius: 1,
-                                      offset: const Offset(
-                                          0, 1), // changes position of shadow
-                                    ),
-                                  ]),
-                              width: MediaQuery.of(context).size.width,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.update,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text(
-                                    "Ubah Jadwal dan Aktivasi Unggah ${index + 1}",
-                                    style: GoogleFonts.readexPro(
+                                          uploadScheduleList[index].schedule)),
+                                  style: GoogleFonts.readexPro(
                                       fontSize: 14,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                selectedChoice =
+                                    uploadScheduleList[index].enable;
+                                uploadScheduleTxtController.text =
+                                    TimePickerHelper.formatTimeOfDay(
+                                        TimePickerHelper.minutesToTimeOfDay(
+                                            uploadScheduleList[index]
+                                                .schedule));
+                                UploadModel? result =
+                                    await showSetupUploadDialog(context, index);
+                                if (result != null) {
+                                  // do your magic
+                                  uploadScheduleList[index] = result;
+                                  BLEResponse resBLE = await CommandSet()
+                                      .setUploadSchedule(
+                                          bleProvider, uploadScheduleList);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.uploadsettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
+                                }
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(
+                                    left: 0, right: 0, top: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                    color: Colors.blue.shade600,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.5),
+                                        spreadRadius: 1,
+                                        blurRadius: 1,
+                                        offset: const Offset(
+                                            0, 1), // changes position of shadow
+                                      ),
+                                    ]),
+                                width: MediaQuery.of(context).size.width,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.update,
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w500,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(
+                                      width: 5,
+                                    ),
+                                    Text(
+                                      "Ubah Jadwal dan Aktivasi Unggah ${index + 1}",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-              childCount: uploadScheduleList.length,
-            )),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 15),
-            )
-          ],
+                    ],
+                  );
+                },
+                childCount: uploadScheduleList.length,
+              )),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 15),
+              )
+            ],
+          ),
         ),
       ),
     );

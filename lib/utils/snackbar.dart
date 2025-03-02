@@ -31,6 +31,7 @@ enum ScreenSnackbar {
   // v2
   logexplorerscreen,
   imageexplorerscreen,
+  uploadlistscreen,
 }
 
 class Snackbar {
@@ -62,6 +63,7 @@ class Snackbar {
       GlobalKey<ScaffoldMessengerState>();
   static final snackBarKeyImageExplorerScreen =
       GlobalKey<ScaffoldMessengerState>();
+  static final snackBarListUploadScreen = GlobalKey<ScaffoldMessengerState>();
 
   static GlobalKey<ScaffoldMessengerState> getSnackbar(ScreenSnackbar ss) {
     switch (ss) {
@@ -111,6 +113,8 @@ class Snackbar {
         return snackBarKeyLogExplorerScreen;
       case ScreenSnackbar.imageexplorerscreen:
         return snackBarKeyImageExplorerScreen;
+      case ScreenSnackbar.uploadlistscreen:
+        return snackBarListUploadScreen;
     }
   }
 

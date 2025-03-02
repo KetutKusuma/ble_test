@@ -709,7 +709,7 @@ class Command {
     }
   }
 
-  Future<BLEResponse<ReceiveModel>> getReceiveSchedule(
+  Future<BLEResponse<List<ReceiveModel>>> getReceiveSchedule(
       BLEProvider bleProvider) async {
     try {
       int command = CommandCode.get;
@@ -749,28 +749,37 @@ class Command {
         }
         params.add(param);
       }
-
       log("params : ${params}");
+
+      // expected params
+      if (params.length != 16 * 3) {
+        return BLEResponse.error(
+            "Error ambil data jadwal terima, param tidak sesuai");
+      }
+
+      List<ReceiveModel> listReceive = [];
 
       int startIndex = 0;
 
-      bool enable = ConvertV2().bufferToBool(params[startIndex], 0);
-      int schedule = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
-      int count = ConvertV2().bufferToUint8(params[startIndex + 2], 0);
-      int interval = ConvertV2().bufferToUint16(params[startIndex + 3], 0);
-      int timeAdjust = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
+      for (var i = 0; i < 16; i++) {
+        bool enable =
+            ConvertV2().bufferToBool(params[(i * 3) + startIndex + 0], 0);
+        int schedule =
+            ConvertV2().bufferToUint16(params[(i * 3) + startIndex + 1], 0);
+        int timeAdjust =
+            ConvertV2().bufferToUint8(params[(i * 3) + startIndex + 2], 0);
+        ReceiveModel receiveModel = ReceiveModel(
+          enable: enable,
+          schedule: schedule,
+          timeAdjust: timeAdjust,
+        );
+        listReceive.add(receiveModel);
+      }
       log("masok end ga nih");
-      ReceiveModel receiveModel = ReceiveModel(
-        enable: enable,
-        schedule: schedule,
-        count: count,
-        interval: interval,
-        timeAdjust: timeAdjust,
-      );
 
       return BLEResponse.success(
         "Sukses dapat jadwal pengambilan gambar",
-        data: receiveModel,
+        data: listReceive,
       );
     } catch (e) {
       return BLEResponse.error("Error dapat jadwal pengambilan gambar : $e");

@@ -20,6 +20,11 @@ class TimePickerHelper {
     return (time.hour * 60) + time.minute;
   }
 
+  static int timeOfDayStringToMinutes(String timeString) {
+    TimeOfDay time = stringToTimeOfDay(timeString);
+    return timeOfDayToMinutes(time);
+  }
+
   static String formatTimeOfDay(TimeOfDay time) {
     // Ensuring two-digit formatting for hours and minutes
     final String hour = time.hour.toString().padLeft(2, '0');
