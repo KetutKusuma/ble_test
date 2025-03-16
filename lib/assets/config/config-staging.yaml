@@ -1,0 +1,11 @@
+# this is config for staging
+
+config: staging
+upload:
+  url: toppi-backend.bimasaktisanjaya.net
+  port: 443
+  protocol: https
+help_upload:
+  url: https://toppi-backend.bimasaktisanjaya.net/upload
+test_ocr:
+  url: https://toppi-backend.bimasaktisanjaya.net/upload?test=1

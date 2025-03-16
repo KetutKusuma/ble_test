@@ -1251,7 +1251,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           if (input != null) {
                             if (input) {
                               BLEResponse resBLE =
-                                  await _command.resetConfig(bleProvider);
+                                  await _command.formatFAT(device, bleProvider);
 
                               Snackbar.showHelperV2(
                                 ScreenSnackbar.adminsettings,

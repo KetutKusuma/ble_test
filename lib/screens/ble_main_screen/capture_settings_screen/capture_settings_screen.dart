@@ -653,7 +653,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         if (result != null) {
                           int dataUpdate = ConvertTime.dateTimeStringToMinute(
                               TimePickerHelper.formatTimeOfDay(result));
-                          captureModel.schedule = dataUpdate;
+                          captureModel.specialSchedule = dataUpdate;
                           BLEResponse resBLE = await _commandSet
                               .setCaptureSchedule(bleProvider, captureModel);
                           Snackbar.showHelperV2(

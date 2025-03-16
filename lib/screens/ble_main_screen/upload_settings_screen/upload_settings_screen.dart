@@ -670,10 +670,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             data: wifiSsidTxt,
                             onTap: () async {
                               try {
+                                controller.text = wifiSsidTxt;
                                 String? input = await _showInputDialog(
-                                  controller,
-                                  "Nama Wifi",
-                                );
+                                    controller, "Nama Wifi", inputFormatters: [
+                                  LengthLimitingTextInputFormatter(16)
+                                ]);
                                 if (input != null) {
                                   gatewayModel.wifiSSID = input;
                                   BLEResponse resBLE = await _commandSet
@@ -703,8 +704,12 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             data: wifiPasswordTxt,
                             onTap: () async {
                               try {
+                                controller.text = wifiPasswordTxt;
                                 String? input = await _showInputDialog(
-                                    controller, "Kata Sandi Wifi");
+                                    controller, "Kata Sandi Wifi",
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(16)
+                                    ]);
                                 if (input != null) {
                                   gatewayModel.wifiPassword = input;
                                   BLEResponse resBLE = await _commandSet
@@ -806,8 +811,13 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       onTap: () async {
                         try {
                           controller.text = modemApnTxt;
-                          String? input =
-                              await _showInputDialog(controller, "Modem APN");
+                          String? input = await _showInputDialog(
+                            controller,
+                            "Modem APN",
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ],
+                          );
                           if (input != null) {
                             controller.clear();
                             gatewayModel.modemAPN = input;

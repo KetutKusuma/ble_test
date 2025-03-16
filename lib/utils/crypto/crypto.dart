@@ -119,7 +119,7 @@ class CryptoMD5 {
 }
 
 class AESService {
-  static const platform = MethodChannel('com.example.ble_test/aes');
+  static const platform = MethodChannel('com.ble_toppi/aes');
   static Future<String> encrypt(
       String plaintext, List<int> key, List<int> iv) async {
     try {

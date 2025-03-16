@@ -37,9 +37,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // for connection ble
   StreamSubscription<BluetoothConnectionState>? _connectionStateSubscription;
-  BluetoothConnectionState _connectionState =
-      BluetoothConnectionState.disconnected;
+
   late BLEProvider bleProvider;
+  BluetoothDevice? bluetoothDevice;
 
   @override
   void initState() {
@@ -121,14 +121,16 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void onConnectPressed(BluetoothDevice device) async {
-    Duration timeout = const Duration(seconds: 5);
     try {
       pd.show(message: "Proses masuk ...");
       await bleProvider.connect(device).timeout(
             const Duration(seconds: 5),
-            onTimeout: () =>
-                throw TimeoutException("Gagal tersambung, coba lagi"),
+            onTimeout: () => throw TimeoutException(
+              "Gagal tersambung, coba lagi",
+            ),
           );
+
+      bluetoothDevice = device;
       Future.delayed(const Duration(seconds: 1, milliseconds: 500));
       // login new v2
       BLEResponse resHandshake =
@@ -168,15 +170,15 @@ class _SearchScreenState extends State<SearchScreen> {
           resLogin.message,
           success: false,
         );
-      } else {
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BleMainScreen(device: device),
-            ),
-          );
-        }
+        return;
+      }
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BleMainScreen(device: device),
+          ),
+        );
       }
     } catch (e) {
       pd.hide();
@@ -266,30 +268,35 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeySearchScreen,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Pindai Perangkat',
-            style: GoogleFonts.readexPro(),
+      child: WillPopScope(
+        onWillPop: () async {
+          if (bluetoothDevice != null) {
+            if (bluetoothDevice!.isConnected) {
+              await bluetoothDevice!.disconnect(androidDelay: 1000);
+            }
+          }
+          return true;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'Pindai Perangkat',
+              style: GoogleFonts.readexPro(),
+            ),
+            elevation: 0,
           ),
-          elevation: 0,
-        ),
-        body: RefreshIndicator(
-          onRefresh: onRefresh,
-          child: ListView(
-            children: [
-              ..._buildSystemDeviceTiles(context),
-              ..._buildScanResultTiles(context),
-            ],
+          body: RefreshIndicator(
+            onRefresh: onRefresh,
+            child: ListView(
+              children: [
+                ..._buildSystemDeviceTiles(context),
+                ..._buildScanResultTiles(context),
+              ],
+            ),
           ),
+          floatingActionButton: buildScanButton(context),
         ),
-        floatingActionButton: buildScanButton(context),
       ),
     );
-  }
-
-  // connected
-  bool get isConnected {
-    return _connectionState == BluetoothConnectionState.connected;
   }
 }
