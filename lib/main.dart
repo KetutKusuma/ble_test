@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/config/config.dart';
 import 'package:ble_test/screens/login_screen/login_screen.dart';
 import 'package:ble_test/utils/extension/string_extension.dart';
 import 'package:flutter/material.dart';
@@ -16,15 +17,26 @@ import 'screens/bluetooth_off_screen.dart';
 
 void main() {
   FlutterBluePlus.setLogLevel(LogLevel.verbose, color: true);
+  // runApp(
+  //   ChangeNotifierProvider(
+  //     create: (context) => BLEProvider(),
+  //     child: const FlutterBlueApp(),
+  //   ),
+  // );
+
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => BLEProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => BLEProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ConfigProvider(),
+        ),
+      ],
       child: const FlutterBlueApp(),
     ),
   );
-
-  String mama = "";
-  mama.changeEmptyString();
 }
 
 //

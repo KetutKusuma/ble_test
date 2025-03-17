@@ -9,6 +9,8 @@ import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/config/config.dart';
+import 'package:ble_test/config/hidden.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/log_explorer_screen/log_explorer_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -37,6 +39,7 @@ class AdminSettingsScreen extends StatefulWidget {
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   late BLEProvider bleProvider;
+  late ConfigProvider configProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
@@ -99,14 +102,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   // v2
   late AdminModels adminModels;
-  Command _command = Command();
-  CommandSet _commandSet = CommandSet();
+  final Command _command = Command();
+  final CommandSet _commandSet = CommandSet();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    configProvider = Provider.of<ConfigProvider>(context, listen: false);
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
@@ -497,22 +501,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   void sendRequest(String hardwareID, String toppiID) async {
-    final url = Uri.parse('https://toppi-admin.bimasaktisanjaya.com/license');
-    final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({
-      "HardwareID": hardwareID,
-      "ToppiID": toppiID,
-    });
-
-    log('Body: $body');
-
     try {
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: body,
-      );
-
+      final response = await Hidden()
+          .sendRequest(hardwareID, toppiID, configProvider.config);
       if (response.statusCode == 200) {
         setState(() {
           licenseTxtController.text = jsonDecode(response.body)["message"];
@@ -521,7 +512,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         log('Error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      log('Error dapat send request: $e');
+      log('Error catch send request: $e');
     }
   }
 
@@ -541,6 +532,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               const Text("Masukan ID dan "),
               GestureDetector(
                 onLongPress: () {
+                  if (configProvider.config.config == "production") {
+                    return;
+                  }
                   sendRequest(hardwareIDTxt, idTxtController.text);
                   setState(() {
                     licenseTxtController.text = "12345678";

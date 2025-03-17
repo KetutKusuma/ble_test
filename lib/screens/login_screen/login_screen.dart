@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/config/config.dart';
+import 'package:ble_test/config/hidden.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/screens/search_screen/search_screen.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -23,6 +27,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   late BLEProvider bleProvider;
+  late ConfigProvider configProvider;
 
   ///==== for connection ble =====
   BluetoothConnectionState _connectionState =
@@ -60,12 +65,16 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isObscureText = true;
   bool rememberMe = false;
   final storage = const FlutterSecureStorage();
+  int _tapCount = 0;
+  int _tapCountBLE = 0;
 
   @override
   void initState() {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    configProvider = Provider.of<ConfigProvider>(context, listen: false);
+    configProvider.loadConfig();
     getAppInfo();
-    // TODO: implement initState
+
     super.initState();
     pd = SimpleFontelicoProgressDialog(
       context: context,
@@ -75,6 +84,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     macAddressTxtConroller.addListener(() {
       _onTextChanged(macAddressTxtConroller);
+    });
+
+    // this is for hidden
+    idToppiHiddenTxtController.addListener(() {
+      _onTextChanged(idToppiHiddenTxtController);
     });
   }
 
@@ -249,6 +263,149 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  String getVersion(String config) {
+    if (config == "staging") {
+      if (!versionApp.contains("-staging")) {
+        versionApp = "$versionApp-staging";
+      }
+    } else {
+      if (versionApp.contains("-staging")) {
+        versionApp = versionApp.replaceAll("-staging", "");
+      }
+    }
+
+    return "v$versionApp";
+  }
+
+  /// hanya untuk SUDO
+  TextEditingController hardwareIDTxtController = TextEditingController();
+  TextEditingController idToppiHiddenTxtController = TextEditingController();
+  String theLicense = "12345678";
+
+  void sendRequest(String hardwareID, String toppiID) async {
+    try {
+      log("data send : $hardwareID, $toppiID");
+      final response = await Hidden()
+          .sendRequest(hardwareID, toppiID, configProvider.config);
+      log("data anying : $response");
+      if (response.statusCode == 200) {
+        setState(() {
+          theLicense = jsonDecode(response.body)["message"];
+        });
+      } else {
+        log('Error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      log('Error catch login send request: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> _showInputDialogForID({
+    TextInputType? keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? lengthTextNeed = 0,
+  }) async {
+    Map<String, dynamic>? input = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          /// maunya disini buat fungsi tersembunyi bisa ngehit si license
+          /// tapi entar aja
+          title: const Text("Masukan HARDWARE ID dan ID TOPPI "),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Form(
+                child: TextFormField(
+                  controller: hardwareIDTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan HARDWARE ID",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: keyboardType,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Tolong diisi sebuah data';
+                    }
+                    return null;
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(8),
+                    // FilteringTextInputFormatter
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              Form(
+                child: TextFormField(
+                  controller: idToppiHiddenTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan TOPPI ID",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: keyboardType,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Tolong diisi sebuah data';
+                    }
+                    return null;
+                  },
+                  inputFormatters: inputFormatters,
+                ),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              Row(
+                children: [
+                  Text("Lisensinya adalah : $theLicense"),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: theLicense));
+                    },
+                    child: const Icon(
+                      Icons.copy,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                idToppiHiddenTxtController.clear();
+                hardwareIDTxtController.clear();
+              },
+              child: const Text("Batalkan"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (configProvider.config.config == "production") {
+                  return;
+                }
+                sendRequest(
+                  hardwareIDTxtController.text,
+                  idToppiHiddenTxtController.text,
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return input;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
@@ -267,10 +424,40 @@ class _LoginScreenState extends State<LoginScreen> {
                       Icons.bluetooth_audio_rounded,
                       size: 30,
                     ),
-                    Text(
-                      "BLE-TOPPI",
-                      style: GoogleFonts.readexPro(
-                          fontSize: 35, fontWeight: FontWeight.bold),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _tapCountBLE++;
+                        });
+
+                        if (_tapCountBLE == 5) {
+                          _tapCountBLE = 0;
+                          screenLock(
+                            context: context,
+                            correctString: "1111",
+                            maxRetries: 1,
+                            onMaxRetries: (value) {
+                              Navigator.pop(context);
+                            },
+                            onUnlocked: () {
+                              log("berhasil");
+                              _showInputDialogForID(
+                                keyboardType: TextInputType.text,
+                                inputFormatters: [
+                                  LengthLimitingTextInputFormatter(14),
+                                  // FilteringTextInputFormatter
+                                ],
+                                lengthTextNeed: 12,
+                              );
+                            },
+                          );
+                        }
+                      },
+                      child: Text(
+                        "BLE-TOPPI",
+                        style: GoogleFonts.readexPro(
+                            fontSize: 35, fontWeight: FontWeight.bold),
+                      ),
                     ),
                     const SizedBox(
                       height: 30,
@@ -465,7 +652,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
-                            inputFormatters: [],
+                            inputFormatters: const [],
                           ),
                           const SizedBox(
                             height: 10,
@@ -657,11 +844,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment:
                       MainAxisAlignment.end, // Aligns the bottom section
                   children: [
-                    Text(
-                      "v$versionApp",
-                      style: GoogleFonts.readexPro(
-                        fontSize: 15,
-                        color: Colors.black45,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _tapCount++;
+                        });
+                        if (_tapCount == 10) {
+                          configProvider.loadConfig();
+
+                          _tapCount = 0;
+                        }
+                      },
+                      child: Text(
+                        getVersion(configProvider.config.config),
+                        style: GoogleFonts.readexPro(
+                          fontSize: 15,
+                          color: Colors.black45,
+                        ),
                       ),
                     ),
                     const SizedBox(

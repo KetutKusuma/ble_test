@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
 import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/ble-v2/ble_url/ble_url.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
 import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
@@ -10,6 +8,7 @@ import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_mode
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/ble-v2/ocr/ocr.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/config/config.dart';
 import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
@@ -19,8 +18,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
@@ -36,6 +33,7 @@ class CaptureScreen extends StatefulWidget {
 
 class _CaptureScreenState extends State<CaptureScreen> {
   late BLEProvider bleProvider;
+  late ConfigProvider configProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
@@ -397,7 +395,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
                                                   String resultOCR =
                                                       await OCRBLE().ocr(
-                                                    BLEUrl.testOCR,
+                                                    configProvider
+                                                        .config.urlTestOCR,
                                                     bufferData,
                                                     // dataParse['img'],
                                                   );

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:yaml/yaml.dart';
 
 class ConfigModel {
   final String config;
   final String urlUpload;
-  final String portUpload;
+  final int portUpload;
   final String protocolUpload;
   final String urlHelpUpload;
   final String urlTestOCR;
@@ -40,12 +41,18 @@ class ConfigModel {
 }
 
 class ConfigProvider with ChangeNotifier {
-  late ConfigModel _config;
+  ConfigModel? _config;
 
-  ConfigModel get config => _config;
+  ConfigModel get config => _config ?? ConfigModel('', '', 0, '', '', '');
 
   loadConfig() async {
     String configFile = 'config.yaml';
+
+    final packageInfo = await PackageInfo.fromPlatform();
+    String versionApp = packageInfo.version;
+    if (versionApp.contains("staging")) {
+      configFile = 'config-staging.yaml';
+    }
 
     if (config.config == 'production') {
       configFile = 'config-staging.yaml';
@@ -54,7 +61,8 @@ class ConfigProvider with ChangeNotifier {
     final yamlString = await rootBundle.loadString("assets/config/$configFile");
     final yaml = loadYaml(yamlString);
 
-    _config = ConfigModel.fromJson(yaml);
+    Map<String, dynamic> yamlMap = Map<String, dynamic>.from(yaml);
+    _config = ConfigModel.fromJson(yamlMap);
 
     notifyListeners();
   }

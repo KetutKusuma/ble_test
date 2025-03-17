@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/ble-v2/ble_url/ble_url.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
@@ -11,6 +9,7 @@ import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
 import 'package:ble_test/ble-v2/ocr/ocr.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/rtc.dart';
+import 'package:ble_test/config/config.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -45,6 +44,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
   get filter => widget.filter;
   get device => widget.device;
   late BLEProvider bleProvider;
+  late ConfigProvider configProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
@@ -61,6 +61,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
     // TODO: implement initState
     super.initState();
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    configProvider = Provider.of<ConfigProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
           context: context, barrierDimisable: true);
@@ -344,10 +345,10 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                             onTap: () async {
                               try {
                                 _progressDialog.show(
-                                    message: "Harap tunggu hasil download...");
+                                    message: "Harap tunggu hasil unggah...");
 
                                 String resultUpload = await OCRBLE().ocr(
-                                  BLEUrl.upload,
+                                  configProvider.config.urlHelpUpload,
                                   dataBuffer.data ?? [],
                                   // dataParse['img'],
                                 );
@@ -412,7 +413,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                     message: "Harap tunggu hasil OCR...");
 
                                 String resultOCR = await OCRBLE().ocr(
-                                  BLEUrl.testOCR,
+                                  configProvider.config.urlTestOCR,
                                   dataBuffer.data ?? [],
                                   // dataParse['img'],
                                 );
