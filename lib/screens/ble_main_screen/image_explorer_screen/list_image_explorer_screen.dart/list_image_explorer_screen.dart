@@ -490,7 +490,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 }
                                 DateTime dateTime = DateTime.now();
                                 String datetimenow =
-                                    DateFormat('yyyy-MM-dd_HH#mm')
+                                    DateFormat('yyyy-MM-dd_HH#mm#ss')
                                         .format(dateTime);
                                 String fileName = "img_$datetimenow.jpg";
                                 if (mounted) {

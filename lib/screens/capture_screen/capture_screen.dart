@@ -278,9 +278,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                             onPressed: () async {
                                               DateTime dateTime =
                                                   DateTime.now();
-                                              String datetimenow =
-                                                  DateFormat('yyyy-MM-dd_HH#mm')
-                                                      .format(dateTime);
+                                              String datetimenow = DateFormat(
+                                                      'yyyy-MM-dd_HH#mm#ss')
+                                                  .format(dateTime);
                                               String fileName =
                                                   "img_$datetimenow.jpg";
 

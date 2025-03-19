@@ -252,18 +252,9 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         try {
-                          var status = await Permission.storage.request();
-                          if (!status.isGranted) {
-                            Snackbar.show(
-                              ScreenSnackbar.logexplorerscreen,
-                              "Izin penyimpanan ditolak",
-                              success: false,
-                            );
-                            return;
-                          }
                           DateTime dateTime = DateTime.now();
-                          String datetimenow =
-                              DateFormat('yyyy-MM-dd_HH#mm').format(dateTime);
+                          String datetimenow = DateFormat('yyyy-MM-dd_HH#mm#ss')
+                              .format(dateTime);
                           String fileName = "log_$datetimenow.txt";
                           if (mounted) {
                             Navigator.pop(context);
