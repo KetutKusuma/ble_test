@@ -45,7 +45,7 @@ class ImageMetaDataModel {
 
   String getDateTimeTakenString() {
     DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
-        (dateTimeTaken! + 946659600) * 1000);
+        (dateTimeTaken! + 946684800) * 1000);
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 

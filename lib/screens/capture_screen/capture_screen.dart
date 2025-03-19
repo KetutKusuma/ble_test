@@ -58,6 +58,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   void initState() {
     super.initState();
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    configProvider = Provider.of<ConfigProvider>(context, listen: false);
     _progressDialog = SimpleFontelicoProgressDialog(
       context: context,
       barrierDimisable: true,

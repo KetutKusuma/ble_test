@@ -5,13 +5,13 @@ import 'package:intl/intl.dart' as intl;
 
 class ConvertV2 {
   int getTimeNowSeconds() {
-    intl.DateFormat format = intl.DateFormat("yyyy-MM-dd HH:mm:ss");
-    // DateTime dateTimeS = format.parseUtc(timeNow); // Force UTC parsing
     DateTime dateTimeS = DateTime.now();
 
     // Convert to Unix timestamp (in seconds)
-    int unixTimestampSS = dateTimeS.millisecondsSinceEpoch ~/ 1000;
-    return unixTimestampSS - 946659600;
+    Duration durationTimeS = dateTimeS.timeZoneOffset;
+    int helpDuration = durationTimeS.inSeconds;
+    int unixTimestampSS = (dateTimeS.millisecondsSinceEpoch) ~/ 1000;
+    return (unixTimestampSS + helpDuration) - 946684800;
   }
 
   String minuteToDateTimeString(int minute) {

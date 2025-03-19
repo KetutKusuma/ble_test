@@ -568,9 +568,11 @@ class Command {
 
       startIndex = 14;
       int dateTimeMiliSeconds =
-          ConvertV2().bufferToUint32(params[startIndex], 0) + (946659600);
-      DateTime dateTime =
-          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000);
+          ConvertV2().bufferToUint32(params[startIndex], 0) + (946684800);
+      // log("datetime before : ${}")
+      DateTime dateTimeFromBle =
+          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000)
+              .toUtc();
 
       // time utc
       startIndex = 15;
@@ -611,7 +613,7 @@ class Command {
           nearAll: nearAll,
           nearUnsent: nearUnsent,
         ),
-        dateTime: dateTime,
+        dateTime: dateTimeFromBle,
         timeUTC: timeUTC,
         otherModel: OtherModel(
           mustToDo: MustToDoModel(
