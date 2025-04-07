@@ -1,19 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
+import 'package:ble_test/ble-v2/model/sub_model/gateway_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
+import 'package:ble_test/screens/ble_main_screen/upload_settings_screen/upload_enable_schedule_settings_screen/upload_enable_schedule_settings_screen.dart';
 import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import '../../../constant/constant_color.dart';
 import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
 
 class UploadSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -24,33 +31,24 @@ class UploadSettingsScreen extends StatefulWidget {
 }
 
 class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      serverTxt = '-',
+  String serverTxt = '-',
       portTxt = '-',
-      uploadEnableTxt = '-',
-      uploadScheduleTxt = '-',
       uploadUsingTxt = '-',
       uploadInitialDelayTxt = '-',
       wifiSsidTxt = '-',
       wifiPasswordTxt = '-',
       modemApnTxt = '-';
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
+  TextEditingController portController = TextEditingController();
 
   final List<Map<String, dynamic>> listMapUploadUsing = [
     {"title": "Wifi", "value": 0},
@@ -58,17 +56,34 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     {"title": "NB-Iot", "value": 2},
   ];
 
-  bool isUploadSettings = true;
+  // for progress dialog
+  late SimpleFontelicoProgressDialog _progressDialog;
+
+  // ini untuk uplado schedule dan upload enbale
+  List<bool> uploadEnable = [];
+  List<int> uploadSchedule = [];
+  TextEditingController uploadScheduleTxtController = TextEditingController();
+
+  // v2
+  final _commandSet = CommandSet();
+  late GatewayModel gatewayModel;
 
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
+          Navigator.popUntil(
             context,
+            (route) => route.isFirst,
           );
         }
         if (mounted) {
@@ -76,22 +91,48 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         }
       },
     );
-    initGetRawUpload();
-    initDiscoverServices();
+    portController.addListener(() {
+      final text = portController.text;
+      if (text.isNotEmpty) {
+        final value = double.tryParse(text);
+        if (value != null) {
+          if (value < 0 && text.length > 65535) {
+            // Otomatis set menjadi 0.5 jika kurang dari 0.5
+            portController.text = '0';
+            portController.selection = TextSelection.fromPosition(TextPosition(
+                offset:
+                    portController.text.length)); // Memastikan cursor di akhir
+          } else if (value > 65535) {
+            // Otomatis set menjadi 1.5 jika lebih dari 1.5
+            portController.text = '65535';
+            portController.selection = TextSelection.fromPosition(
+              TextPosition(
+                offset: portController.text.length,
+              ),
+            ); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
+    initGetDataGateway();
   }
 
   @override
   void dispose() {
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isUploadSettings = false;
+    _connectionStateSubscription.cancel();
+
     super.dispose();
+  }
+
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Harap Tunggu...",
+    );
   }
 
   onRefresh() async {
     try {
-      initGetRawUpload();
+      initGetDataGateway();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -99,150 +140,60 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     }
   }
 
-  initGetRawUpload() async {
-    try {
-      if (isConnected) {
-        List<int> list = utf8.encode("raw_upload?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Upload", device);
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
-          success: false);
+  String getUploadUsing(int value) {
+    if (value == 0) {
+      return "Wifi";
+    } else if (value == 1) {
+      return "Sim800l";
+    } else if (value == 2) {
+      return "NB-Iot";
+    } else {
+      return "-";
     }
   }
 
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.uploadsettings,
-            prettyException("Discover Services Error:", e),
+  initGetDataGateway() async {
+    try {
+      BLEResponse<GatewayModel> res = await Command().getGateway(bleProvider);
+      _progressDialog.hide();
+      if (res.status) {
+        gatewayModel = res.data!;
+        setState(() {
+          serverTxt = res.data!.server.changeEmptyString();
+          portTxt = res.data!.port.toString().changeZeroString();
+          uploadUsingTxt = getUploadUsing(res.data!.uploadUsing);
+          uploadInitialDelayTxt = res.data!.uploadInitialDelay.toString();
+          wifiSsidTxt = res.data!.wifiSSID.changeEmptyString();
+          wifiPasswordTxt = res.data!.wifiPassword.changeEmptyString();
+          modemApnTxt = res.data!.modemAPN.changeEmptyString();
+        });
+      } else {
+        Snackbar.show(ScreenSnackbar.uploadsettings, res.message,
             success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isUploadSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 100) {
-                  List<dynamic> result =
-                      UploadSettingsConverter.convertUploadSettings(_value);
-                  if (mounted) {
-                    log("result[1]: '${result[1]}', ${result[1].trim().length} ${result[1].isEmpty}");
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      serverTxt = "${result[1]}";
-                      portTxt = result[2].toString();
-                      uploadEnableTxt = result[3].toString();
-                      uploadScheduleTxt = result[4].toString();
-                      uploadUsingTxt = result[5] == 0
-                          ? "Wifi"
-                          : result[5] == 1
-                              ? "Sim800l"
-                              : result[5] == 2
-                                  ? "NB-IoT"
-                                  : "Error";
-                      uploadInitialDelayTxt = result[6].toString();
-                      wifiSsidTxt = result[7].toString();
-                      wifiPasswordTxt = result[8].toString();
-                      modemApnTxt = result[9].toString();
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "server") {
-                      serverTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "port") {
-                      portTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_enable") {
-                      uploadEnableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_schedule") {
-                      uploadScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "upload_using") {
-                      uploadUsingTxt = _setSettings.value == "0"
-                          ? "Wifi"
-                          : _setSettings.value == "1"
-                              ? "Sim800l"
-                              : _setSettings.value == "2"
-                                  ? "NB-IoT"
-                                  : "Error";
-                    } else if (_setSettings.setSettings ==
-                        "upload_initial_delay") {
-                      uploadInitialDelayTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_ssid") {
-                      wifiSsidTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "wifi_password") {
-                      wifiPasswordTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "modem_apn") {
-                      modemApnTxt = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Success set ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
-        }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
-          prettyException("Last Value Error:", e),
+      Snackbar.show(ScreenSnackbar.uploadsettings, "Error dapat gateway : $e",
           success: false);
-      log(e.toString());
     }
   }
 
   Future<String?> _showInputDialog(
       TextEditingController controller, String title,
-      {List<TextInputFormatter>? inputFormatters}) async {
+      {List<TextInputFormatter>? inputFormatters,
+      TextInputType? keyboardType = TextInputType.text}) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $title"),
+          title: Text("Masukan data $title"),
           content: Form(
             child: TextFormField(
               controller: controller,
               decoration: const InputDecoration(
-                labelText: "Enter Value",
+                labelText: "Masukan data",
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: keyboardType,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter some text';
@@ -257,16 +208,16 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty && controller.text.length > 12) {
+                if (controller.text.isNotEmpty) {
                   Navigator.pop(context, controller.text);
                   controller.clear();
-                } else {}
+                }
               },
-              child: const Text("OK"),
+              child: const Text("Simpan"),
             ),
           ],
         );
@@ -327,68 +278,199 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     return result;
   }
 
+  Future<List<String>?> showSetupUploadDialog(
+      BuildContext context, int number) async {
+    bool? selectedChoice; // Tracks the selected choice
+
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+          ),
+          titlePadding:
+              const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
+          title: Text(
+            "Setup Destination ${number + 1}",
+            style: GoogleFonts.readexPro(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          content: SizedBox(
+            height: 200,
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  children: [
+                    // for transmit schedule
+                    TextFormField(
+                      readOnly: true,
+                      onTap: () async {
+                        TimeOfDay? result =
+                            await TimePickerHelper.pickTime(context, null);
+                        if (result != null) {
+                          uploadScheduleTxtController.text =
+                              TimePickerHelper.formatTimeOfDay(result);
+                        }
+                      },
+                      style: GoogleFonts.readexPro(),
+                      controller: uploadScheduleTxtController,
+                      decoration: const InputDecoration(
+                        labelText: "Enter Upload Schedule",
+                        hintText: "00.00-23.59",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+
+                    // for destination enable
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Upload Enable",
+                            style: GoogleFonts.readexPro(),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => selectedChoice = true),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: selectedChoice == true
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'True',
+                                      style: GoogleFonts.readexPro(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => selectedChoice = false),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: selectedChoice == false
+                                          ? Colors.red
+                                          : Colors.grey,
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'False',
+                                      style: GoogleFonts.readexPro(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Save logic here
+                if (selectedChoice != null &&
+                    uploadScheduleTxtController.text.isNotEmpty) {
+                  int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
+                      TimePickerHelper.stringToTimeOfDay(
+                          uploadScheduleTxtController.text));
+
+                  Navigator.of(context).pop([
+                    "upload_schedule=$number;$transmitSchedule",
+                    "upload_enable=$number;$selectedChoice",
+                  ]);
+                }
+              },
+              child: Text(
+                'Perbarui',
+                style: GoogleFonts.readexPro(),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                uploadScheduleTxtController.clear();
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Batalkan',
+                style: GoogleFonts.readexPro(),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyUploadSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Upload Settings'),
+          title: const Text('Pengaturan Unggah'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
           child: CustomScrollView(
             slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
+              SliverToBoxAdapter(
+                // hasScrollBody: false,
                 child: Column(
                   children: [
-                    Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                    ),
                     SettingsContainer(
                       title: "Server",
                       data: serverTxt,
                       onTap: () async {
                         try {
+                          controller.text = serverTxt;
                           String? input =
                               await _showInputDialog(controller, "Server");
+                          log("input : $input");
                           if (input != null) {
-                            List<int> list = utf8.encode("server=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "server";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Server", device);
+                            controller.clear();
+                            gatewayModel.server = input;
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -407,17 +489,24 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       data: portTxt,
                       onTap: () async {
                         try {
+                          portController.text = portTxt;
                           String? input = await _showInputDialog(
-                              controller, "Upload Port", inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ]);
+                            portController,
+                            "Upload Port",
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            keyboardType: TextInputType.number,
+                          );
                           if (input != null) {
-                            List<int> list = utf8.encode("port=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "port";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Upload Port", device);
+                            gatewayModel.port = int.parse(input);
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -431,47 +520,100 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.podcasts_rounded,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Upload Enable",
-                      data: uploadEnableTxt,
-                      onTap: () async {
-                        try {
-                          bool? input = await _showTrueFalseDialog(
-                              context, "Upload Enable");
-                          if (input != null) {
-                            List<int> list =
-                                utf8.encode("upload_enable=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Upload Enable", device);
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.uploadsettings,
-                            "Error click on upload enable : $e",
-                            success: false,
-                          );
-                        }
+
+                    // CustomScrollView(
+                    //   slivers: [
+
+                    //   ],
+                    // ),
+                  ],
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                UploadEnableScheduleSettingScreen(
+                                    device: device),
+                          ),
+                        );
                       },
-                      icon: const Icon(
-                        Icons.upload_file,
+                      child: Container(
+                        margin:
+                            const EdgeInsets.only(top: 7, left: 10, right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Icon(CupertinoIcons.gear),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Pengaturan Jadwal dan Aktivasi",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 20,
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Using",
+                      title: "Unggah Menggunakan",
                       data: uploadUsingTxt,
                       onTap: () async {
                         try {
                           Map? input = await _showSelectionPopup(
                               context, listMapUploadUsing);
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("port=${input['value']}");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "upload_using";
-                            _setSettings.value = input['value'].toString();
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Upload Using", device);
+                            gatewayModel.uploadUsing = input["value"];
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(ScreenSnackbar.uploadsettings,
@@ -484,23 +626,30 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       ),
                     ),
                     SettingsContainer(
-                      title: "Upload Initial Delay",
+                      title: "Penundaan Awal Unggah",
+                      description: "(detik)",
                       data: uploadInitialDelayTxt,
                       onTap: () async {
                         try {
+                          controller.text = uploadInitialDelayTxt;
                           String? input = await _showInputDialog(
                               controller, "Upload Initial Delay",
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly
-                              ]);
+                              ],
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      signed: false, decimal: true));
                           if (input != null) {
-                            List<int> list =
-                                utf8.encode("upload_initial_delay=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "upload_initial_delay";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(bytes,
-                                "Success Set Upload Initial Delay", device);
+                            controller.clear();
+                            gatewayModel.uploadInitialDelay = int.parse(input);
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -514,75 +663,171 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.vertical_align_top_rounded,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "Wifi SSID",
-                      data: wifiSsidTxt,
-                      onTap: () async {
-                        try {
-                          String? input =
-                              await _showInputDialog(controller, "Wifi SSID");
-                          if (input != null) {
-                            List<int> list = utf8.encode("wifi_ssid=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "wifi_ssid";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Wifi SSID", device);
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.uploadsettings,
-                            "Error click on wifi ssid : $e",
-                            success: false,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.wifi_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Wifi Password",
-                      data: wifiPasswordTxt,
-                      onTap: () async {
-                        try {
-                          String? input = await _showInputDialog(
-                              controller, "Wifi Password");
-                          if (input != null) {
-                            List<int> list =
-                                utf8.encode("wifi_password=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "wifi_password";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Wifi Password", device);
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.uploadsettings,
-                            "Error click on wifi password : $e",
-                            success: false,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.wifi_password_rounded,
-                      ),
-                    ),
+                    (uploadUsingTxt != "Wifi")
+                        ? const SizedBox()
+                        : SettingsContainer(
+                            title: "Nama Wifi",
+                            data: wifiSsidTxt,
+                            onTap: () async {
+                              try {
+                                controller.text = wifiSsidTxt;
+                                String? input = await _showInputDialog(
+                                    controller, "Nama Wifi", inputFormatters: [
+                                  LengthLimitingTextInputFormatter(16)
+                                ]);
+                                if (input != null) {
+                                  gatewayModel.wifiSSID = input;
+                                  BLEResponse resBLE = await _commandSet
+                                      .setGateway(bleProvider, gatewayModel);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.uploadsettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
+                                }
+                              } catch (e) {
+                                Snackbar.show(
+                                  ScreenSnackbar.uploadsettings,
+                                  "Error click on Nama Wifi : $e",
+                                  success: false,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.wifi_rounded,
+                            ),
+                          ),
+                    (uploadUsingTxt != "Wifi")
+                        ? const SizedBox()
+                        : SettingsContainer(
+                            title: "Kata Sandi Wifi",
+                            data: wifiPasswordTxt,
+                            onTap: () async {
+                              try {
+                                controller.text = wifiPasswordTxt;
+                                String? input = await _showInputDialog(
+                                    controller, "Kata Sandi Wifi",
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(16)
+                                    ]);
+                                if (input != null) {
+                                  gatewayModel.wifiPassword = input;
+                                  BLEResponse resBLE = await _commandSet
+                                      .setGateway(bleProvider, gatewayModel);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.uploadsettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
+                                }
+                              } catch (e) {
+                                Snackbar.show(
+                                  ScreenSnackbar.uploadsettings,
+                                  "Error click on Kata Sandi Wifi : $e",
+                                  success: false,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.wifi_password_rounded,
+                            ),
+                          ),
+                    (uploadUsingTxt != "Wifia")
+                        ? const SizedBox()
+                        : Padding(
+                            padding: const EdgeInsets.only(
+                                left: 10.0, right: 10, top: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      List<int> list =
+                                          utf8.encode("wifi_connect!");
+                                      Uint8List bytes =
+                                          Uint8List.fromList(list);
+                                      BLEUtils.funcWrite(bytes,
+                                          "Success Connect Wifi", device);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 10),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Colors.green.shade600),
+                                      child: Text(
+                                        "Connect Wifi",
+                                        style: GoogleFonts.readexPro(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 15,
+                                ),
+                                Expanded(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      splashColor: Colors.black,
+                                      onTap: () {
+                                        List<int> list =
+                                            utf8.encode("wifi_disconnect!");
+                                        Uint8List bytes =
+                                            Uint8List.fromList(list);
+                                        BLEUtils.funcWrite(bytes,
+                                            "Success Disonnect Wifi", device);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors.grey.shade600),
+                                        child: Text(
+                                          "Disconnect Wifi",
+                                          style: GoogleFonts.readexPro(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                     SettingsContainer(
                       title: "Modem APN",
                       data: modemApnTxt,
                       onTap: () async {
                         try {
-                          String? input =
-                              await _showInputDialog(controller, "Modem APN");
+                          controller.text = modemApnTxt;
+                          String? input = await _showInputDialog(
+                            controller,
+                            "Modem APN",
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ],
+                          );
                           if (input != null) {
-                            List<int> list = utf8.encode("modem_apn=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings.setSettings = "modem_apn";
-                            _setSettings.value = input;
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Modem APN", device);
+                            controller.clear();
+                            gatewayModel.modemAPN = input;
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
                           }
                         } catch (e) {
                           Snackbar.show(
@@ -596,6 +841,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.wifi_tethering_error,
                       ),
                     ),
+                    const SizedBox(
+                      height: 15,
+                    )
                   ],
                 ),
               )

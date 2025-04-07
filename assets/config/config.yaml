@@ -1,0 +1,11 @@
+# this is config for production
+
+config: production
+upload:
+  url: toppi-backend.bimasaktisanjaya.com
+  port: 443
+  protocol: https
+help_upload:
+  url: https://toppi-backend.bimasaktisanjaya.com/upload
+test_ocr:
+  url: https://toppi-backend.bimasaktisanjaya.com/upload?test=1

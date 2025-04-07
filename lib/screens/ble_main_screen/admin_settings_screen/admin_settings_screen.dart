@@ -1,18 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'package:ble_test/utils/ble.dart';
-import 'package:ble_test/utils/converter/settings/admin_settings_convert.dart';
-import 'package:ble_test/utils/extra.dart';
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
+import 'package:ble_test/ble-v2/model/admin_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
+import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/config/config.dart';
+import 'package:ble_test/config/hidden.dart';
+import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/log_explorer_screen/log_explorer_screen.dart';
+import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
+import 'package:ble_test/utils/enum/role.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
+import 'package:http/http.dart' as http;
 
 class AdminSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -24,22 +38,16 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  // for connection
+  late BLEProvider bleProvider;
+  late ConfigProvider configProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
 
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  String statusTxt = '-',
-      idTxt = '-',
+  String idTxt = '-',
       voltCoef1Txt = '-',
       voltCoef2Txt = '-',
       brightnessText = '-',
@@ -49,37 +57,87 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       hMirrorText = '-',
       vFlipText = '-',
       cameraJpgQualityTxt = '-',
-      roleTxt = '-';
+      adjustmentImageRotationTxt = "-",
+      roleTxt = '-',
+      hardwareIDTxt = "-";
 
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController idTxtController = TextEditingController();
+  TextEditingController licenseTxtController = TextEditingController();
   TextEditingController voltageCoefTxtController = TextEditingController();
+  TextEditingController cameraJpegQualityController = TextEditingController();
+  TextEditingController adjustmentImageRotationController =
+      TextEditingController();
 
-  final List<Map<String, dynamic>> dataMap = [
-    {"title": "Undefiend", "value": 0},
-    {"title": "Regular", "value": 1},
-    {"title": "Gateway", "value": 2},
+  final List<Map<String, dynamic>> dataMapRole = [
+    // {"title": "Tidak Terdefinisi", "value": 0},
+    {"title": "Regular", "value": 0},
+    {"title": "Gateway", "value": 1},
+  ];
+  final List<Map<String, dynamic>> dataMapBrightnessContrastSaturation = [
+    {"title": "-2", "value": -2},
+    {"title": "-1", "value": -1},
+    {"title": "0", "value": 0},
+    {"title": "1", "value": 1},
+    {"title": "2", "value": 2},
+  ];
+  final List<Map<String, dynamic>> dataMapSpecialEffect = [
+    {"title": "Tidak ada", "value": 0},
+    {"title": "Negative", "value": 1},
+    {"title": "Grayscale", "value": 2},
+    {"title": "Red Tint", "value": 3},
+    {"title": "Green Tint", "value": 4},
+    {"title": "Blue Tint", "value": 5},
+    {"title": "Sepia", "value": 6},
   ];
   List<int> bits = [];
   bool isAdminSettings = true;
+  late SimpleFontelicoProgressDialog _progressDialog;
+
+  // for get enable
+  bool isGetEnable = false;
+  String enableTxt = "-";
+
+  // for get print to serial monitor
+  String printToSerialMonitorTxt = "-";
+
+  // v2
+  late AdminModels adminModels;
+  final Command _command = Command();
+  final CommandSet _commandSet = CommandSet();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    configProvider = Provider.of<ConfigProvider>(context, listen: false);
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
-            context,
-          );
+          if (mounted) {
+            Navigator.popUntil(
+              context,
+              (route) => route.isFirst,
+            );
+
+            Snackbar.show(
+              ScreenSnackbar.adminsettings,
+              "Perangkat Tidak Terhubung",
+              success: false,
+            );
+          }
         }
         if (mounted) {
           setState(() {});
         }
       },
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
 
     idTxtController.addListener(() {
       _onTextChanged(idTxtController);
@@ -107,28 +165,57 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         }
       }
     });
+    cameraJpegQualityController.addListener(() {
+      final text = voltageCoefTxtController.text;
+      if (text.isNotEmpty) {
+        final value = double.tryParse(text);
+        if (value != null) {
+          if (value < 0) {
+            // Otomatis set menjadi 0.5 jika kurang dari 0.5
+            voltageCoefTxtController.text = '0';
+            voltageCoefTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: voltageCoefTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          } else if (value > 63) {
+            // Otomatis set menjadi 1.5 jika lebih dari 1.5
+            voltageCoefTxtController.text = '63';
+            voltageCoefTxtController.selection = TextSelection.fromPosition(
+                TextPosition(
+                    offset: voltageCoefTxtController
+                        .text.length)); // Memastikan cursor di akhir
+          }
+        }
+      }
+    });
+    // licenseTxtController.addListener(() {
+    //   _onTextChanged(licenseTxtController);
+    // });
 
-    initGetRawAdmin();
-    initDiscoverServices();
+    initGetAdmin();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    _connectionStateSubscription.cancel();
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
     isAdminSettings = false;
+    _connectionStateSubscription.cancel();
     super.dispose();
   }
 
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Harap Tunggu...",
+    );
+  }
+
   void _onTextChanged(TextEditingController textEditingController) {
-    String text = textEditingController.text
-        .replaceAll(":", ""); // Remove existing colons
+    // Step 1: Remove invalid characters (allow only a-f, A-F, and 0-9)
+    String text =
+        textEditingController.text.replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
+
+    // Step 2: Format the text with colons
     String formattedText = "";
 
-    // Add colon after every 2 characters
     for (int i = 0; i < text.length; i++) {
       formattedText += text[i];
       if ((i + 1) % 2 == 0 && i != text.length - 1) {
@@ -136,7 +223,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       }
     }
 
-    // Prevent unnecessary updates (cursor position fixes)
+    // Step 3: Prevent unnecessary updates and fix cursor position
     if (formattedText != textEditingController.text) {
       final cursorPosition = textEditingController.selection.baseOffset;
       textEditingController.value = textEditingController.value.copyWith(
@@ -150,7 +237,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   onRefresh() async {
     try {
-      initGetRawAdmin();
+      initGetAdmin();
       await Future.delayed(
         const Duration(seconds: 1),
       );
@@ -160,117 +247,69 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     }
   }
 
-  initGetRawAdmin() async {
+  String getRole(int role) {
+    String roleS = "Tidak terdefinisi";
+    if (role == 0) {
+      roleS = "Regular";
+    }
+    if (role == 1) {
+      roleS = "Gateway";
+    }
+    return roleS;
+  }
+
+  Future initGetAdmin() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_admin?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Admin", device);
+        BLEResponse<AdminModels> adminResponse =
+            await _command.getAdminData(device, bleProvider);
+        _progressDialog.hide();
+        log("admin response : $adminResponse");
+        if (adminResponse.status) {
+          adminModels = adminResponse.data!;
+          idTxt = ConvertV2().arrayUint8ToStringHexAddress(
+              adminResponse.data!.identityModel!.toppiID);
+          hardwareIDTxt = ConvertV2().arrayUint8ToString(
+              adminResponse.data!.identityModel!.hardwareID);
+          voltCoef1Txt = adminResponse
+              .data!.batteryCoefficientModel!.coefficient1
+              .toStringAsFixed(1)
+              .toString();
+          voltCoef2Txt = adminResponse
+              .data!.batteryCoefficientModel!.coefficient2
+              .toStringAsFixed(1)
+              .toString();
+
+          brightnessText = adminResponse.data!.cameraModel!.brightness
+              .toString()
+              .changeForCamera();
+          contrastText = adminResponse.data!.cameraModel!.contrast
+              .toString()
+              .changeForCamera();
+          saturationText = adminResponse.data!.cameraModel!.saturation
+              .toString()
+              .changeForCamera();
+          specialEffectText = getSpecialEffectString(
+              adminResponse.data!.cameraModel!.specialEffect);
+          hMirrorText = adminResponse.data!.cameraModel!.hMirror.toString();
+          vFlipText = adminResponse.data!.cameraModel!.vFlip.toString();
+          cameraJpgQualityTxt =
+              adminResponse.data!.cameraModel!.jpegQuality.toString();
+          adjustmentImageRotationTxt =
+              adminResponse.data!.cameraModel!.adjustImageRotation.toString();
+          roleTxt = getRole(adminResponse.data!.role ?? 0);
+          enableTxt = adminResponse.data!.enable.toString();
+          printToSerialMonitorTxt =
+              adminResponse.data!.printToSerialMonitor.toString();
+          setState(() {});
+        } else {
+          Snackbar.show(ScreenSnackbar.adminsettings, adminResponse.message,
+              success: false);
+        }
       }
     } catch (e) {
       Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
           success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.login,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              log("is notifying ga nih : ${characters.isNotifying}");
-              if (characters.properties.notify && isAdminSettings) {
-                _value = value;
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 16) {
-                  List<dynamic> result =
-                      AdminSettingsConverter().convertAdminSettings(_value);
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      idTxt = result[1].toString();
-                      voltCoef1Txt = result[2].toString();
-                      voltCoef2Txt = result[3].toString();
-                      brightnessText = (result[4]).toString();
-                      contrastText = (result[5]).toString();
-                      saturationText = (result[6]).toString();
-                      specialEffectText = result[7].toString();
-                      hMirrorText = result[8].toString();
-                      vFlipText = result[9].toString();
-                      cameraJpgQualityTxt = result[10].toString();
-                      roleTxt = result[11] == 0
-                          ? "Undifined"
-                          : result[10] == 1
-                              ? "Regular"
-                              : result[10] == 2
-                                  ? "Gateway"
-                                  : "Error";
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "id") {
-                      idTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "voltcoef1") {
-                      voltCoef1Txt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "voltcoef2") {
-                      voltCoef2Txt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "role") {
-                      roleTxt = _setSettings.value == "0"
-                          ? "Undifined"
-                          : _setSettings.value == "1"
-                              ? "Regular"
-                              : _setSettings.value == "2"
-                                  ? "Gateway"
-                                  : "Error";
-                    }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Success set ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-        }
-      }
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Last Value Error:", e),
-          success: false);
-      log(e.toString());
     }
   }
 
@@ -287,45 +326,24 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  /// ===== for connection ===================
-  Future onConnectPressed() async {
-    try {
-      await device.connectAndUpdateStream();
-      // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.login, "Connect: Success", success: true);
-    } catch (e) {
-      if (e is FlutterBluePlusException &&
-          e.code == FbpErrorCode.connectionCanceled.index) {
-        // ignore connections canceled by the user
-      } else {
-        Snackbar.show(
-            ScreenSnackbar.login, prettyException("Connect Error:", e),
-            success: false);
-        log(e.toString());
-      }
-    }
-  }
-
-  Future onCancelPressed() async {
-    try {
-      await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.login, "Cancel: Success", success: true);
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.login, prettyException("Cancel Error:", e),
-          success: false);
-      log(e.toString());
-    }
-  }
-
-  Future onDisconnectPressed() async {
-    try {
-      await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.login, "Disconnect: Success", success: true);
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.login, prettyException("Disconnect Error:", e),
-          success: false);
-      log(e.toString());
+  String getSpecialEffectString(int value) {
+    switch (value) {
+      case 0:
+        return "Tidak Ada";
+      case 1:
+        return "Negative";
+      case 2:
+        return "Grayscale";
+      case 3:
+        return "Red Tint";
+      case 4:
+        return "Green Tint";
+      case 5:
+        return "Blue Tint";
+      case 6:
+        return "Sepia";
+      default:
+        return "None";
     }
   }
 
@@ -344,18 +362,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       builder: (BuildContext context) {
         return SimpleDialog(
           title: Text(msg),
-          children: <Widget>[
+          children: [
             SimpleDialogOption(
               onPressed: () {
                 Navigator.pop(context, true); // Return true
               },
-              child: const Text('True'),
+              child: const Text('Ya'),
             ),
             SimpleDialogOption(
               onPressed: () {
                 Navigator.pop(context, false); // Return false
               },
-              child: const Text('False'),
+              child: const Text('Tidak'),
             ),
           ],
         );
@@ -365,46 +383,276 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return selectedValue;
   }
 
+  /// ya atau tidak untuk reset konfiguasi, format berkas
+  /// dan kembali ke pengaturan pabrik
+  Future<bool?> _showResetDialog(BuildContext context, String msg,
+      {String? description}) async {
+    bool? selectedValue = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  msg,
+                  style: const TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                description == null
+                    ? const SizedBox()
+                    : Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+              ],
+            ),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, true); // Return true
+                  },
+                  child: const Text('Ya'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, false); // Return false
+                  },
+                  child: const Text('Tidak'),
+                ),
+              ],
+            ));
+      },
+    );
+
+    return selectedValue;
+  }
+
   // Function to show a dialog for input
-  Future<String?> _showInputDialog(TextEditingController controller) async {
+  Future<String?> _showInputDialog(
+    TextEditingController controller,
+    String title, {
+    String? label = '',
+    TextInputType? keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? lengthTextNeed = 0,
+  }) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Enter New ID"),
+          title: Text("Masukan $title"),
           content: Form(
             child: TextFormField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: "Enter New ID",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: "Masukan $label",
+                border: const OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: keyboardType,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
+                  return 'Tolong diisi sebuah data';
                 }
                 return null;
               },
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(14),
-                FilteringTextInputFormatter.digitsOnly
-              ],
+              inputFormatters: inputFormatters,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                controller.clear();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty && controller.text.length > 12) {
+                if (lengthTextNeed != 0 &&
+                    lengthTextNeed! < controller.text.length) {
+                  Navigator.pop(context, controller.text);
+                  controller.clear();
+                }
+                if (lengthTextNeed == 0) {
                   Navigator.pop(context, controller.text);
                   controller.clear();
                 } else {}
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return input;
+  }
+
+  void sendRequest(String hardwareID, String toppiID) async {
+    try {
+      final response = await Hidden()
+          .sendRequest(hardwareID, toppiID, configProvider.config);
+      if (response.statusCode == 200) {
+        setState(() {
+          licenseTxtController.text = jsonDecode(response.body)["message"];
+        });
+      } else {
+        log('Error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      log('Error catch send request: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> _showInputDialogForID({
+    TextInputType? keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? lengthTextNeed = 0,
+  }) async {
+    Map<String, dynamic>? input = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          /// maunya disini buat fungsi tersembunyi bisa ngehit si license
+          /// tapi entar aja
+          title: Row(
+            children: [
+              const Text("Masukan ID dan "),
+              GestureDetector(
+                onLongPress: () {
+                  if (configProvider.config.config == "production") {
+                    return;
+                  }
+                  sendRequest(hardwareIDTxt, idTxtController.text);
+                  setState(() {
+                    licenseTxtController.text = "12345678";
+                  });
+                },
+                child: const Text(
+                  "Lisensi",
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "ID Perangkat Keras : $hardwareIDTxt",
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(
+                height: 3,
+              ),
+              Text(
+                "Lisensi : ${adminModels.identityModel!.isLicense ? "Valid" : "Invalid"}",
+                style: const TextStyle(
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              Form(
+                child: TextFormField(
+                  controller: idTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan ID",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: keyboardType,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Tolong diisi sebuah data';
+                    }
+                    return null;
+                  },
+                  inputFormatters: inputFormatters,
+                ),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              Form(
+                child: TextFormField(
+                  controller: licenseTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan Lisensi",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: keyboardType,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Tolong diisi sebuah data';
+                    }
+                    return null;
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(8),
+                    // FilteringTextInputFormatter
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                idTxtController.clear();
+                licenseTxtController.clear();
+              },
+              child: const Text("Batalkan"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (idTxtController.text.isNotEmpty &&
+                    licenseTxtController.text.isNotEmpty) {
+                  Navigator.pop(context, {
+                    "id": idTxtController.text,
+                    "license": licenseTxtController.text
+                  });
+                  idTxtController.clear();
+                  licenseTxtController.clear();
+                  return;
+                }
+                if (licenseTxtController.text.length < 8) {
+                  Snackbar.show(
+                    ScreenSnackbar.adminsettings,
+                    "Lisensi Tidak Valid harus 8 karakter",
+                    success: false,
+                  );
+                }
+                if (idTxtController.text.isEmpty) {
+                  Snackbar.show(
+                    ScreenSnackbar.adminsettings,
+                    "ID Tidak Boleh Kosong",
+                    success: false,
+                  );
+                }
+                if (licenseTxtController.text.isEmpty) {
+                  Snackbar.show(
+                    ScreenSnackbar.adminsettings,
+                    "Lisensi Tidak Boleh Kosong",
+                    success: false,
+                  );
+                }
               },
               child: const Text("OK"),
             ),
@@ -422,7 +670,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Enter Value Voltage Coef"),
+          title: const Text("Masukan data Koefisien Tegangan"),
           content: Form(
             child: TextFormField(
               controller: controller,
@@ -432,7 +680,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
               decoration: const InputDecoration(
-                labelText: 'Value between 0.5 and 1.5',
+                labelText: 'Nilai antara 0.5 and 1.5',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -443,7 +691,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 controller.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
@@ -462,12 +710,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return input;
   }
 
-  Future<Map?> _showSelectionPopup(BuildContext context) async {
+  Future<Map?> _showSelectionPopup(
+      BuildContext context, List<Map<String, dynamic>> dataMap) async {
     Map? result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select an Option'),
+          title: const Text('Pilih Sebuah Opsi'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: dataMap.map((item) {
@@ -491,29 +740,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       key: Snackbar.snackBarKeyAdminSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Admin Settings'),
+          title: const Text('Pengaturan Admin'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -524,135 +752,618 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    Text("VALUE : $_value"),
-                    SettingsContainer(
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {
-                        // List<int> list = utf8.encode("?");
-                        // Uint8List bytes = Uint8List.fromList(list);
-                        // BLEUtils.funcWrite(bytes, "Success Get Raw Admin");
-                      },
+                    const SizedBox(
+                      height: 10,
                     ),
+
                     SettingsContainer(
                       icon: const Icon(Icons.person_outline),
                       title: "ID",
                       data: idTxt,
                       onTap: () async {
-                        String? input = await _showInputDialog(idTxtController);
-                        log("input : $input");
-                        if (input != null) {
-                          List<int> list = utf8.encode("id=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings =
-                              SetSettingsModel(setSettings: "id", value: input);
-                          BLEUtils.funcWrite(bytes, "Success Set ID", device);
+                        if (featureA.contains(roleUser)) {
+                          idTxtController.text = idTxt;
+                          Map<String, dynamic>? input =
+                              await _showInputDialogForID(
+                            keyboardType: TextInputType.text,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(14),
+                              // FilteringTextInputFormatter
+                            ],
+                            lengthTextNeed: 12,
+                          );
+                          if (input != null) {
+                            List<int> dataSetID = ConvertV2()
+                                .stringHexAddressToArrayUint8(input['id'], 5);
+                            log("hasil data set : $dataSetID");
+                            IdentityModel identityUpdate =
+                                adminModels.identityModel!;
+                            log("- identity : $identityUpdate");
+                            identityUpdate.toppiID = dataSetID;
+                            BLEResponse resBLE = await _commandSet.setIdentity(
+                              bleProvider,
+                              identityUpdate,
+                              input['license'],
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
                         }
                       },
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.bolt),
-                      title: "Volt Coef 1",
-                      data: voltCoef1Txt,
-                      onTap: () async {
-                        String? input = await _showInputDialogVoltage(
-                            voltageCoefTxtController);
-                        if (input != null) {
-                          List<int> list = utf8.encode("voltage1_coef=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "voltcoef1", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Volt Coef 1", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.gear_big),
+                        title: "Role",
+                        data: roleTxt,
+                        onTap: () async {
+                          Map? input =
+                              await _showSelectionPopup(context, dataMapRole);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            BLEResponse resBLE = await _commandSet.setRole(
+                                bleProvider, dataUpdate);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.bolt),
-                      title: "Volt Coef 2",
-                      data: voltCoef2Txt,
-                      onTap: () async {
-                        String? input = await _showInputDialogVoltage(
-                            voltageCoefTxtController);
-                        if (input != null) {
-                          List<int> list = utf8.encode("voltage2_coef=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "voltcoef2", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Volt Coef 2", device);
-                        }
-                      },
-                    ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.brightness_5),
-                      title: "Camera Brightness",
-                      data: brightnessText,
-                      onTap: () {},
-                    ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.brightness_6),
-                      title: "Camera Contrast",
-                      data: contrastText,
-                      onTap: () {},
-                    ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.brightness_1_rounded),
-                      title: "Camera Saturation",
-                      data: saturationText,
-                      onTap: () {},
-                    ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.wand_stars_inverse),
-                      title: "Camera Special effect",
-                      data: specialEffectText,
-                      onTap: () {},
-                    ),
-                    SettingsContainer(
-                      icon: const Icon(Icons.flip),
-                      title: "Camera H Mirror",
-                      data: hMirrorText,
-                      onTap: () {},
-                    ),
-                    SettingsContainer(
-                      icon: Transform.rotate(
-                        angle: 3.14 / 2,
-                        child: const Icon(
-                          Icons.flip,
+
+                    Visibility(
+                      visible: featureB.contains(roleUser),
+                      child: SettingsContainer(
+                        title: "Aktifkan Toppi",
+                        data: enableTxt == "true" ? "Ya" : "Tidak",
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Aktifkan Toppi");
+                          if (input != null) {
+                            BLEResponse resBLE =
+                                await _commandSet.setEnable(bleProvider, input);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.check_circle_outline_outlined,
                         ),
                       ),
-                      title: "Camera V Flip",
-                      data: vFlipText,
-                      onTap: () {},
                     ),
-                    SettingsContainer(
-                      icon: const Icon(
-                        Icons.high_quality_outlined,
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.bolt),
+                        title: "Koefisien Tegangan 1",
+                        data: voltCoef1Txt,
+                        onTap: () async {
+                          voltageCoefTxtController.text = voltCoef1Txt;
+                          String? input = await _showInputDialogVoltage(
+                              voltageCoefTxtController);
+                          if (input != null) {
+                            BatteryCoefficientModel batteryCoef =
+                                adminModels.batteryCoefficientModel!;
+                            log("inputan coef 1 : $input");
+                            batteryCoef.coefficient1 = double.parse(input);
+                            BLEResponse resBLE =
+                                await _commandSet.setBatteryVoltageCoef(
+                              bleProvider,
+                              batteryCoef,
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
                       ),
-                      title: "Camera Jpg Quality",
-                      data: cameraJpgQualityTxt,
-                      onTap: () {},
                     ),
-                    SettingsContainer(
-                      icon: const Icon(CupertinoIcons.gear_big),
-                      title: "Role",
-                      data: roleTxt,
-                      onTap: () async {
-                        Map? result = await _showSelectionPopup(context);
-                        if (result != null) {
-                          List<int> list =
-                              utf8.encode("role=${result["value"]}");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "role",
-                              value: result["value"].toString());
-                          BLEUtils.funcWrite(bytes, "Success Set Role", device);
-                        }
-                      },
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.bolt),
+                        title: "Koefisien Tegangan 2",
+                        data: voltCoef2Txt,
+                        onTap: () async {
+                          voltageCoefTxtController.text = voltCoef2Txt;
+                          String? input = await _showInputDialogVoltage(
+                              voltageCoefTxtController);
+                          if (input != null) {
+                            BatteryCoefficientModel batteryCoef =
+                                adminModels.batteryCoefficientModel!;
+                            log("inputan coef 2 : $input");
+                            batteryCoef.coefficient2 = double.parse(input);
+                            BLEResponse resBLE =
+                                await _commandSet.setBatteryVoltageCoef(
+                              bleProvider,
+                              batteryCoef,
+                            );
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
                     ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.brightness_5),
+                        title: "Kecerahan Kamera",
+                        data: brightnessText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapBrightnessContrastSaturation);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.brightness = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.brightness_6),
+                        title: "Kontras Kamera",
+                        data: contrastText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapBrightnessContrastSaturation);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.contrast = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.brightness_1_rounded),
+                        title: "Saturasi Kamera",
+                        data: saturationText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapBrightnessContrastSaturation);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.saturation = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(CupertinoIcons.wand_stars_inverse),
+                        title: "Efek Khusus Kamera",
+                        data: specialEffectText,
+                        onTap: () async {
+                          Map? input = await _showSelectionPopup(
+                              context, dataMapSpecialEffect);
+                          if (input != null) {
+                            int dataUpdate = input['value'];
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.specialEffect = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(Icons.flip),
+                        title: "Cermin Horizontal Kamera",
+                        data: hMirrorText == "true" ? "Ya" : "Tidak",
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Cermin Horizontal Kamera");
+                          if (input != null) {
+                            bool dataUpdate = input;
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.hMirror = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: Transform.rotate(
+                          angle: 3.14 / 2,
+                          child: const Icon(
+                            Icons.flip,
+                          ),
+                        ),
+                        title: "Pembalikan Vertikal Kamera",
+                        data: vFlipText == "true" ? "Ya" : "Tidak",
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Pembalikan Vertikal Kamera");
+                          if (input != null) {
+                            bool dataUpdate = input;
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.vFlip = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(
+                          Icons.high_quality_outlined,
+                        ),
+                        title: "Kualitas JPEG Kamera",
+                        data: cameraJpgQualityTxt,
+                        onTap: () async {
+                          cameraJpegQualityController.text =
+                              cameraJpgQualityTxt;
+                          String? input = await _showInputDialog(
+                            cameraJpegQualityController,
+                            "Kualitas JPEG Kamera",
+                            label: '5 to 63',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                          );
+                          log("input : $input");
+                          if (input != null) {
+                            int dataUpdate = int.parse(input);
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.jpegQuality = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        icon: const Icon(
+                          Icons.high_quality_outlined,
+                        ),
+                        title: "Penyesuaian Rotasi Gambar",
+                        data: "$adjustmentImageRotationTxt°",
+                        onTap: () async {
+                          adjustmentImageRotationController.text =
+                              adjustmentImageRotationTxt;
+                          String? input = await _showInputDialog(
+                            cameraJpegQualityController,
+                            "Penyesuaian Rotasi Gambar",
+                            label: "0° sampai 180°",
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                          );
+                          log("input : $input");
+                          if (input != null) {
+                            int dataUpdate = int.parse(input);
+                            CameraModel camera = adminModels.cameraModel!;
+                            camera.adjustImageRotation = dataUpdate;
+                            BLEResponse resBLE = await _commandSet.setCamera(
+                                bleProvider, camera);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+
+                    // FOR PRINT TO SERIAL MONITOR
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: SettingsContainer(
+                        title: "Tampilkan ke Layar Serial",
+                        data:
+                            printToSerialMonitorTxt == "true" ? "Ya" : "Tidak",
+                        onTap: () async {
+                          bool? input = await _showTrueFalseDialog(
+                              context, "Tampilkan ke Layar Serial");
+                          if (input != null) {
+                            BLEResponse resBLE = await _commandSet
+                                .setPrintSerialMonitor(bleProvider, input);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.adminsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.print_outlined,
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Catatan Sistem",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LogExplorerScreen(
+                                device: device,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.history_edu_rounded,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+
+                    /// RESET
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          bool? input = await _showResetDialog(
+                            context,
+                            "Apa anda yakin ingin reset konfigurasi ? ",
+                          );
+                          if (input != null) {
+                            if (input) {
+                              BLEResponse resBLE =
+                                  await _command.resetConfig(bleProvider);
+                              if (!resBLE.status) {
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.adminsettings,
+                                  resBLE,
+                                );
+                                return;
+                              }
+
+                              Snackbar.show(
+                                ScreenSnackbar.adminsettings,
+                                "Sukses mengembalikan ke pengaturan pabrik",
+                                success: true,
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFB200),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.settings_backup_restore_rounded,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Reset Konfigurasi",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    /// FORMAT
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          bool? input = await _showResetDialog(context,
+                              "Apakah anda yakin untuk format berkas ? ",
+                              description:
+                                  "Jika iya, anda akan keluar dari perangkat TOPPI");
+                          if (input != null) {
+                            if (input) {
+                              BLEResponse resBLE =
+                                  await _command.formatFAT(device, bleProvider);
+
+                              Snackbar.showHelperV2(
+                                ScreenSnackbar.adminsettings,
+                                resBLE,
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEB5B00),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.drive_file_move_rtl_outlined,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Format Berkas",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    /// FULL FACTORY RESET
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: GestureDetector(
+                        onTap: () async {
+                          bool? input = await _showResetDialog(
+                            context,
+                            "Apa anda yakin ingin mengembalikan ke setelan pabrik ? ",
+                            description:
+                                "Jika iya, anda akan keluar dari perangkat TOPPI",
+                          );
+                          if (input != null) {
+                            if (input) {
+                              BLEResponse resBLE =
+                                  await _command.resetConfig(bleProvider);
+                              if (!resBLE.status) {
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.adminsettings,
+                                  resBLE,
+                                );
+                                return;
+                              }
+                              resBLE =
+                                  await _command.formatFAT(device, bleProvider);
+                              if (!resBLE.status) {
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.adminsettings,
+                                  resBLE,
+                                );
+                                return;
+                              }
+
+                              Snackbar.show(
+                                ScreenSnackbar.adminsettings,
+                                "Sukses mengembalikan ke pengaturan pabrik",
+                                success: true,
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                              left: 10, right: 10, top: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE52020),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.factory_outlined,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Kembali ke Pengaturan Pabrik",
+                                style: GoogleFonts.readexPro(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(
                       height: 20,
                     ),
@@ -674,9 +1385,11 @@ class SettingsContainer extends StatelessWidget {
     required this.data,
     required this.onTap,
     required this.icon,
+    this.description,
   });
 
   final String title;
+  final String? description;
   final String data;
   final void Function() onTap;
   final Widget icon;
@@ -686,7 +1399,7 @@ class SettingsContainer extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(top: 7, left: 10, right: 10),
+        margin: const EdgeInsets.only(top: 6, left: 10, right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(
@@ -702,30 +1415,62 @@ class SettingsContainer extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              icon,
+              Expanded(
+                flex: 5,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: FittedBox(
+                        alignment: Alignment.centerLeft,
+                        fit: BoxFit.contain,
+                        child: icon,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      flex: 8,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.readexPro(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          (description == null)
+                              ? const SizedBox()
+                              : Text(
+                                  description ?? '',
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(
                 width: 10,
               ),
               Expanded(
-                flex: 4,
-                child: Text(
-                  title,
-                  style: GoogleFonts.readexPro(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
                 flex: 3,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
+                child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     data,
-                    style: const TextStyle(
+                    style: GoogleFonts.readexPro(
                       fontSize: 14,
                     ),
+                    textAlign: TextAlign.right,
                   ),
                 ),
               )

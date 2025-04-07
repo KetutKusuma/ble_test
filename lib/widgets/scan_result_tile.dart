@@ -78,7 +78,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            "remote ID : " + widget.result.device.remoteId.str,
+            "remote ID : ${widget.result.device.remoteId.str}",
             style: Theme.of(context).textTheme.bodySmall,
           )
         ],
@@ -90,7 +90,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
 
   Widget _buildConnectButton(BuildContext context) {
     return ElevatedButton(
-      child: isConnected ? const Text('OPEN') : const Text('CONNECT'),
+      child: isConnected ? const Text('Buka') : const Text('Sambungkan'),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
@@ -132,7 +132,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
     // log("advnya : $adv");
     return ExpansionTile(
       title: _buildTitle(context),
-      leading: Text("RSSI: " + widget.result.rssi.toString()),
+      leading: Text("RSSI: ${widget.result.rssi}"),
       trailing: _buildConnectButton(context),
       children: <Widget>[
         if (adv.advName.isNotEmpty) _buildAdvRow(context, 'Name', adv.advName),
@@ -148,8 +148,34 @@ class _ScanResultTileState extends State<ScanResultTile> {
           _buildAdvRow(
               context, 'Service UUIDs', getNiceServiceUuids(adv.serviceUuids)),
         if (adv.serviceData.isNotEmpty)
-          _buildAdvRow(
-              context, 'Service Data', getNiceServiceData(adv.serviceData)),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text('Service Data',
+                    style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(
+                  width: 12.0,
+                ),
+                Expanded(
+                  child: Text(
+                    adv.serviceData.entries
+                        .map((v) =>
+                            '${v.key}: ${'[${v.value.map((i) => i.toRadixString(16).padLeft(2, '0')).join(', ')}]'}')
+                        .join(', ')
+                        .toUpperCase(),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.apply(color: Colors.black),
+                    softWrap: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

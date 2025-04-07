@@ -11,18 +11,24 @@ class UploadSettingsConverter {
     bool statusBool = bytes[0] == 1;
     String server = BytesConvert.bytesToString(bytes.sublist(1, 49));
     int port = BytesConvert.bytesToInt16(bytes.sublist(49, 51));
-    bool uploadEnableBool = bytes[51] == 1;
-    int uploadScheduleInt = BytesConvert.bytesToInt16(bytes.sublist(52, 62));
-    int uploadUsingInt = BytesConvert.bytesToInt8([bytes[62]]);
-    int uploadInitialDelay = BytesConvert.bytesToInt16(bytes.sublist(63, 65));
-    String wifiSsid = BytesConvert.bytesToString(bytes.sublist(65, 81));
-    String wifiPassword = BytesConvert.bytesToString(bytes.sublist(81, 97));
-    String modemApn = BytesConvert.bytesToString(bytes.sublist(97, 113));
+    // =======
+    List<bool> uploadEnable =
+        convertUploadEnable(bytes[51]).map((value) => value == 1).toList();
+    List<int> uploadSchedule = convertUploadSchedule(
+      bytes.sublist(52, 68),
+    );
+    // =======
+    int uploadUsingInt = BytesConvert.bytesToInt8([bytes[68]]);
+    int uploadInitialDelay =
+        BytesConvert.bytesToInt16(bytes.sublist(69, 71), isBigEndian: false);
+    String wifiSsid = BytesConvert.bytesToString(bytes.sublist(71, 87));
+    String wifiPassword = BytesConvert.bytesToString(bytes.sublist(87, 103));
+    String modemApn = BytesConvert.bytesToString(bytes.sublist(103, 119));
 
     log("server : '$server'");
     log("port : $port");
-    log("upload enable : $uploadEnableBool");
-    log("upload schedule : $uploadScheduleInt");
+    log("upload enable : $uploadEnable");
+    log("upload schedule : $uploadSchedule");
     log("upload using : $uploadUsingInt");
     log("upload initial delay : $uploadInitialDelay");
     log("wifi ssid : $wifiSsid");
@@ -33,15 +39,15 @@ class UploadSettingsConverter {
       server = '-';
     }
 
-    if (bytes.sublist(65, 81).every((element) => element == 0)) {
+    if (bytes.sublist(71, 87).every((element) => element == 0)) {
       wifiSsid = '-';
     }
 
-    if (bytes.sublist(81, 97).every((element) => element == 0)) {
+    if (bytes.sublist(87, 103).every((element) => element == 0)) {
       wifiPassword = '-';
     }
 
-    if (bytes.sublist(97, 113).every((element) => element == 0)) {
+    if (bytes.sublist(103, 119).every((element) => element == 0)) {
       modemApn = '-';
     }
 
@@ -49,8 +55,8 @@ class UploadSettingsConverter {
       statusBool,
       server,
       port,
-      uploadEnableBool,
-      uploadScheduleInt,
+      uploadEnable,
+      uploadSchedule,
       uploadUsingInt,
       uploadInitialDelay,
       wifiSsid,
@@ -59,11 +65,31 @@ class UploadSettingsConverter {
     ];
   }
 
-  static String checkString(String ss) {
-    String result = '' * 48;
-    log("${ss.length == result}");
-    if (ss.length == result) {}
+  static List<int> convertUploadEnable(int value) {
+    // Convert to binary string
+    String binaryString = value.toRadixString(2);
 
-    return ss;
+    // Pad to 8 bits (if necessary)
+    binaryString = binaryString.padLeft(8, '0');
+
+    // Convert to a list of integers
+    List<int> binaryArray = binaryString.split('').map(int.parse).toList();
+
+    List<int> resultReverse = binaryArray.reversed.toList();
+
+    /// get the 5 first
+    List<int> result = resultReverse.sublist(0, 8);
+
+    return result;
+  }
+
+  static List<int> convertUploadSchedule(List<int> bytes) {
+    List<int> listResultInt = [];
+    for (int i = 0; i < bytes.length; i += 2) {
+      List<int> chunk = bytes.sublist(i, i + 2);
+      int rees = BytesConvert.bytesToInt16(chunk, isBigEndian: false);
+      listResultInt.add(rees);
+    }
+    return listResultInt;
   }
 }

@@ -25,29 +25,33 @@ class AdminSettingsConverter {
     // 6:9 -> bytes to float
     // log("list 7 : ${bytes[7]}");
     log("sublist 6,10 : ${bytes.sublist(6, 10)}");
-    double floatVoltageCoef1 =
-        BytesConvert.bytesToFloatorDouble(bytes.sublist(6, 10));
+    double floatVoltageCoef1 = BytesConvert.bytesToFloatorDouble(
+        bytes.sublist(6, 10),
+        isBigEndian: false);
 
     // 10:13 -> bytes to float
     log("sublist 10,13 : ${bytes.sublist(10, 14)}");
-    double floatVoltageCoef2 =
-        BytesConvert.bytesToFloatorDouble(bytes.sublist(10, 14));
+    double floatVoltageCoef2 = BytesConvert.bytesToFloatorDouble(
+        bytes.sublist(10, 14),
+        isBigEndian: false);
 
-    int brightnessInt = BytesConvert.bytesToInt8([bytes[14]]);
-    int contrastInt = BytesConvert.bytesToInt8([bytes[15]]);
-    int saturationInt = BytesConvert.bytesToInt8([bytes[16]]);
-    int specialEffectInt = BytesConvert.bytesToInt8([bytes[17]]);
-    bool hmirrorBool = bytes[18] == 1;
-    bool vflipBool = bytes[19] == 1;
+    bool printToSerialMonitorBool = bytes[14] == 1;
+    int brightnessInt = BytesConvert.bytesToInt8([bytes[15]]);
+    int contrastInt = BytesConvert.bytesToInt8([bytes[16]]);
+    int saturationInt = BytesConvert.bytesToInt8([bytes[17]]);
+    int specialEffectInt = BytesConvert.bytesToInt8([bytes[18]]);
+    bool hmirrorBool = bytes[19] == 1;
+    bool vflipBool = bytes[20] == 1;
 
-    int cameraJpgQuality = BytesConvert.bytesToInt8([bytes[20]]);
-    int intRole = BytesConvert.bytesToInt8([bytes[21]]);
+    int cameraJpgQuality = BytesConvert.bytesToInt8([bytes[21]]);
+    int intRole = BytesConvert.bytesToInt8([bytes[22]]);
 
     // Print results
     log("boolStatus: $boolStatus");
     log("macAddress: $macAddress");
     log("floatVoltageCoef1: $floatVoltageCoef1");
     log("floatVoltageCoef2: $floatVoltageCoef2");
+    log("printToSerialMonitorBool: $printToSerialMonitorBool");
     log("brightnessInt: $brightnessInt");
     log("contrastInt: $contrastInt");
     log("saturationInt: $saturationInt");
@@ -62,6 +66,7 @@ class AdminSettingsConverter {
       macAddress,
       floatVoltageCoef1,
       floatVoltageCoef2,
+      printToSerialMonitorBool,
       brightnessInt,
       contrastInt,
       saturationInt,

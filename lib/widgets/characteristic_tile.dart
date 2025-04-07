@@ -102,7 +102,7 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
                 onPressed: () {
                   Navigator.of(context).pop(); // Close popup
                 },
-                child: const Text("Cancel"),
+                child: const Text("Batalkan"),
               ),
               ElevatedButton(
                 onPressed: () async {

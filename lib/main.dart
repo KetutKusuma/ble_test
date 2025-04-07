@@ -4,15 +4,38 @@
 
 import 'dart:async';
 
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/config/config.dart';
+import 'package:ble_test/screens/login_screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import 'screens/bluetooth_off_screen.dart';
-import 'screens/scan_screen.dart';
 
 void main() {
   FlutterBluePlus.setLogLevel(LogLevel.verbose, color: true);
-  runApp(const FlutterBlueApp());
+  // runApp(
+  //   ChangeNotifierProvider(
+  //     create: (context) => BLEProvider(),
+  //     child: const FlutterBlueApp(),
+  //   ),
+  // );
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => BLEProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ConfigProvider(),
+        ),
+      ],
+      child: const FlutterBlueApp(),
+    ),
+  );
 }
 
 //
@@ -52,10 +75,21 @@ class _FlutterBlueAppState extends State<FlutterBlueApp> {
   @override
   Widget build(BuildContext context) {
     Widget screen = _adapterState == BluetoothAdapterState.on
-        ? const ScanScreen()
+        // ? const ScanScreen()
+        ? const LoginScreen()
         : BluetoothOffScreen(adapterState: _adapterState);
 
     return MaterialApp(
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color.fromARGB(255, 246, 246, 255),
+        textTheme: GoogleFonts.readexProTextTheme(),
+      ),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          child: child!,
+        );
+      },
       debugShowCheckedModeBanner: false,
       color: Colors.lightBlue,
       home: screen,

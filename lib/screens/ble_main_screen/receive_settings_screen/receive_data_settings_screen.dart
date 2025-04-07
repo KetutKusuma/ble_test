@@ -1,17 +1,21 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/receive_settings_convert.dart';
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
+import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
+import 'package:ble_test/ble-v2/utils/convert.dart';
+import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/utils/extra.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:ble_test/utils/time_pick/time_pick.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
-import '../../../utils/ble.dart';
 import '../../../utils/snackbar.dart';
 
 class ReceiveDataSettingsScreen extends StatefulWidget {
@@ -24,45 +28,43 @@ class ReceiveDataSettingsScreen extends StatefulWidget {
 }
 
 class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      receiveEnableTxt = '-',
-      receiveScheduleTxt = '-',
-      receiveIntervalTxt = '-',
-      receiveCountTxt = '-',
-      receiveTimeAdjust = '-';
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
   TextEditingController controller = TextEditingController();
   TextEditingController receiveEnableTxtController = TextEditingController();
   TextEditingController receiveScheduleTxtController = TextEditingController();
-  TextEditingController receiveIntervalTxtController = TextEditingController();
-  TextEditingController receiveCountTxtController = TextEditingController();
-  TextEditingController  receiveTimeAdjustTxtController = TextEditingController();
-  bool isReceiveDataSettings = true;
+  TextEditingController receiveTimeAdjustTxtController =
+      TextEditingController();
+  late SimpleFontelicoProgressDialog _progressDialog;
+
+  // v2
+  final _commandSet = CommandSet();
+  late List<ReceiveModel> listReceive = [];
+  bool? selectedChoice; // Tracks the selected choice
 
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
+          Navigator.popUntil(
             context,
+            (route) => route.isFirst,
           );
         }
         if (mounted) {
@@ -70,22 +72,25 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         }
       },
     );
-    initGetRawReceive();
-    initDiscoverServices();
+    initGetReceive();
   }
 
   @override
   void dispose() {
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isReceiveDataSettings = false;
+    _connectionStateSubscription.cancel();
+
     super.dispose();
+  }
+
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Harap Tunggu...",
+    );
   }
 
   onRefresh() async {
     try {
-      initGetRawReceive();
+      initGetReceive();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -93,180 +98,185 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     }
   }
 
-  initGetRawReceive() async {
+  initGetReceive() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_receive?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Receive", device);
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
-          success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.receivesettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isReceiveDataSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 7) {
-                  List<dynamic> result =
-                      ReceiveSettingsConvert.convertReceiveSettings(_value);
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      receiveEnableTxt = result[1].toString();
-                      receiveScheduleTxt = result[2].toString();
-                      receiveIntervalTxt = result[3].toString();
-                      receiveCountTxt = result[4].toString();
-                      receiveTimeAdjust = result[5].toString();
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "receive_enable") {
-                      receiveEnableTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "receive_schedule") {
-                      receiveScheduleTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "receive_interval") {
-                      receiveIntervalTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings == "receive_count") {
-                      receiveCountTxt = _setSettings.value;
-                    } else if (_setSettings.setSettings ==
-                        "receive_time_adjust") {
-                      receiveTimeAdjust = _setSettings.value;
-                    }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Success set ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
-          );
-          // _lastValueSubscription.cancel();
+        BLEResponse<List<ReceiveModel>> response =
+            await Command().getReceiveSchedule(bleProvider);
+        _progressDialog.hide();
+        if (response.status) {
+          listReceive = response.data!;
+          setState(() {
+            // receiveEnableTxt = response.data!.enable.toString();
+            // receiveScheduleTxt =
+            //     ConvertTime.minuteToDateTimeString(response.data!.schedule);
+            // receiveIntervalTxt = response.data!.interval.toString();
+            // receiveCountTxt = response.data!.count.toString();
+            // receiveTimeAdjust = response.data!.timeAdjust.toString();
+          });
+        } else {
+          Snackbar.show(ScreenSnackbar.receivesettings, response.message,
+              success: false);
         }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.receivesettings,
-          prettyException("Last Value Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.receivesettings, "Dapat error jadwal terima : $e",
           success: false);
-      log(e.toString());
     }
   }
 
-    Future<bool?> _showTrueFalseDialog(BuildContext context, String msg) async {
-    bool? selectedValue = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return SimpleDialog(
-          title: Text(msg),
-          children: <Widget>[
-            SimpleDialogOption(
-              onPressed: () {
-                Navigator.pop(context, true); // Return true
-              },
-              child: const Text('True'),
-            ),
-            SimpleDialogOption(
-              onPressed: () {
-                Navigator.pop(context, false); // Return false
-              },
-              child: const Text('False'),
-            ),
-          ],
-        );
-      },
-    );
-
-    return selectedValue;
-  }
-
- Future<String?> _showInputDialogInteger(
-      TextEditingController controller, String field, String time) async {
-    String? input = await showDialog<String>(
+  Future<ReceiveModel?> _showSetupReceiveDialog(
+    BuildContext context,
+    int number,
+  ) async {
+    return await showDialog<ReceiveModel>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter Value $field" ),
-          content: Form(
-            child: TextFormField(
-              controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(signed: false, decimal: false),
-              inputFormatters: [
-                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
+          title: Text("Atur Penerimaan ${number + 1}"),
+          content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  readOnly: true,
+                  onTap: () async {
+                    TimeOfDay? result =
+                        await TimePickerHelper.pickTime(context, null);
+                    if (result != null) {
+                      setState(() {
+                        receiveScheduleTxtController.text =
+                            TimePickerHelper.formatTimeOfDay(result);
+                      });
+                    }
+                  },
+                  controller: receiveScheduleTxtController,
+                  decoration: const InputDecoration(
+                    labelText: "Masukan Jadwal Penerimaan",
+                    hintText: "00.00-23.59",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextFormField(
+                  controller: receiveTimeAdjustTxtController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      signed: false, decimal: false),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: "Masukan Penyesuaian Waktu Penerimaan (detik)",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                // for destination enable
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Aktifkan Penerimaan ?",
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => setState(
+                              () => selectedChoice = true,
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: selectedChoice == true
+                                      ? Colors.green
+                                      : Colors.grey,
+                                  radius: 12,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Ya',
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          GestureDetector(
+                            onTap: () => setState(() => selectedChoice = false),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: selectedChoice == false
+                                      ? Colors.red
+                                      : Colors.grey,
+                                  radius: 12,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Tidak',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
-              decoration:  InputDecoration(
-                labelText: 'Value in $time',
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ),
+            );
+          }),
           actions: [
             TextButton(
               onPressed: () {
-                controller.clear();
+                receiveEnableTxtController.clear();
+                receiveScheduleTxtController.clear();
+                receiveTimeAdjustTxtController.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  Navigator.pop(context, controller.text);
-                  controller.clear();
-                } else {}
+                if (selectedChoice != null &&
+                    receiveScheduleTxtController.text.isNotEmpty &&
+                    receiveTimeAdjustTxtController.text.isNotEmpty) {
+                  int receiveSchedule =
+                      TimePickerHelper.timeOfDayStringToMinutes(
+                          receiveScheduleTxtController.text);
+                  ReceiveModel receiveModel = ReceiveModel(
+                    enable: selectedChoice ?? false,
+                    schedule: receiveSchedule,
+                    timeAdjust: int.parse(receiveTimeAdjustTxtController.text),
+                  );
+                  receiveEnableTxtController.clear();
+                  receiveScheduleTxtController.clear();
+                  receiveTimeAdjustTxtController.clear();
+                  Navigator.pop(context, receiveModel);
+                }
               },
-              child: const Text("OK"),
+              child: const Text("Simpan"),
             ),
           ],
         );
       },
     );
-
-    return input;
   }
 
   @override
@@ -275,153 +285,172 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
       key: Snackbar.snackBarKeyReceiveSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Receive Settings'),
+          title: const Text('Pengaturan Penerimaan'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
           child: CustomScrollView(
             slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  children: [
-                    Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  childCount: listReceive.length,
+                  (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(
+                        top: 15,
+                        left: 10,
+                        right: 10,
                       ),
-                    ),
-                    SettingsContainer(
-                      title: "Receive Enable",
-                      data: receiveEnableTxt,
-                      onTap: () async {
-                        bool? input = await _showTrueFalseDialog(context,"Set Receive Enable");
-                        if (input != null) {
-                          // Ubah nilai boolean menjadi string "1" untuk true atau "0" untuk false
-                          String encodedValue = input ? "1" : "0"; 
-                          List<int> list = utf8.encode("receive_enable=$encodedValue");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                            setSettings: "receive_enable",
-                            value: encodedValue,
-                          );
-                          BLEUtils.funcWrite(
-                            bytes, 
-                            "Success Set Receive Enable", 
-                            device,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.compass_calibration_rounded,
-                      ),
-                    ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 10),
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          )),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Pengaturan Jadwal Penerimaan ${index + 1}",
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Aktifkan Penerimaan : ",
+                                  style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      listReceive[index].enable
+                                          ? "Ya"
+                                          : "Tidak",
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Jadwal Penerimaan : ",
+                                  style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      ConvertTime.minuteToDateTimeString(
+                                          listReceive[index].schedule),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Penyesuaian Waktu Penerimaan (detik) : ",
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      listReceive[index].timeAdjust.toString(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    10,
+                                  ), // Rounded corners
+                                ),
+                              ),
+                              onPressed: () async {
+                                // ReceiveModel receivemodel = listReceive[index];
+                                selectedChoice = listReceive[index].enable;
+                                receiveScheduleTxtController.text =
+                                    TimePickerHelper.formatTimeOfDay(
+                                        TimePickerHelper.minutesToTimeOfDay(
+                                            listReceive[index].schedule));
+                                receiveTimeAdjustTxtController.text =
+                                    listReceive[index].timeAdjust.toString();
+                                ReceiveModel? resilt =
+                                    await _showSetupReceiveDialog(
+                                  context,
+                                  index,
+                                );
 
-                    SettingsContainer(
-                      title: "Receive Schedule (minute)",
-                      data: receiveScheduleTxt,
-                      onTap: () async {
-                        String? input = await _showInputDialogInteger(
-                            receiveScheduleTxtController, "Receive Schedule", "minute");
-                        if (input != null) {
-                          List<int> list = utf8.encode("receive_schedule=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_schedule", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Schedule", device);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.podcasts_rounded,
+                                if (resilt != null) {
+                                  listReceive[index] = resilt;
+                                  BLEResponse resBLE =
+                                      await _commandSet.setReceiveSchedule(
+                                          bleProvider, listReceive);
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.receivesettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                "Perbarui Penerimaan",
+                              ),
+                            ),
+                          )
+                        ],
                       ),
-                    ),
-                    SettingsContainer(
-                      title: "Receive Interval (minute)",
-                      data: receiveIntervalTxt,
-                      onTap: () async {
-                        String? input = await _showInputDialogInteger(
-                            receiveIntervalTxtController, "Receive Interval", "minute");
-                        if (input != null) {
-                          List<int> list = utf8.encode("receive_interval=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_interval", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Interval", device);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.upload_file,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Receive Count",
-                      data: receiveCountTxt,
-                      onTap: () async {
-                        String? input = await  _showInputDialogInteger(
-                            receiveCountTxtController, "Receive Count","number");
-                        if (input != null) {
-                          List<int> list = utf8.encode("receive_count=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_count", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Count", device);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.upload_rounded,
-                      ),
-                    ),
-                    SettingsContainer(
-                      title: "Receive Time Adjust (seconds)",
-                      data: receiveTimeAdjust,
-                      onTap: () async {
-                        String? input = await   _showInputDialogInteger(
-                            receiveTimeAdjustTxtController, "Receive Time Adjust","seconds");
-                        if (input != null) {
-                          List<int> list = utf8.encode("receive_time_adjust=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "receive_time_adjust", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Receive Time Adjust", device);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.vertical_align_top_rounded,
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              )
+              ),
             ],
           ),
         ),

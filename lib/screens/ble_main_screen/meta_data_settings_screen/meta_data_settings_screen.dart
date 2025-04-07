@@ -1,20 +1,21 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:typed_data';
-
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/command/command.dart';
+import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
-import 'package:ble_test/utils/converter/settings/meta_data_settings_convert.dart';
-import 'package:ble_test/utils/converter/settings/upload_settings_convert.dart';
+import 'package:ble_test/utils/enum/role.dart';
 import 'package:ble_test/utils/extra.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-
-import '../../../utils/ble.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import '../../../ble-v2/command/command_set.dart';
 import '../../../utils/snackbar.dart';
+import 'package:ble_test/utils/extension/string_extension.dart';
 
 class MetaDataSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -25,45 +26,48 @@ class MetaDataSettingsScreen extends StatefulWidget {
 }
 
 class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
+  late BLEProvider bleProvider;
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  final bool _isConnecting = false;
-  final bool _isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
-  StreamSubscription<List<int>>? _lastValueSubscription;
-
-  // ignore: unused_field
-  List<BluetoothService> _services = [];
-  List<int> _value = [];
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  String statusTxt = '-',
-      modelMeterTxt = '-',
+  String meterModelTxt = '-',
       meterSnTxt = '-',
       meterSealTxt = '-',
-      timeUTCTxt = '-';
-  SetSettingsModel _setSettings = SetSettingsModel(setSettings: "", value: "");
+      customTxt = "-",
+      idPelangganTxt = '-';
   TextEditingController controller = TextEditingController();
-  TextEditingController modelMeterTxtController = TextEditingController();
+  TextEditingController meterModelTxtController = TextEditingController();
   TextEditingController meterSnTxtController = TextEditingController();
   TextEditingController meterSealTxtController = TextEditingController();
-  TextEditingController timeUTCTxtController = TextEditingController();
+  TextEditingController idPelangganTxtController = TextEditingController();
 
-  bool isMetaDataSettings = true;
+  late SimpleFontelicoProgressDialog _progressDialog;
 
+  // v2
+  late MetaDataModel metaData;
+  final _commandSet = CommandSet();
 
   @override
   void initState() {
     super.initState();
+    bleProvider = Provider.of<BLEProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _progressDialog = SimpleFontelicoProgressDialog(
+          context: context, barrierDimisable: true);
+      _showLoading();
+    });
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
         _connectionState = state;
         if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.pop(
+          Navigator.popUntil(
             context,
+            (route) => route.isFirst,
           );
         }
         if (mounted) {
@@ -71,45 +75,26 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         }
       },
     );
-    timeUTCTxtController.addListener(() {
-      final text = timeUTCTxtController.text;
-      if (text.isNotEmpty) {
-        final value = int.tryParse(text);
-        if (value != null) {
-          if (value < -12) {
-            // Otomatis set menjadi -12 jika kurang dari -12
-           timeUTCTxtController.text = '-12';
-           timeUTCTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: timeUTCTxtController
-                        .text.length)); // Memastikan cursor di akhir
-          } else if (value > 12) {
-             // Otomatis set menjadi 12 jika lebih dari 12
-            timeUTCTxtController.text = '12';
-           timeUTCTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: timeUTCTxtController
-                        .text.length)); // Memastikan cursor di akhir
-          }
-        }
-      }
-    });
-    initGetRawMetaData();
-    initDiscoverServices();
+
+    initGetMetaData();
   }
 
   @override
   void dispose() {
-    if (_lastValueSubscription != null) {
-      _lastValueSubscription!.cancel();
-    }
-    isMetaDataSettings = false;
+    _connectionStateSubscription.cancel();
+
     super.dispose();
+  }
+
+  void _showLoading() {
+    _progressDialog.show(
+      message: "Harap Tunggu...",
+    );
   }
 
   onRefresh() async {
     try {
-      initGetRawMetaData();
+      initGetMetaData();
       await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -117,172 +102,57 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     }
   }
 
-  initGetRawMetaData() async {
+  initGetMetaData() async {
     try {
       if (isConnected) {
-        List<int> list = utf8.encode("raw_meta_data?");
-        Uint8List bytes = Uint8List.fromList(list);
-        BLEUtils.funcWrite(bytes, "Success Get Raw Meta data", device);
-      }
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
-          success: false);
-    }
-  }
-
-  Future initDiscoverServices() async {
-    await Future.delayed(const Duration(seconds: 4));
-    if (isConnected) {
-      try {
-        _services = await device.discoverServices();
-        initLastValueSubscription(device);
-      } catch (e) {
-        Snackbar.show(ScreenSnackbar.metadatasettings,
-            prettyException("Discover Services Error:", e),
-            success: false);
-        log(e.toString());
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  initLastValueSubscription(BluetoothDevice device) {
-    try {
-      for (var service in device.servicesList) {
-        for (var characters in service.characteristics) {
-          _lastValueSubscription = characters.lastValueStream.listen(
-            (value) {
-              if (characters.properties.notify && isMetaDataSettings) {
-                log("is notifying ga nih : ${characters.isNotifying}");
-                _value = value;
-                if (mounted) {
-                  setState(() {});
-                }
-                log("VALUE : $_value, ${_value.length}");
-
-                // this is for get raw admin
-                if (_value.length > 45) {
-                  List<dynamic> result =
-                      MetaDataSettingsConvert.convertMetaDataSettings(_value);
-                  if (mounted) {
-                    setState(() {
-                      statusTxt = result[0].toString();
-                      modelMeterTxt = result[1].toString();
-                      meterSnTxt = result[2].toString();
-                      meterSealTxt = result[3].toString();
-                      timeUTCTxt = result[4].toString();
-                    });
-                  }
-                }
-                // this is for set
-                if (_value.length == 1) {
-                  if (_value[0] == 1) {
-                    if (_setSettings.setSettings == "meter_model") {
-                      _setSettings.value = modelMeterTxt;
-                    } else if (_setSettings.setSettings == "meter_sn") {
-                      _setSettings.value = meterSnTxt;
-                    } else if (_setSettings.setSettings == "meter_seal") {
-                      _setSettings.value = meterSealTxt;
-                    } else if (_setSettings.setSettings == "time_utc") {
-                      _setSettings.value = timeUTCTxt;
-                    }
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Success set ${_setSettings.setSettings}",
-                        success: true);
-                  } else {
-                    Snackbar.show(ScreenSnackbar.adminsettings,
-                        "Failed set ${_setSettings.setSettings}",
-                        success: false);
-                  }
-                }
-
-                if (mounted) {
-                  setState(() {});
-                }
-              }
-            },
-            cancelOnError: true,
+        BLEResponse<MetaDataModel> response =
+            await Command().getMetaData(bleProvider);
+        _progressDialog.hide();
+        if (response.status) {
+          metaData = response.data!;
+          setState(() {
+            meterModelTxt = response.data!.meterModel.changeEmptyString();
+            meterSnTxt = response.data!.meterSN.changeEmptyString();
+            meterSealTxt = response.data!.meterSeal.changeEmptyString();
+            customTxt = response.data!.custom.changeEmptyString();
+          });
+        } else {
+          Snackbar.show(
+            ScreenSnackbar.metadatasettings,
+            response.message,
+            success: false,
           );
-          // _lastValueSubscription.cancel();
         }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.metadatasettings,
-          prettyException("Last Value Error:", e),
+      Snackbar.show(
+          ScreenSnackbar.metadatasettings, "Dapat error meta data : $e",
           success: false);
-      log(e.toString());
     }
   }
 
- Future<String?> _showInputDialog(
-    TextEditingController controller, String field) async {
-  String? input = await showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("Enter Value $field" ),
-        content: Form(
-          child: TextFormField(
-            controller: controller,
-            keyboardType: TextInputType.text,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')), // Hanya huruf, angka, dan spasi
-            ],
-            decoration: InputDecoration(
-              labelText: "Enter Valid $field",
-              border: const OutlineInputBorder(),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.clear();
-              Navigator.of(context).pop();
-            },
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                Navigator.pop(context, controller.text);
-                controller.clear();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Input cannot be empty!")),
-                );
-              }
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      );
-    },
-  );
-
-  return input;
-}
-
- Future<String?> _showInputDialogTimeUTC(
-      TextEditingController controller) async {
+  Future<String?> _showInputDialog(
+      TextEditingController controller, String field,
+      {List<TextInputFormatter>? addInputFormatters}) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
+        List<TextInputFormatter>? inputFormatters = [
+          // FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
+        ];
+        if (addInputFormatters != null) {
+          inputFormatters.addAll(addInputFormatters);
+        }
         return AlertDialog(
-          title: const Text("Enter Value Time UTC"),
+          title: Text("Masukan data $field"),
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(signed: true, decimal: false),
-              inputFormatters: [
-                 FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,2}$')),
-              ],
-              decoration: const InputDecoration(
-                labelText: 'Value between -12 and 12',
-                border: OutlineInputBorder(),
+              keyboardType: TextInputType.text,
+              inputFormatters: inputFormatters,
+              decoration: InputDecoration(
+                labelText: "Masukan $field",
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -292,14 +162,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 controller.clear();
                 Navigator.of(context).pop();
               },
-              child: const Text("Cancel"),
+              child: const Text("Batalkan"),
             ),
             TextButton(
               onPressed: () {
                 if (controller.text.isNotEmpty) {
                   Navigator.pop(context, controller.text);
                   controller.clear();
-                } else {}
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Input cannot be empty!")),
+                  );
+                }
               },
               child: const Text("OK"),
             ),
@@ -317,29 +191,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       key: Snackbar.snackBarKeyMetadataSettings,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Meta Data Settings'),
+          title: const Text('Pengaturan Meta Data'),
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                if (_isConnecting || _isDisconnecting) buildSpinner(context),
-                TextButton(
-                  onPressed: _isConnecting
-                      ? onCancelPressed
-                      : (isConnected ? onDisconnectPressed : onConnectPressed),
-                  child: Text(
-                    _isConnecting
-                        ? "CANCEL"
-                        : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                )
-              ],
-            ),
-          ],
         ),
         body: SmartRefresher(
           controller: _refreshController,
@@ -350,91 +203,165 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    Text("VALUE : $_value"),
-                    SettingsContainer(
-                      title: "Status",
-                      data: statusTxt,
-                      onTap: () {},
-                      icon: const Icon(
-                        CupertinoIcons.settings,
-                      ),
-                    ),
                     SettingsContainer(
                       title: "Model Meter",
-                      data: modelMeterTxt,
+                      data: meterModelTxt,
                       onTap: () async {
-                          String? input = await  _showInputDialog(
-                              modelMeterTxtController, "Model Meter");
-                          if (input != null && input.isNotEmpty) {
-                            List<int> list = utf8.encode("meter_model=$input");
-                            Uint8List bytes = Uint8List.fromList(list);
-                            _setSettings = SetSettingsModel(
-                                setSettings: "meter_model", value: input);
-                            BLEUtils.funcWrite(
-                                bytes, "Success Set Model Meter", device);
-                          }
-                        },
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
+                        meterModelTxtController.text = meterModelTxt;
+                        String? input = await _showInputDialog(
+                          meterModelTxtController,
+                          "Model Meter",
+                          addInputFormatters: [
+                            LengthLimitingTextInputFormatter(16)
+                          ],
+                        );
+                        if (input != null && input.isNotEmpty) {
+                          metaData.meterModel = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider, metaData);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
+                        }
+                      },
                       icon: const Icon(
-                        Icons.compass_calibration_rounded,
+                        Icons.model_training_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Meter SN",
+                      title: "Nomor Seri Meter",
                       data: meterSnTxt,
-                     onTap: () async {
+                      onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
+                        meterSnTxtController.text = meterSnTxt;
                         String? input = await _showInputDialog(
-                            meterSnTxtController, "Meter Sn");
+                            meterSnTxtController, "Nomor Seri Meter",
+                            addInputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ]);
                         if (input != null && input.isNotEmpty) {
-                          List<int> list = utf8.encode("meter_sn=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meter_sn", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Meter Sn", device);
+                          metaData.meterSN = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider, metaData);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
-                        Icons.podcasts_rounded,
+                        Icons.numbers_rounded,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Meter Seal",
+                      title: "Segel Meter",
                       data: meterSealTxt,
-                        onTap: () async {
+                      onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
+                        meterSealTxtController.text = meterSealTxt;
                         String? input = await _showInputDialog(
-                            meterSealTxtController,"Meter Seal");
+                            meterSealTxtController, "Segel Meter",
+                            addInputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ]);
                         if (input != null && input.isNotEmpty) {
-                          List<int> list = utf8.encode("meter_seal=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "meter_seal", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Meter Seal", device);
+                          metaData.meterSeal = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                              bleProvider, metaData);
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
-                        Icons.upload_file,
+                        Icons.shield_outlined,
                       ),
                     ),
                     SettingsContainer(
-                      title: "Time UTC",
-                      data: timeUTCTxt,
-                       onTap: () async {
-                        String? input = await _showInputDialogTimeUTC(
-                            timeUTCTxtController);
-                        if (input != null) {
-                          List<int> list = utf8.encode("time_utc=$input");
-                          Uint8List bytes = Uint8List.fromList(list);
-                          _setSettings = SetSettingsModel(
-                              setSettings: "timeutc", value: input);
-                          BLEUtils.funcWrite(
-                              bytes, "Success Set Time UTC", device);
+                      title: "ID Pelanggan",
+                      data: customTxt,
+                      onTap: () async {
+                        if (!featureA.contains(roleUser)) {
+                          return;
+                        }
+                        idPelangganTxtController.text = customTxt;
+                        String? input = await _showInputDialog(
+                            idPelangganTxtController, "Id Pelanggan",
+                            addInputFormatters: [
+                              LengthLimitingTextInputFormatter(32)
+                            ]);
+                        if (input != null && input.isNotEmpty) {
+                          metaData.custom = input;
+                          BLEResponse resBLE = await _commandSet.setMetaData(
+                            bleProvider,
+                            metaData,
+                          );
+                          Snackbar.showHelperV2(
+                            ScreenSnackbar.metadatasettings,
+                            resBLE,
+                            onSuccess: onRefresh,
+                          );
                         }
                       },
                       icon: const Icon(
-                        Icons.upload_rounded,
+                        Icons.description_rounded,
                       ),
                     ),
+                    // SettingsContainer(
+                    //   title: "Waktu UTC",
+                    //   data: timeUTCTxt,
+                    //   onTap: () async {
+                    //     timeUTCTxtController.text = timeUTCTxt;
+                    //     // String? input =
+                    //     //     await _showInputDialogTimeUTC(timeUTCTxtController);
+                    //     String? input =
+                    //         await _showSelectionPopupUTC(context, utcList);
+                    //     if (input != null) {
+                    //       if (!input.contains("+") && !input.contains("-")) {
+                    //         Snackbar.show(
+                    //           ScreenSnackbar.metadatasettings,
+                    //           "Masukan data waktu UTC dengan benar, kurang - atau +",
+                    //           success: false,
+                    //         );
+                    //         return;
+                    //       }
+                    //       if (!input.contains(":")) {
+                    //         Snackbar.show(
+                    //           ScreenSnackbar.metadatasettings,
+                    //           "Masukan data waktu UTC dengan benar, kurang :",
+                    //           success: false,
+                    //         );
+                    //       } else {
+                    //         int data = ConvertV2().utcStringToUint8(input);
+                    //         // metaData.timeUTC = data;
+                    //         BLEResponse resBLE = await _commandSet.setMetaData(
+                    //           bleProvider,
+                    //           metaData,
+                    //         );
+                    //         Snackbar.showHelperV2(
+                    //           ScreenSnackbar.metadatasettings,
+                    //           resBLE,
+                    //           onSuccess: onRefresh,
+                    //         );
+                    //       }
+                    //     }
+                    //   },
+                    //   icon: const Icon(
+                    //     Icons.access_time,
+                    //   ),
+                    // ),
                   ],
                 ),
               )
@@ -458,51 +385,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
         ),
       ),
     );
-  }
-
-  Future onConnectPressed() async {
-    try {
-      await device.connectAndUpdateStream();
-      // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Connect: Success",
-          success: true);
-    } catch (e) {
-      if (e is FlutterBluePlusException &&
-          e.code == FbpErrorCode.connectionCanceled.index) {
-        // ignore connections canceled by the user
-      } else {
-        Snackbar.show(ScreenSnackbar.metadatasettings,
-            prettyException("Connect Error:", e),
-            success: false);
-        log(e.toString());
-      }
-    }
-  }
-
-  Future onCancelPressed() async {
-    try {
-      await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Cancel: Success",
-          success: true);
-    } catch (e) {
-      Snackbar.show(
-          ScreenSnackbar.metadatasettings, prettyException("Cancel Error:", e),
-          success: false);
-      log(e.toString());
-    }
-  }
-
-  Future onDisconnectPressed() async {
-    try {
-      await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.metadatasettings, "Disconnect: Success",
-          success: true);
-    } catch (e) {
-      Snackbar.show(ScreenSnackbar.metadatasettings,
-          prettyException("Disconnect Error:", e),
-          success: false);
-      log(e.toString());
-    }
   }
 
   // GET
