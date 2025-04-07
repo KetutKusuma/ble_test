@@ -161,7 +161,7 @@ class _UploadEnableScheduleSettingScreenState
           titlePadding:
               const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
-            "Atur Tujuan ${number + 1}",
+            "Atur Unggah ${number + 1}",
             style: GoogleFonts.readexPro(
               fontWeight: FontWeight.w500,
             ),

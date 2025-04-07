@@ -347,12 +347,14 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 _progressDialog.show(
                                     message: "Harap tunggu hasil unggah...");
 
-                                String resultUpload = await OCRBLE().ocr(
+                                String resultUpload =
+                                    await OCRBLE().helperUploadImg(
                                   configProvider.config.urlHelpUpload,
                                   dataBuffer.data ?? [],
+                                  ConvertV2().arrayUint8ToStringHexAddress(
+                                      (imageMetaData.id ?? [])),
                                   // dataParse['img'],
                                 );
-                                log("result upload : $resultUpload");
                                 _progressDialog.hide();
 
                                 showDialog(

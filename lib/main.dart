@@ -7,7 +7,6 @@ import 'dart:async';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/config/config.dart';
 import 'package:ble_test/screens/login_screen/login_screen.dart';
-import 'package:ble_test/utils/extension/string_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
