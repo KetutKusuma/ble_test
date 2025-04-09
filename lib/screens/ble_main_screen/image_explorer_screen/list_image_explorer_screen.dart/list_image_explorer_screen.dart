@@ -417,7 +417,8 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 String resultOCR = await OCRBLE().ocr(
                                   configProvider.config.urlTestOCR,
                                   dataBuffer.data ?? [],
-                                  // dataParse['img'],
+                                  ConvertV2().arrayUint8ToStringHexAddress(
+                                      (imageMetaData.id ?? [])),
                                 );
 
                                 _progressDialog.hide();

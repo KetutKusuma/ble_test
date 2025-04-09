@@ -62,6 +62,7 @@ class OCRBLE {
   Future<String> ocr(
     String url,
     List<int> data,
+    String nameData,
   ) async {
     try {
       List<int> idBuffer = List.filled(5, 0);
@@ -94,7 +95,7 @@ class OCRBLE {
       request.files.add(http.MultipartFile.fromBytes(
         'DATA',
         data,
-        filename: 'image.jpg',
+        filename: nameData,
       ));
 
       var streamedResponse = await request.send();
