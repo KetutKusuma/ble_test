@@ -25,8 +25,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
-import 'package:ble_test/utils/extension/string_extension.dart';
-import 'package:http/http.dart' as http;
+import 'package:ble_test/utils/extension/extension.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
