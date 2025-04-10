@@ -7,8 +7,8 @@ import 'package:ble_test/utils/crc32.dart';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
-class OCRBLE {
-  Future<String> helperUploadImg(
+class ToServer {
+  Future<http.Response> helperUploadImg(
     String url,
     List<int> data,
     String nameData,
@@ -54,7 +54,7 @@ class OCRBLE {
       //   "status": response.statusCode,
       //   "body": response.body,
       // };
-      return response.body;
+      return response;
     } catch (e) {
       throw Exception("OCR request failed: $e");
     }

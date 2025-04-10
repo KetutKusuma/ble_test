@@ -6,7 +6,7 @@ import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
 import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
-import 'package:ble_test/ble-v2/ocr/ocr.dart';
+import 'package:ble_test/ble-v2/server/server.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/config/config.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -395,7 +395,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                           "Harap tunggu hasil OCR...");
 
                                                   String resultOCR =
-                                                      await OCRBLE().ocr(
+                                                      await ToServer().ocr(
                                                     configProvider
                                                         .config.urlTestOCR,
                                                     bufferData,
@@ -409,7 +409,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                   _progressDialog.hide();
 
                                                   String newResultFormat =
-                                                      OCRBLE.formatResponse(
+                                                      ToServer.formatResponse(
                                                           resultOCR);
                                                   showDialog(
                                                     context: context,

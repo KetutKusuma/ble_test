@@ -6,7 +6,7 @@ import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/explorer/image_explorer.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
-import 'package:ble_test/ble-v2/ocr/ocr.dart';
+import 'package:ble_test/ble-v2/server/server.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/rtc.dart';
 import 'package:ble_test/config/config.dart';
@@ -22,6 +22,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
 import '../../../../ble-v2/download_utils/download_utils.dart';
+import 'package:http/http.dart' as http;
 
 class ListImageExplorerScreen extends StatefulWidget {
   final int filter;
@@ -256,6 +257,48 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
           ImageMetaDataModelParse.parse(dataBuffer.data!);
 
       ImageMetaDataModel imageMetaData = dataParse["metaData"];
+
+      List<Widget> _buildMetadataTextsV2(
+        ImageMetaDataModel imageMetaData,
+      ) {
+        final List<Widget> widgets = [];
+
+        void addText(String text) {
+          widgets.add(Text(text));
+        }
+
+        addText("Firmware : ${imageMetaData.firmware}");
+        addText("Version : ${imageMetaData.version}");
+        addText(
+            "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}");
+        addText("ID Pelanggan : ${imageMetaData.custom}");
+        addText("Model Meter : ${imageMetaData.meterModel}");
+        addText("Nomor Seri Meter : ${imageMetaData.meterSN}");
+        addText("Segel Meter : ${imageMetaData.meterSeal}");
+        addText("Tanggal Diambil : ${imageMetaData.getDateTimeTakenString()}");
+        addText(
+            "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}");
+        addText(
+            "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V");
+        addText(
+            "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V");
+        addText("Rotasi Kamera : ${imageMetaData.adjustmentRotation}");
+        addText(
+            "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C");
+        addText(
+            "Ukuran Gambar : ${listImageExplorer[index].getFileSizeString()}");
+
+        // Sisipkan SizedBox(height: 3) antar elemen kecuali terakhir
+        return [
+          for (int i = 0; i < widgets.length; i++) ...[
+            widgets[i],
+            if (i != widgets.length - 1) const SizedBox(height: 3),
+          ]
+        ];
+      }
+
+      List<Widget> _buildMetadataTextsV3(ImageMetaDataModel imageMetaData) {}
+
       _progressDialog.hide();
       showDialog(
         context: context,
@@ -297,50 +340,16 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                           const SizedBox(
                             height: 5,
                           ),
-                          Text(
-                            "Firmware : ${imageMetaData.firmware}",
-                          ),
-                          const SizedBox(height: 3),
-                          Text("Version : ${imageMetaData.version}"),
-                          const SizedBox(height: 3),
-                          Text(
-                            "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
-                          ),
-                          const SizedBox(height: 3),
-                          Text("ID Pelanggan : ${imageMetaData.custom}"),
-                          const SizedBox(height: 3),
-                          Text("Model Meter : ${imageMetaData.meterModel}"),
-                          const SizedBox(height: 3),
-                          Text("Nomor Seri Meter : ${imageMetaData.meterSN}"),
-                          const SizedBox(height: 3),
-                          Text("Segel Meter : ${imageMetaData.meterSeal}"),
-                          const SizedBox(height: 3),
-                          Text(
-                              "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
-                          const SizedBox(height: 3),
-                          Text(
-                            "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                              "Rotasi Kamera : ${imageMetaData.adjustmentRotation}"),
-                          const SizedBox(height: 3),
-                          Text(
-                            "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C",
-                          ),
-                          const SizedBox(
-                            height: 3,
-                          ),
-                          Text(
-                              "Ukuran Gambar : ${listImageExplorer[index].getFileSizeString()}"),
+                          Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: Text(listImageExplorer[index]
+                                  .getDirIndexString())),
+                          ..._buildMetadataTextsV2(imageMetaData),
                         ],
                       )
                     else
@@ -350,6 +359,15 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                           const SizedBox(
                             height: 5,
                           ),
+                          Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: Text(listImageExplorer[index]
+                                  .getDirIndexString())),
                           Text(
                             "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}",
                           ),
@@ -358,6 +376,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                             "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
                           ),
                           Text("ID Pelanggan : ${imageMetaData.custom}"),
+                          const SizedBox(height: 3),
                           Text(
                               "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
                           const SizedBox(height: 3),
@@ -406,8 +425,8 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 _progressDialog.show(
                                     message: "Harap tunggu hasil unggah...");
 
-                                String resultUpload =
-                                    await OCRBLE().helperUploadImg(
+                                http.Response resultUpload =
+                                    await ToServer().helperUploadImg(
                                   num.parse(imageMetaData.version ?? "0.0") >=
                                           2.21
                                       ? "https://toppi-entrypoint-v3.bimasaktisanjaya.net/upload"
@@ -427,8 +446,14 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                       title: const Text("Hasil Unggah"),
                                       children: [
                                         SimpleDialogOption(
-                                          child: Text(
-                                            resultUpload,
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                "Kode Status : ${resultUpload.statusCode}",
+                                              ),
+                                              Text(
+                                                  "Data : ${resultUpload.body}")
+                                            ],
                                           ),
                                         )
                                       ],
@@ -477,7 +502,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 _progressDialog.show(
                                     message: "Harap tunggu hasil OCR...");
 
-                                String resultOCR = await OCRBLE().ocr(
+                                String resultOCR = await ToServer().ocr(
                                   configProvider.config.urlTestOCR,
                                   dataBuffer.data ?? [],
                                   ConvertV2().arrayUint8ToStringHexAddress(
@@ -487,7 +512,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 _progressDialog.hide();
 
                                 String newResultFormat =
-                                    OCRBLE.formatResponse(resultOCR);
+                                    ToServer.formatResponse(resultOCR);
                                 showDialog(
                                   context: context,
                                   builder: (context) {
