@@ -288,53 +288,112 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                         ),
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        Text(
-                          "Firmware : ${imageMetaData.firmware}",
-                        ),
-                        const SizedBox(height: 3),
-                        Text("Version : ${imageMetaData.version}"),
-                        const SizedBox(height: 3),
-                        Text(
-                          "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
-                        ),
-                        const SizedBox(height: 3),
-                        Text("ID Pelanggan : ${imageMetaData.custom}"),
-                        const SizedBox(height: 3),
-                        Text("Model Meter : ${imageMetaData.meterModel}"),
-                        const SizedBox(height: 3),
-                        Text("Nomor Seri Meter : ${imageMetaData.meterSN}"),
-                        const SizedBox(height: 3),
-                        Text("Segel Meter : ${imageMetaData.meterSeal}"),
-                        const SizedBox(height: 3),
-                        Text(
-                            "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
-                        const SizedBox(height: 3),
-                        Text(
-                          "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                            "Rotasi Kamera : ${imageMetaData.adjustmentRotation}"),
-                        const SizedBox(height: 3),
-                        Text(
-                          "Suhu : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C",
-                        ),
-                      ],
-                    ),
+
+                    // for handle v2.21
+                    if (double.parse(imageMetaData.version ?? "0.0") < 2.21)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            "Firmware : ${imageMetaData.firmware}",
+                          ),
+                          const SizedBox(height: 3),
+                          Text("Version : ${imageMetaData.version}"),
+                          const SizedBox(height: 3),
+                          Text(
+                            "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
+                          ),
+                          const SizedBox(height: 3),
+                          Text("ID Pelanggan : ${imageMetaData.custom}"),
+                          const SizedBox(height: 3),
+                          Text("Model Meter : ${imageMetaData.meterModel}"),
+                          const SizedBox(height: 3),
+                          Text("Nomor Seri Meter : ${imageMetaData.meterSN}"),
+                          const SizedBox(height: 3),
+                          Text("Segel Meter : ${imageMetaData.meterSeal}"),
+                          const SizedBox(height: 3),
+                          Text(
+                              "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
+                          const SizedBox(height: 3),
+                          Text(
+                            "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                              "Rotasi Kamera : ${imageMetaData.adjustmentRotation}"),
+                          const SizedBox(height: 3),
+                          Text(
+                            "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C",
+                          ),
+                          const SizedBox(
+                            height: 3,
+                          ),
+                          Text(
+                              "Ukuran Gambar : ${listImageExplorer[index].getFileSizeString()}"),
+                        ],
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}",
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
+                          ),
+                          Text("ID Pelanggan : ${imageMetaData.custom}"),
+                          Text(
+                              "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
+                          const SizedBox(height: 3),
+                          Text(
+                            "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
+                          ),
+                          Text(
+                            "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C",
+                          ),
+                          Text(
+                            "Role : ${(imageMetaData.getRoleString())}",
+                          ),
+                          Text(
+                            "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                              "Rotasi Kamera : ${imageMetaData.adjustmentRotation}"),
+                          const SizedBox(height: 3),
+                          Text("Model Meter : ${imageMetaData.meterModel}"),
+                          const SizedBox(height: 3),
+                          Text("Nomor Seri Meter : ${imageMetaData.meterSN}"),
+                          const SizedBox(height: 3),
+                          Text("Segel Meter : ${imageMetaData.meterSeal}"),
+                          const SizedBox(height: 3),
+                          Text(
+                              "Angka Bulat dan Desimal : ${imageMetaData.numberDigit}/${imageMetaData.numberDecimal}"),
+                          const SizedBox(height: 3),
+                          Text(
+                              "Ukuran Gambar : ${listImageExplorer[index].getFileSizeString()}"),
+                        ],
+                      ),
                     const SizedBox(
                       height: 10,
                     ),
@@ -349,7 +408,11 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
 
                                 String resultUpload =
                                     await OCRBLE().helperUploadImg(
-                                  configProvider.config.urlHelpUpload,
+                                  num.parse(imageMetaData.version ?? "0.0") >=
+                                          2.21
+                                      ? "https://toppi-entrypoint-v3.bimasaktisanjaya.net/upload"
+                                      : configProvider.config.urlHelpUpload,
+                                  // configProvider.config.urlHelpUpload,
                                   dataBuffer.data ?? [],
                                   ConvertV2().arrayUint8ToStringHexAddress(
                                       (imageMetaData.id ?? [])),
@@ -493,9 +556,10 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 }
                                 DateTime dateTime = DateTime.now();
                                 String datetimenow =
-                                    DateFormat('yyyy-MM-dd_HH#mm#ss')
+                                    DateFormat('yyyyMMddHHmmss')
                                         .format(dateTime);
-                                String fileName = "img_$datetimenow.jpg";
+                                String fileName =
+                                    "img_${imageExplorer[index].getFilenameString()}_$datetimenow.jpg";
                                 if (mounted) {
                                   await DownloadUtils.saveToDownload(
                                     context,

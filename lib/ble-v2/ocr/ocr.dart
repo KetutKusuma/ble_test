@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/rtc.dart';
@@ -48,7 +49,7 @@ class OCRBLE {
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
+      log("response status code : ${response.statusCode}");
       // return {
       //   "status": response.statusCode,
       //   "body": response.body,

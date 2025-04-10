@@ -176,6 +176,39 @@ class CommandImageFile {
     }
   }
 
+  Future<BLEResponse> imageFileRename(BLEProvider bleProvider, int flagDir,
+      List<int> fileName, int renameTo) async {
+    try {
+      int command = CommandCode.imageFileRename;
+      int uniqueID = UniqueIDManager().getUniqueID();
+
+      List<int> buffer = [];
+      messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addUint8(flagDir, buffer);
+      messageV2.addArrayOfUint8(fileName, buffer);
+      messageV2.addUint8(renameTo, buffer);
+
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
+
+      Header headerBLE =
+          Header(uniqueID: uniqueID, command: command, status: false);
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+      if (responseWrite.header.status) {
+        return BLEResponse.success("Sukses ubah nama berkas gambar");
+      } else {
+        return BLEResponse.errorFromBLE(responseWrite);
+      }
+    } catch (e) {
+      return BLEResponse.error("Error dapat ubah nama berkas gambar");
+    }
+  }
+
   Future<BLEResponse> imageFileDelete(
       BLEProvider bleProvider, int flagDir, List<int> fileName) async {
     try {
