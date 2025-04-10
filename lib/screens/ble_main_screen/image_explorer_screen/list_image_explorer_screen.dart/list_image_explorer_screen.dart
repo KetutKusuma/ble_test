@@ -59,7 +59,6 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     configProvider = Provider.of<ConfigProvider>(context, listen: false);
@@ -87,7 +86,6 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _connectionStateSubscription.cancel();
   }
@@ -258,7 +256,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
 
       ImageMetaDataModel imageMetaData = dataParse["metaData"];
 
-      List<Widget> _buildMetadataTextsV2(
+      List<Widget> buildMetadataTextsV2(
         ImageMetaDataModel imageMetaData,
       ) {
         final List<Widget> widgets = [];
@@ -297,7 +295,45 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
         ];
       }
 
-      List<Widget> _buildMetadataTextsV3(ImageMetaDataModel imageMetaData) {}
+      List<Widget> buildMetadataTextsV3(ImageMetaDataModel imageMetaData) {
+        final List<Widget> widgets = [];
+
+        void addText(String text) {
+          widgets.add(Text(text));
+        }
+
+        addText(
+            "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}");
+        addText(
+            "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}");
+        addText("ID Pelanggan : ${imageMetaData.customerID}");
+        addText("Tanggal Diambil : ${imageMetaData.getDateTimeTakenString()}");
+        addText(
+            "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}");
+        addText(
+            "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C");
+        addText("Role : ${imageMetaData.getRoleString()}");
+        addText(
+            "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V");
+        addText(
+            "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V");
+        addText("Rotasi Kamera : ${imageMetaData.adjustmentRotation}");
+        addText("Model Meter : ${imageMetaData.meterModel}");
+        addText("Nomor Seri Meter : ${imageMetaData.meterSN}");
+        addText("Segel Meter : ${imageMetaData.meterSeal}");
+        addText(
+            "Angka Bulat/Desimal : ${imageMetaData.numberDigit}/${imageMetaData.numberDecimal}");
+        addText("Kustom : ${imageMetaData.custom}");
+        addText(
+            "Ukuran Gambar : ${listImageExplorer[index].getFileSizeString()}");
+
+        return [
+          for (int i = 0; i < widgets.length; i++) ...[
+            widgets[i],
+            if (i != widgets.length - 1) const SizedBox(height: 3),
+          ]
+        ];
+      }
 
       _progressDialog.hide();
       showDialog(
@@ -349,7 +385,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               child: Text(listImageExplorer[index]
                                   .getDirIndexString())),
-                          ..._buildMetadataTextsV2(imageMetaData),
+                          ...buildMetadataTextsV2(imageMetaData),
                         ],
                       )
                     else
@@ -368,49 +404,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               child: Text(listImageExplorer[index]
                                   .getDirIndexString())),
-                          Text(
-                            "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}",
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
-                          ),
-                          Text("ID Pelanggan : ${imageMetaData.custom}"),
-                          const SizedBox(height: 3),
-                          Text(
-                              "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
-                          const SizedBox(height: 3),
-                          Text(
-                            "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
-                          ),
-                          Text(
-                            "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C",
-                          ),
-                          Text(
-                            "Role : ${(imageMetaData.getRoleString())}",
-                          ),
-                          Text(
-                            "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                              "Rotasi Kamera : ${imageMetaData.adjustmentRotation}"),
-                          const SizedBox(height: 3),
-                          Text("Model Meter : ${imageMetaData.meterModel}"),
-                          const SizedBox(height: 3),
-                          Text("Nomor Seri Meter : ${imageMetaData.meterSN}"),
-                          const SizedBox(height: 3),
-                          Text("Segel Meter : ${imageMetaData.meterSeal}"),
-                          const SizedBox(height: 3),
-                          Text(
-                              "Angka Bulat dan Desimal : ${imageMetaData.numberDigit}/${imageMetaData.numberDecimal}"),
-                          const SizedBox(height: 3),
-                          Text(
-                              "Ukuran Gambar : ${listImageExplorer[index].getFileSizeString()}"),
+                          ...buildMetadataTextsV3(imageMetaData)
                         ],
                       ),
                     const SizedBox(
