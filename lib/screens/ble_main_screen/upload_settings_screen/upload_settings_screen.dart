@@ -145,18 +145,6 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     }
   }
 
-  String getUploadUsing(int value) {
-    if (value == 0) {
-      return "Wifi";
-    } else if (value == 1) {
-      return "Sim800l";
-    } else if (value == 2) {
-      return "NB-Iot";
-    } else {
-      return "-";
-    }
-  }
-
   initGetDataGateway() async {
     try {
       gatewayModel = GatewayModel(
@@ -182,24 +170,23 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         gatewayModel = res.data!;
         log("gatewayModel : $gatewayModel");
         setState(() {
-          serverTxt = res.data!.server.changeEmptyString();
-          portTxt = res.data!.port.toString().changeZeroString();
-          uploadUsingTxt = getUploadUsing(res.data!.uploadUsing);
+          serverTxt = res.data!.server;
+          portTxt = res.data!.port.toString();
+          uploadUsingTxt =
+              GatewayModel.getUploadUsingString(res.data!.uploadUsing);
           uploadInitialDelayTxt = res.data!.uploadInitialDelay.toString();
-          wifiSsidTxt = res.data!.wifi.ssid.changeEmptyString();
-          wifiPasswordTxt = res.data!.wifi.password.changeEmptyString();
+          wifiSsidTxt = res.data!.wifi.ssid;
+          wifiPasswordTxt = res.data!.wifi.password;
           if (gatewayModel.paramCount == 7) {
-            modemApnTxt = res.data!.modemAPN.changeEmptyString();
+            modemApnTxt = res.data!.modemAPN;
           } else {
             secureTxt = res.data!.wifi.secure.changeBoolToStringIndo();
-            mikrotikIPTxt = res.data!.wifi.mikrotikIP.changeEmptyString();
+            mikrotikIPTxt = res.data!.wifi.mikrotikIP;
             mikrotikLoginSecureTxt =
                 res.data!.wifi.mikrotikLoginSecure.changeBoolToStringIndo();
-            mikrotikUsernameTxt =
-                res.data!.wifi.mikrotikUsername.changeEmptyString();
-            mikrotikPasswordTxt =
-                res.data!.wifi.mikrotikPassword.changeEmptyString();
-            modemApnTxt = res.data!.modemAPN.changeEmptyString();
+            mikrotikUsernameTxt = res.data!.wifi.mikrotikUsername;
+            mikrotikPasswordTxt = res.data!.wifi.mikrotikPassword;
+            modemApnTxt = res.data!.modemAPN;
           }
         });
       } else {
@@ -215,7 +202,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future<String?> _showInputDialog(
       TextEditingController controller, String title,
       {List<TextInputFormatter>? inputFormatters,
-      TextInputType? keyboardType = TextInputType.text}) async {
+      TextInputType? keyboardType = TextInputType.text,
+      bool canSaveEmpty = true}) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -247,7 +235,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
             ),
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty) {
+                if (canSaveEmpty || controller.text.isNotEmpty) {
                   Navigator.pop(context, controller.text);
                   controller.clear();
                 }
@@ -489,7 +477,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                   children: [
                     SettingsContainer(
                       title: "Server",
-                      data: serverTxt,
+                      data: serverTxt.changeEmptyString(),
                       onTap: () async {
                         try {
                           controller.text = serverTxt;
@@ -521,7 +509,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Port",
-                      data: portTxt,
+                      data: portTxt.changeEmptyString(),
                       onTap: () async {
                         try {
                           portController.text = portTxt;
@@ -698,75 +686,74 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         Icons.vertical_align_top_rounded,
                       ),
                     ),
-                    (uploadUsingTxt != "Wifi")
-                        ? const SizedBox()
-                        : SettingsContainer(
-                            title: "Nama Wifi",
-                            data: wifiSsidTxt,
-                            onTap: () async {
-                              try {
-                                controller.text = wifiSsidTxt;
-                                String? input = await _showInputDialog(
-                                    controller, "Nama Wifi", inputFormatters: [
-                                  LengthLimitingTextInputFormatter(16)
-                                ]);
-                                if (input != null) {
-                                  gatewayModel.wifi.ssid = input;
-                                  BLEResponse resBLE = await _commandSet
-                                      .setGateway(bleProvider, gatewayModel);
-                                  Snackbar.showHelperV2(
-                                    ScreenSnackbar.uploadsettings,
-                                    resBLE,
-                                    onSuccess: onRefresh,
-                                  );
-                                }
-                              } catch (e) {
-                                Snackbar.show(
-                                  ScreenSnackbar.uploadsettings,
-                                  "Error click on Nama Wifi : $e",
-                                  success: false,
-                                );
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.wifi_rounded,
-                            ),
-                          ),
-                    (uploadUsingTxt != "Wifi")
-                        ? const SizedBox()
-                        : SettingsContainer(
-                            title: "Kata Sandi Wifi",
-                            data: wifiPasswordTxt,
-                            onTap: () async {
-                              try {
-                                controller.text = wifiPasswordTxt;
-                                String? input = await _showInputDialog(
-                                    controller, "Kata Sandi Wifi",
-                                    inputFormatters: [
-                                      LengthLimitingTextInputFormatter(32)
-                                    ]);
-                                if (input != null) {
-                                  gatewayModel.wifi.password = input;
-                                  BLEResponse resBLE = await _commandSet
-                                      .setGateway(bleProvider, gatewayModel);
-                                  Snackbar.showHelperV2(
-                                    ScreenSnackbar.uploadsettings,
-                                    resBLE,
-                                    onSuccess: onRefresh,
-                                  );
-                                }
-                              } catch (e) {
-                                Snackbar.show(
-                                  ScreenSnackbar.uploadsettings,
-                                  "Error click on Kata Sandi Wifi : $e",
-                                  success: false,
-                                );
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.wifi_password_rounded,
-                            ),
-                          ),
+                    SettingsContainer(
+                      title: "Nama Wifi",
+                      data: wifiSsidTxt.changeEmptyString(),
+                      onTap: () async {
+                        try {
+                          controller.text = wifiSsidTxt;
+                          String? input = await _showInputDialog(
+                            controller,
+                            "Nama Wifi",
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(16)
+                            ],
+                            canSaveEmpty: false,
+                          );
+                          if (input != null) {
+                            gatewayModel.wifi.ssid = input;
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        } catch (e) {
+                          Snackbar.show(
+                            ScreenSnackbar.uploadsettings,
+                            "Error click on Nama Wifi : $e",
+                            success: false,
+                          );
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.wifi_rounded,
+                      ),
+                    ),
+                    SettingsContainer(
+                      title: "Kata Sandi Wifi",
+                      data: wifiPasswordTxt,
+                      onTap: () async {
+                        try {
+                          controller.text = wifiPasswordTxt;
+                          String? input = await _showInputDialog(
+                              controller, "Kata Sandi Wifi", inputFormatters: [
+                            LengthLimitingTextInputFormatter(32)
+                          ]);
+                          if (input != null) {
+                            gatewayModel.wifi.password = input;
+                            BLEResponse resBLE = await _commandSet.setGateway(
+                                bleProvider, gatewayModel);
+                            Snackbar.showHelperV2(
+                              ScreenSnackbar.uploadsettings,
+                              resBLE,
+                              onSuccess: onRefresh,
+                            );
+                          }
+                        } catch (e) {
+                          Snackbar.show(
+                            ScreenSnackbar.uploadsettings,
+                            "Error click on Kata Sandi Wifi : $e",
+                            success: false,
+                          );
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.wifi_password_rounded,
+                      ),
+                    ),
                     (uploadUsingTxt != "Wifia")
                         ? const SizedBox()
                         : Padding(

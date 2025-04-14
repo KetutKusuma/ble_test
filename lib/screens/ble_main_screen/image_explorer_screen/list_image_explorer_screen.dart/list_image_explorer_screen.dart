@@ -419,18 +419,19 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 _progressDialog.show(
                                     message: "Harap tunggu hasil unggah...");
 
-                                http.Response resultUpload =
-                                    await ToServer().helperUploadImg(
-                                  num.parse(imageMetaData.version ?? "0.0") >=
-                                          2.21
-                                      ? "https://toppi-entrypoint-v3.bimasaktisanjaya.net/upload"
-                                      : configProvider.config.urlHelpUpload,
-                                  // configProvider.config.urlHelpUpload,
-                                  dataBuffer.data ?? [],
-                                  ConvertV2().arrayUint8ToStringHexAddress(
-                                      (imageMetaData.id ?? [])),
-                                  // dataParse['img'],
-                                );
+                                http.Response resultUpload = await ToServer()
+                                    .postRequest(
+                                        num.parse(imageMetaData.version ??
+                                                    "0.0") >=
+                                                2.21
+                                            ? "https://toppi-entrypoint-v3.bimasaktisanjaya.net/upload"
+                                            : configProvider
+                                                .config.urlHelpUpload,
+                                        // configProvider.config.urlHelpUpload,
+                                        dataBuffer.data ?? [],
+                                        imageMetaData
+                                        // dataParse['img'],
+                                        );
                                 _progressDialog.hide();
 
                                 showDialog(
@@ -441,6 +442,8 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                       children: [
                                         SimpleDialogOption(
                                           child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 "Kode Status : ${resultUpload.statusCode}",
@@ -496,17 +499,17 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 _progressDialog.show(
                                     message: "Harap tunggu hasil OCR...");
 
-                                String resultOCR = await ToServer().ocr(
+                                http.Response resultOCR =
+                                    await ToServer().postRequest(
                                   configProvider.config.urlTestOCR,
                                   dataBuffer.data ?? [],
-                                  ConvertV2().arrayUint8ToStringHexAddress(
-                                      (imageMetaData.id ?? [])),
+                                  imageMetaData,
                                 );
 
                                 _progressDialog.hide();
 
-                                String newResultFormat =
-                                    ToServer.formatResponse(resultOCR);
+                                // String newResultFormat =
+                                //     ToServer.formatResponse(resultOCR);
                                 showDialog(
                                   context: context,
                                   builder: (context) {
@@ -515,7 +518,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                       children: [
                                         SimpleDialogOption(
                                           child: Text(
-                                            newResultFormat,
+                                            "Kode Status : ${resultOCR.statusCode}\nData : ${resultOCR.body}",
                                           ),
                                         )
                                       ],

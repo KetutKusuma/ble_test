@@ -244,22 +244,21 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addString(gateway.server.changeEmptyString(), buffer);
+      messageV2.addString(gateway.server, buffer);
       messageV2.addUint16(gateway.port, buffer);
       messageV2.addUint8(gateway.uploadUsing, buffer);
       messageV2.addUint8(gateway.uploadInitialDelay, buffer);
-      messageV2.addString(gateway.wifi.ssid.changeEmptyString(), buffer);
-      messageV2.addString(gateway.wifi.password.changeEmptyString(), buffer);
+      messageV2.addString(gateway.wifi.ssid, buffer);
+      messageV2.addString(gateway.wifi.password, buffer);
       if (gateway.paramCount == 7) {
-        messageV2.addString(gateway.modemAPN.changeEmptyString(), buffer);
+        messageV2.addString(gateway.modemAPN, buffer);
       } else if (gateway.paramCount == 12) {
         messageV2.addBool(gateway.wifi.secure, buffer);
-        messageV2.addString(
-            gateway.wifi.mikrotikIP.changeEmptyString(), buffer);
+        messageV2.addString(gateway.wifi.mikrotikIP, buffer);
         messageV2.addBool(gateway.wifi.mikrotikLoginSecure, buffer);
         messageV2.addString(gateway.wifi.mikrotikUsername, buffer);
         messageV2.addString(gateway.wifi.mikrotikPassword, buffer);
-        messageV2.addString(gateway.modemAPN.changeEmptyString(), buffer);
+        messageV2.addString(gateway.modemAPN, buffer);
       } else {
         return BLEResponse.error(
             "Kesalahan pada panjang parameter gateway tidak sesuai");

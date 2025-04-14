@@ -29,7 +29,7 @@ server : $server \nport : $port \nuploadUsing : $uploadUsing \nuploadInitialDela
 ''';
   }
 
-  String getUploadUsingString() {
+  static String getUploadUsingString(uploadUsing) {
     if (uploadUsing == 0) {
       return "Wifi Internal";
     } else if (uploadUsing == 1) {

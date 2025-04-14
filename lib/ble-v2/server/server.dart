@@ -1,20 +1,28 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/rtc.dart';
 import 'package:ble_test/utils/crc32.dart';
+import 'package:ble_test/utils/global.dart';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 
 class ToServer {
-  Future<http.Response> helperUploadImg(
+  Future<String> _getVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    String versionApp = packageInfo.version;
+    return versionApp;
+  }
+
+  Future<http.Response> postRequest(
     String url,
     List<int> data,
-    String nameData,
+    ImageMetaDataModel imageMetaData,
   ) async {
     try {
-      List<int> idBuffer = List.filled(5, 0);
       int timestamp = RTC.getSeconds();
       List<int> timestampBuffer = List<int>.filled(4, 0, growable: false);
       ConvertV2().insertUint32ToBuffer(timestamp, timestampBuffer, 0);
@@ -23,9 +31,23 @@ class ToServer {
       List<int> checksumBuffer = List<int>.filled(4, 0, growable: false);
       ConvertV2().insertUint32ToBuffer(checksum, checksumBuffer, 0);
 
+      // # ini untuk handle versi v2.21
+      String version = await _getVersion();
+      String fileName = ConvertV2().arrayUint8ToStringHexAddress(
+        (imageMetaData.id ?? []),
+      ); // ini untuk requestID
+
+      int utc = RTC.getTimeUTC();
+      // ### ---- ###
+
+      // log("list-> appName : ${appName.codeUnits}, version : ${version.codeUnits}, filename : ${fileName.codeUnits}, id : ${imageMetaData.id}, timestamp : ${timestampBuffer}, utc : ${utc.toString().codeUnits}, checksum : ${checksumBuffer}, md5Salt : ${InitConfig.data().md5Salt}");
       List<int> signatureInput = [
-        ...idBuffer,
+        ...appName.codeUnits, // v2.21
+        ...version.codeUnits, // v2.21
+        ...fileName.codeUnits, // v2.21
+        ...imageMetaData.id ?? [],
         ...timestampBuffer,
+        ...[utc], // v2.21
         ...checksumBuffer,
         ...InitConfig.data().md5Salt
       ];
@@ -33,84 +55,99 @@ class ToServer {
       Digest signature = md5.convert(signatureInput);
 
       Map<String, String> headers = {
-        "X-ID": _bytesToHex(idBuffer),
+        "X-FIRMWARE": appName,
+        "X-VERSION": version,
+        "X-REQUEST-ID": fileName, // nama filenya
+        "X-TOPPI-ID": _bytesToHex(imageMetaData.id ?? []),
         "X-TIMESTAMP": timestamp.toString(),
+        "X-UTC": utc.toString(),
         "X-CHECKSUM": checksum.toString(),
         "X-SIGNATURE": signature.toString(),
       };
 
       var request = http.MultipartRequest("POST", Uri.parse(url));
       request.headers.addAll(headers);
-      request.files.add(http.MultipartFile.fromBytes(
-        'DATA',
-        data,
-        filename: nameData,
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'Data',
+          data,
+          filename: fileName,
+        ),
+      );
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-      log("response status code : ${response.statusCode}");
-      // return {
-      //   "status": response.statusCode,
-      //   "body": response.body,
-      // };
+
       return response;
     } catch (e) {
       throw Exception("OCR request failed: $e");
     }
   }
 
-  Future<String> ocr(
-    String url,
-    List<int> data,
-    String nameData,
-  ) async {
-    try {
-      List<int> idBuffer = List.filled(5, 0);
-      int timestamp = RTC.getSeconds();
-      List<int> timestampBuffer = List<int>.filled(4, 0, growable: false);
-      ConvertV2().insertUint32ToBuffer(timestamp, timestampBuffer, 0);
+  // Future<String> ocr(
+  //     String url, List<int> data, ImageMetaDataModel imageMetaData) async {
+  //   try {
+  //     int timestamp = RTC.getSeconds();
+  //     List<int> timestampBuffer = List<int>.filled(4, 0, growable: false);
+  //     ConvertV2().insertUint32ToBuffer(timestamp, timestampBuffer, 0);
 
-      int checksum = CRC32.compute(data);
-      List<int> checksumBuffer = List<int>.filled(4, 0, growable: false);
-      ConvertV2().insertUint32ToBuffer(checksum, checksumBuffer, 0);
+  //     int checksum = CRC32.compute(data);
+  //     List<int> checksumBuffer = List<int>.filled(4, 0, growable: false);
+  //     ConvertV2().insertUint32ToBuffer(checksum, checksumBuffer, 0);
 
-      List<int> signatureInput = [
-        ...idBuffer,
-        ...timestampBuffer,
-        ...checksumBuffer,
-        ...InitConfig.data().md5Salt
-      ];
+  //     // # ini untuk handle versi v2.21
+  //     String version = await _getVersion();
+  //     String fileName = ConvertV2().arrayUint8ToStringHexAddress(
+  //       (imageMetaData.id ?? []),
+  //     ); // ini untuk requestID
 
-      Digest signature = md5.convert(signatureInput);
+  //     int utc = RTC.getTimeUTC();
+  //     // ### ---- ###
 
-      Map<String, String> headers = {
-        "X-ID": _bytesToHex(idBuffer),
-        "X-TIMESTAMP": timestamp.toString(),
-        "X-CHECKSUM": checksum.toString(),
-        "X-SIGNATURE": signature.toString(),
-      };
+  //     List<int> signatureInput = [
+  //       ...appName.codeUnits,
+  //       ...version.codeUnits,
+  //       ...fileName.codeUnits,
+  //       ...imageMetaData.id ?? [],
+  //       ...timestampBuffer,
+  //       ...utc.toString().codeUnits,
+  //       ...checksumBuffer,
+  //       ...InitConfig.data().md5Salt
+  //     ];
 
-      var request = http.MultipartRequest("POST", Uri.parse(url));
-      request.headers.addAll(headers);
-      request.files.add(http.MultipartFile.fromBytes(
-        'DATA',
-        data,
-        filename: nameData,
-      ));
+  //     Digest signature = md5.convert(signatureInput);
 
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
+  //     Map<String, String> headers = {
+  //       "X-FIRMWARE": appName,
+  //       "X-VERSION": version,
+  //       "X-REQUEST-ID": fileName, // nama filenya
+  //       "X-TOPPI-ID": _bytesToHex(imageMetaData.id ?? []),
+  //       "X-TIMESTAMP": timestamp.toString(),
+  //       "X-UTC": utc.toString(),
+  //       "X-CHECKSUM": checksum.toString(),
+  //       "X-SIGNATURE": signature.toString(),
+  //     };
 
-      // return {
-      //   "status": response.statusCode,
-      //   "body": response.body,
-      // };
-      return response.body;
-    } catch (e) {
-      throw Exception("OCR request failed: $e");
-    }
-  }
+  //     var request = http.MultipartRequest("POST", Uri.parse(url));
+  //     request.headers.addAll(headers);
+  //     request.files.add(http.MultipartFile.fromBytes(
+  //       'DATA',
+  //       data,
+  //       filename: fileName,
+  //     ));
+
+  //     var streamedResponse = await request.send();
+  //     var response = await http.Response.fromStream(streamedResponse);
+
+  //     // return {
+  //     //   "status": response.statusCode,
+  //     //   "body": response.body,
+  //     // };
+  //     return response.body;
+  //   } catch (e) {
+  //     throw Exception("OCR request failed: $e");
+  //   }
+  // }
 
   static String formatResponse(String data) {
     try {

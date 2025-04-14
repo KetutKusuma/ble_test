@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import 'package:http/http.dart' as http;
 
 class CaptureScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -443,23 +444,17 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                       message:
                                                           "Harap tunggu hasil OCR...");
 
-                                                  String resultOCR =
-                                                      await ToServer().ocr(
+                                                  http.Response resultOCR =
+                                                      await ToServer()
+                                                          .postRequest(
                                                     configProvider
                                                         .config.urlTestOCR,
                                                     bufferData,
-                                                    ConvertV2()
-                                                        .arrayUint8ToStringHexAddress(
-                                                      (_imageMetaData!.id ??
-                                                          []),
-                                                    ),
+                                                    _imageMetaData!,
                                                   );
 
                                                   _progressDialog.hide();
 
-                                                  String newResultFormat =
-                                                      ToServer.formatResponse(
-                                                          resultOCR);
                                                   showDialog(
                                                     context: context,
                                                     builder: (context) {
@@ -469,7 +464,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                         children: [
                                                           SimpleDialogOption(
                                                             child: Text(
-                                                              newResultFormat,
+                                                              "Kode Status : ${resultOCR.statusCode}\nData : ${resultOCR.body}",
                                                             ),
                                                           )
                                                         ],
