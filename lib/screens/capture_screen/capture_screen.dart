@@ -399,11 +399,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                     configProvider
                                                         .config.urlTestOCR,
                                                     bufferData,
-                                                    ConvertV2()
-                                                        .arrayUint8ToStringHexAddress(
-                                                      (_imageMetaData!.id ??
-                                                          []),
-                                                    ),
+                                                    UniqueIDManager()
+                                                        .idGenerator(),
                                                   );
 
                                                   _progressDialog.hide();

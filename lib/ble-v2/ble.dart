@@ -240,4 +240,9 @@ class UniqueIDManager {
 
     return int.parse(uniqueIDStr);
   }
+
+  String idGenerator() {
+    final now = DateTime.now();
+    return now.microsecondsSinceEpoch.toString();
+  }
 }

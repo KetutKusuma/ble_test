@@ -351,8 +351,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                     await OCRBLE().helperUploadImg(
                                   configProvider.config.urlHelpUpload,
                                   dataBuffer.data ?? [],
-                                  ConvertV2().arrayUint8ToStringHexAddress(
-                                      (imageMetaData.id ?? [])),
+                                  imageExplorer[index].getFilenameString(),
                                   // dataParse['img'],
                                 );
                                 _progressDialog.hide();
@@ -417,8 +416,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                 String resultOCR = await OCRBLE().ocr(
                                   configProvider.config.urlTestOCR,
                                   dataBuffer.data ?? [],
-                                  ConvertV2().arrayUint8ToStringHexAddress(
-                                      (imageMetaData.id ?? [])),
+                                  imageExplorer[index].getFilenameString(),
                                 );
 
                                 _progressDialog.hide();
