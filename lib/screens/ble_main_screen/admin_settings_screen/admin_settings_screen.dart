@@ -272,12 +272,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               adminResponse.data!.identityModel!.hardwareID);
           voltCoef1Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient1
-              .toStringAsFixed(1)
-              .toString();
+              .formatDouble();
           voltCoef2Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient2
-              .toStringAsFixed(1)
-              .toString();
+              .formatDouble();
 
           brightnessText = adminResponse.data!.cameraModel!.brightness
               .toString()

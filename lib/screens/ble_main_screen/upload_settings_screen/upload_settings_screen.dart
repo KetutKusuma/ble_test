@@ -724,7 +724,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                     ),
                     SettingsContainer(
                       title: "Kata Sandi Wifi",
-                      data: wifiPasswordTxt,
+                      data: wifiPasswordTxt.changeEmptyString(),
                       onTap: () async {
                         try {
                           controller.text = wifiPasswordTxt;
@@ -903,7 +903,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               ),
                               SettingsContainer(
                                 title: "Alamat IP Mikrotik",
-                                data: mikrotikIPTxt,
+                                data: mikrotikIPTxt.changeEmptyString(),
                                 onTap: () async {
                                   try {
                                     controller.text = mikrotikIPTxt;
@@ -974,7 +974,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               ),
                               SettingsContainer(
                                 title: "Nama Pengguna Mikrotik",
-                                data: mikrotikUsernameTxt,
+                                data: mikrotikUsernameTxt.changeEmptyString(),
                                 onTap: () async {
                                   try {
                                     controller.text = mikrotikUsernameTxt;
@@ -1012,7 +1012,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               ),
                               SettingsContainer(
                                 title: "Password Mikrotik",
-                                data: mikrotikPasswordTxt,
+                                data: mikrotikPasswordTxt.changeEmptyString(),
                                 onTap: () async {
                                   try {
                                     controller.text = mikrotikPasswordTxt;
@@ -1050,7 +1050,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                               ),
                               SettingsContainer(
                                 title: "Modem APN",
-                                data: modemApnTxt,
+                                data: modemApnTxt.changeEmptyString(),
                                 onTap: () async {
                                   try {
                                     controller.text = modemApnTxt;

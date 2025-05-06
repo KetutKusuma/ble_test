@@ -55,3 +55,13 @@ extension BoolExtensions on bool {
     return "Tidak";
   }
 }
+
+extension DoubleExtensions on double {
+  String formatDouble() {
+    // Buat string dengan 4 angka di belakang koma
+    String fixed = toStringAsFixed(4);
+
+    // Ubah ke double lalu kembali ke string agar trailing zero hilang
+    return double.parse(fixed).toString();
+  }
+}
