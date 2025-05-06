@@ -160,7 +160,7 @@ class BLEProvider with ChangeNotifier {
     StreamSubscription<List<int>>? subscription;
 
     subscription = characteristic.lastValueStream.listen((value) {
-      log("Received Value: $value");
+      // log("Received Value: $value");
       _valueController.add(value); // Send value to stream
 
       if (!completer.isCompleted) {
@@ -200,7 +200,7 @@ class BLEProvider with ChangeNotifier {
       }
 
       Header headerRes = MessageV2().getHeader(buffer);
-      log("header response : $headerRes");
+      // log("header response : $headerRes");
       if (headerRes.uniqueID == headerBLE.uniqueID &&
           headerRes.command == headerBLE.command) {
         return Response(headerRes, buffer);

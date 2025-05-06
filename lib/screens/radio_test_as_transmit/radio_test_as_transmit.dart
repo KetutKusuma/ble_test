@@ -274,7 +274,7 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
                                 repeat = int.parse(repeatTxtController.text);
 
                                 for (var i = 0; i < repeat; i++) {
-                                  log("i : $i == repeat : $repeat");
+                                  // log("i : $i == repeat : $repeat");
 
                                   if (!isTransmitStart) {
                                     isTransmitStart = false;

@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
         userRoleTxtController.text.trim(),
         passwordTxtController.text.trim(),
         challenge);
-    log("resLogin : $resLogin");
+    // log("resLogin : $resLogin");
     pd.hide();
     if (resLogin.status == false) {
       Snackbar.show(

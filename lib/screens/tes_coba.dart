@@ -59,7 +59,7 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
                 List<int> challenge = resHandshake.data!;
                 BLEResponse resLogin = await Command().login(
                     widget.device, bleProvider, "admin", "admin", challenge);
-                log("resLogin : $resLogin");
+                // log("resLogin : $resLogin");
               },
               child: Text("Handshake"),
             ),
@@ -100,7 +100,7 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
                 ];
                 BLEResponse resLogin = await Command().login(
                     widget.device, bleProvider, "admin", "admin", challenge);
-                log("resLogin : $resLogin");
+                // log("resLogin : $resLogin");
               },
               child: Text("Login"),
             ),

@@ -47,7 +47,6 @@ class CaptureModel {
   }
 
   String get getSpecialDateString {
-    log("masok ?? $specialDate");
     List<String> specialDates = [];
     for (int i = 0; i < 31; i++) {
       // log("special dates uuhy : ${ConvertTime.getBit(specialDate, i)}");
@@ -56,7 +55,7 @@ class CaptureModel {
         specialDates.add((i + 1).toString());
       }
     }
-    log("special dates : $specialDates");
+    // log("special dates : $specialDates");
     return specialDates.join(",");
   }
 

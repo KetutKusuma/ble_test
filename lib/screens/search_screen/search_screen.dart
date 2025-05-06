@@ -161,7 +161,7 @@ class _SearchScreenState extends State<SearchScreen> {
             challenge,
           )
           .fbpTimeout(5, "Login gagal karena waktu habis, coba lagi");
-      log("resLogin : $resLogin");
+      // log("resLogin : $resLogin");
 
       pd.hide();
       if (resLogin.status == false) {

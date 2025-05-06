@@ -246,13 +246,13 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addString(gateway.server.changeEmptyString(), buffer);
+      messageV2.addString(gateway.server, buffer);
       messageV2.addUint16(gateway.port, buffer);
       messageV2.addUint8(gateway.uploadUsing, buffer);
       messageV2.addUint8(gateway.uploadInitialDelay, buffer);
-      messageV2.addString(gateway.wifiSSID.changeEmptyString(), buffer);
-      messageV2.addString(gateway.wifiPassword.changeEmptyString(), buffer);
-      messageV2.addString(gateway.modemAPN.changeEmptyString(), buffer);
+      messageV2.addString(gateway.wifiSSID, buffer);
+      messageV2.addString(gateway.wifiPassword, buffer);
+      messageV2.addString(gateway.modemAPN, buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,

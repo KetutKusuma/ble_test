@@ -275,7 +275,7 @@ class ConvertTime {
   }
 
   static bool getBit(int value, int position) {
-    log("special dates get bit : ${(value & (1 << position))}");
+    // log("special dates get bit : ${(value & (1 << position))}");
     return (value & (1 << position)) != 0;
   }
 

@@ -112,7 +112,7 @@ class BLEResponse<T> {
       }
       params.add(param);
     }
-    log("sampe sini params : $params");
+    // log("sampe sini params : $params");
     if (params.length < 2) {
       return BLEResponse.error("Gagal mengambil parameter, parameter kurang");
     }
@@ -256,7 +256,7 @@ class Command {
         }
         params.add(param);
       }
-      log("params : $params");
+      // log("params : $params");
 
       if (params.length != 2) {
         throw Exception("Retrieve parameter expected 2 parameters");
@@ -264,8 +264,6 @@ class Command {
 
       int logisAs = ConvertV2().bufferToUint8(params[0], 0);
       int sessionIDNow = ConvertV2().bufferToUint8(params[1], 0);
-      log("logisAs : $logisAs");
-      log("sessionID : $sessionIDNow");
 
       _setRoleLoginAs(logisAs);
       sessionID = sessionIDNow;
@@ -403,7 +401,7 @@ class Command {
         params.add(param);
       }
 
-      log("params identity : ${params}");
+      // log("params identity : ${params}");
 
       int startIndex = 0;
       // identity
@@ -533,7 +531,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       /// firmware
       int startIndex = 0;
@@ -660,7 +658,7 @@ class Command {
         idata,
         headerBLE,
       );
-      log("response wriste get capture schedule : ${responseWrite}");
+      log("response write get capture schedule : ${responseWrite}");
 
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -676,7 +674,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       int startIndex = 0;
 
@@ -684,7 +682,6 @@ class Command {
       int count = ConvertV2().bufferToUint8(params[startIndex + 1], 0);
       int interval = ConvertV2().bufferToUint16(params[startIndex + 2], 0);
       int spDate = ConvertV2().bufferToUint32(params[startIndex + 3], 0);
-      log("MAMA from ${params[startIndex + 3]} to $spDate");
       int spSchedule = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
       int spCount = ConvertV2().bufferToUint8(params[startIndex + 5], 0);
       int spInterval = ConvertV2().bufferToUint16(params[startIndex + 6], 0);
@@ -751,7 +748,7 @@ class Command {
         }
         params.add(param);
       }
-      log("params : ${params}");
+      // log("params : ${params}");
 
       // expected params
       if (params.length != 16 * 3) {
@@ -777,7 +774,6 @@ class Command {
         );
         listReceive.add(receiveModel);
       }
-      log("masok end ga nih");
 
       return BLEResponse.success(
         "Sukses dapat jadwal pengambilan gambar",
@@ -828,7 +824,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       List<TransmitModel> listTransmitModel = [];
       int startIndex = 0;
@@ -895,7 +891,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       if (params.length != (8 * 2)) {
         throw Exception("Gagal panjang jadwal upload tidak sesuai");
@@ -959,7 +955,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       int startIndex = 0;
       String server = ConvertV2().bufferToString(params[startIndex]);
@@ -1020,7 +1016,7 @@ class Command {
       log("response write get meta data : $responseWrite");
       // turn to a model
       List<List<int>> params = [];
-      log("parameter count : ${responseWrite.header.parameterCount}");
+      // log("parameter count : ${responseWrite.header.parameterCount}");
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
         List<int>? param = MessageV2().getParameter(responseWrite.buffer, i);
         if (param == null) {
@@ -1089,7 +1085,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       int startIndex = 0;
       int allImage = ConvertV2().bufferToUint16(params[startIndex], 0);
@@ -1154,7 +1150,7 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      // log("params : ${params}");
 
       int startIndex = 0;
 

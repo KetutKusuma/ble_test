@@ -150,7 +150,7 @@ class ImageMetaDataModelParse {
         ),
       );
       Uint8List temp = Uint8List.fromList(temp2);
-      log("##long temp : ${temp.length}");
+      // log("##long temp : ${temp.length}");
       int tempLen = temp.length;
       if (tempLen <= 4) {
         throw Exception("Invalid data");
@@ -173,7 +173,7 @@ class ImageMetaDataModelParse {
         startIndex = tempLen - metaDataLen + 1;
       }
 
-      log("##version : $version");
+      // log("##version : $version");
 
       if (version == 1) {
         return {

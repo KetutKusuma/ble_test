@@ -264,7 +264,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         BLEResponse<AdminModels> adminResponse =
             await _command.getAdminData(device, bleProvider);
         _progressDialog.hide();
-        log("admin response : $adminResponse");
+        // log("admin response : $adminResponse");
         if (adminResponse.status) {
           adminModels = adminResponse.data!;
           idTxt = ConvertV2().arrayUint8ToStringHexAddress(
@@ -273,11 +273,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               adminResponse.data!.identityModel!.hardwareID);
           voltCoef1Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient1
-              .toStringAsFixed(1)
+              .formatDouble()
               .toString();
           voltCoef2Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient2
-              .toStringAsFixed(1)
+              .formatDouble()
               .toString();
 
           brightnessText = adminResponse.data!.cameraModel!.brightness

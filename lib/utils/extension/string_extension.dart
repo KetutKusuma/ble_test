@@ -23,3 +23,13 @@ extension StringExtensions on String {
     return this;
   }
 }
+
+extension DoubleExtensions on double {
+  formatDouble() {
+    // Buat string dengan 3 angka di belakang koma
+    String fixed = toStringAsFixed(3);
+
+    // Ubah ke double lalu kembali ke string agar trailing zero hilang
+    return double.parse(fixed).toString();
+  }
+}
