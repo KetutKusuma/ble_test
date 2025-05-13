@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 
 class CaptureModel {
@@ -82,5 +83,28 @@ class CaptureModel {
 
   set specialScheduleString(String value) {
     specialSchedule = ConvertTime.dateTimeStringToMinute(value);
+  }
+
+  void toDeviceConfiguration(CaptureScheduleModelYaml c) {
+    c.setScheduleFromUint16(schedule);
+    c.count = count;
+    c.setSpecialDateFromUint32(specialDate);
+    c.setSpecialScheduleFromUint16(specialSchedule);
+    c.specialCount = specialCount;
+    c.specialInterval = specialInterval;
+    c.recentCaptureLimit = recentCaptureLimit;
+  }
+
+  static CaptureModel fromDeviceConfiguration(CaptureScheduleModelYaml c) {
+    return CaptureModel(
+      schedule: c.getScheduleToUint16(),
+      count: c.count,
+      interval: c.interval,
+      specialDate: c.getSpecialDateToUint32(),
+      specialSchedule: c.getSpecialScheduleToUint16(),
+      specialCount: c.specialCount,
+      specialInterval: c.specialInterval,
+      recentCaptureLimit: c.recentCaptureLimit,
+    );
   }
 }

@@ -1,3 +1,7 @@
+import 'dart:developer';
+
+import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
+
 class GatewayModel {
   // untuk handle >= 2.21
 
@@ -52,6 +56,41 @@ server : $server \nport : $port \nuploadUsing : $uploadUsing \nuploadInitialDela
     {"title": "Modem GSM UART", "value": 3},
     {"title": "Modem NB-IoT UART", "value": 4},
   ];
+
+  void toDeviceConfiguration(GatewayModelYaml gy) {
+    gy.server = server;
+    gy.mikrotikIP = wifi.mikrotikIP;
+    gy.mikrotikLoginSecure = wifi.mikrotikLoginSecure;
+    gy.mikrotikPassword = wifi.mikrotikPassword;
+    gy.mikrotikUsername = wifi.mikrotikUsername;
+    gy.port = port;
+    gy.uploadInitialDelay = uploadInitialDelay;
+    gy.uploadUsing = GatewayModel.getUploadUsingString(uploadUsing);
+    gy.wifiPassword = wifi.password;
+    gy.wifiSecure = wifi.secure;
+    gy.wifiSSID = wifi.ssid;
+    gy.modemAPN = modemAPN;
+  }
+
+  static GatewayModel fromDeviceConfiguration(GatewayModelYaml gy) {
+    return GatewayModel(
+      paramCount: 0,
+      server: gy.server ?? "",
+      port: gy.port ?? 0,
+      uploadUsing: GatewayModelYaml().getUploadUsingToUint8(),
+      uploadInitialDelay: gy.uploadInitialDelay ?? 0,
+      modemAPN: gy.modemAPN ?? "",
+      wifi: WifiModel(
+        password: gy.wifiPassword ?? "",
+        secure: gy.wifiSecure ?? true,
+        ssid: gy.wifiSSID ?? "",
+        mikrotikIP: gy.mikrotikIP ?? "",
+        mikrotikLoginSecure: gy.mikrotikLoginSecure ?? false,
+        mikrotikPassword: gy.mikrotikPassword ?? "",
+        mikrotikUsername: gy.mikrotikUsername ?? "",
+      ),
+    );
+  }
 }
 
 /// String ssid;

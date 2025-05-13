@@ -1,3 +1,5 @@
+import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
+
 class MetaDataModel {
   String meterModel;
   String meterSN;
@@ -28,5 +30,28 @@ class MetaDataModel {
 meterModel : $meterModel \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ncustom : $custom, \nparamCount : $paramCount \nnumberDigit : $numberDigit \nnumberDecimal : $numberDecimal \ncustomerID: $customerID
       }
 ''';
+  }
+
+  static MetaDataModel fromDeviceConfiguration(MetaDataModelYaml c) {
+    return MetaDataModel(
+      meterModel: c.meterModel ?? "",
+      meterSN: c.meterSN ?? "",
+      meterSeal: c.meterSeal ?? "",
+      custom: c.custom ?? "",
+      paramCount: 0,
+      numberDigit: c.numberDigit,
+      numberDecimal: c.numberDecimal,
+      customerID: c.customerId,
+    );
+  }
+
+  void toDeviceConfiguration(MetaDataModelYaml c) {
+    c.meterModel = meterModel;
+    c.meterSN = meterSN;
+    c.meterSeal = meterSeal;
+    c.custom = custom;
+    c.numberDigit = numberDigit;
+    c.numberDecimal = numberDecimal;
+    c.customerId = customerID;
   }
 }
