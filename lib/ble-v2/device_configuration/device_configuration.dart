@@ -183,11 +183,16 @@ class BatteryVoltageCoefficientModelYaml {
     this.voltageCoefficient2,
   });
 
+  BatteryVoltageCoefficientModelYaml.fromJson(Map<String, dynamic> json) {
+    voltageCoefficient1 = json['VoltageCoefficient1'];
+    voltageCoefficient2 = json['VoltageCoefficient2'];
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'BatteryVoltageCoefficient': {
-        'voltageCoefficient1': voltageCoefficient1,
-        'voltageCoefficient2': voltageCoefficient2
+        'VoltageCoefficient1': voltageCoefficient1,
+        'VoltageCoefficient2': voltageCoefficient2
       }
     };
   }
@@ -231,6 +236,17 @@ class CameraSettingModelYaml {
     this.jpegQuality,
     this.adjustImageRotation,
   });
+
+  CameraSettingModelYaml.fromJson(Map<String, dynamic> json) {
+    brightness = json['Brigtness'];
+    contrast = json['Contrast'];
+    saturation = json['Saturation'];
+    specialEffect = json['SpecialEffect'];
+    hMirror = json['HMirror'];
+    vFlip = json['VFlip'];
+    jpegQuality = json['JpegQuality'];
+    adjustImageRotation = json['AdjustImageRotation'];
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -382,6 +398,28 @@ class AdministratorModelYaml {
     }
   }
 
+  static AdministratorModelYaml fromJson(Map<String, dynamic> json) {
+    return AdministratorModelYaml(
+      setRole: json['SetRole'],
+      setEnable: json['SetEnable'],
+      setDateTime: json['SetDateTime'],
+      gateway: json['Gateway'] != null
+          ? GatewayModelYaml.fromJson(json['Gateway'])
+          : null,
+      metaData: json['MetaData'] != null
+          ? MetaDataModelYaml.fromJson(json['MetaData'])
+          : null,
+      batteryVoltageCoefficient: json['BatteryVoltageCoefficient'] != null
+          ? BatteryVoltageCoefficientModelYaml.fromJson(
+              json['BatteryVoltageCoefficient'])
+          : null,
+      cameraSetting: json['CameraSetting'] != null
+          ? CameraSettingModelYaml.fromJson(json['CameraSetting'])
+          : null,
+      printToSerialMonitor: json['PrintToSerialMonitor'],
+    );
+  }
+
   Map<String, dynamic> toMap() {
     Map<String, dynamic> m = {
       "SetRole": setRoleFromUint8(getRoleToUint8()),
@@ -402,16 +440,50 @@ class AdministratorModelYaml {
   }
 }
 
-class CaptureScheduleModelYaml {
-  String schedule = "";
-  int count = 0;
-  int interval = 0;
-  List<int> specialDate = [];
-  String specialSchedule = "";
-  int specialCount = 0;
-  int specialInterval = 0;
-  int recentCaptureLimit = 0;
+class DateTimeWithUTCModelModelYaml {
+  DateTime dateTime;
+  int utc;
 
+  DateTimeWithUTCModelModelYaml({
+    required this.dateTime,
+    required this.utc,
+  });
+}
+
+class CaptureScheduleModelYaml {
+  String? schedule = "";
+  int? count = 0;
+  int? interval = 0;
+  List<int>? specialDate = [];
+  String? specialSchedule = "";
+  int? specialCount = 0;
+  int? specialInterval = 0;
+  int? recentCaptureLimit = 0;
+
+  CaptureScheduleModelYaml({
+    this.schedule = "",
+    this.count = 0,
+    this.interval = 0,
+    this.specialDate,
+    this.specialSchedule = "",
+    this.specialCount = 0,
+    this.specialInterval = 0,
+    this.recentCaptureLimit = 0,
+  });
+
+  CaptureScheduleModelYaml.fromJson(Map<String, dynamic> json) {
+    List<int>? spDatehelp = json['SpecialDate'] != null
+        ? List<int>.from(json['SpecialDate'])
+        : null;
+    schedule = json['Schedule'];
+    count = json['Count'];
+    interval = json['Interval'];
+    specialDate = spDatehelp;
+    specialSchedule = json['SpecialSchedule'];
+    specialCount = json['SpecialCount'];
+    specialInterval = json['SpecialInterval'];
+    recentCaptureLimit = json['RecentCaptureLimit'];
+  }
   Map<String, dynamic> toMap() {
     return {
       "CaptureSchedule": {
@@ -429,7 +501,8 @@ class CaptureScheduleModelYaml {
 
   // Fungsi untuk mendapatkan schedule sebagai uint16
   int getScheduleToUint16() {
-    final scheduleInMinutes = ConvertV2().dateTimeStringToMinute(schedule);
+    final scheduleInMinutes =
+        ConvertV2().dateTimeStringToMinute(schedule ?? "");
     return scheduleInMinutes;
   }
 
@@ -441,7 +514,7 @@ class CaptureScheduleModelYaml {
   // Fungsi untuk mendapatkan SpecialDate sebagai uint32
   int getSpecialDateToUint32() {
     int value = 0;
-    for (final date in specialDate) {
+    for (final date in specialDate ?? []) {
       if (date >= 1 && date <= 31) {
         value = ConvertV2().setBit(value, date - 1, true) ? 1 : 0;
       }
@@ -451,10 +524,11 @@ class CaptureScheduleModelYaml {
 
   // Fungsi untuk mengubah SpecialDate dari uint32
   void setSpecialDateFromUint32(int value) {
-    specialDate.clear();
+    specialDate ??= [];
+    specialDate!.clear();
     for (int i = 0; i < 31; i++) {
       if (ConvertV2().getBit(value, i)) {
-        specialDate.add(i + 1);
+        specialDate!.add(i + 1);
       }
     }
   }
@@ -462,7 +536,7 @@ class CaptureScheduleModelYaml {
   // Fungsi untuk mendapatkan specialSchedule sebagai uint16
   int getSpecialScheduleToUint16() {
     final specialScheduleInMinutes =
-        ConvertV2().dateTimeStringToMinute(specialSchedule);
+        ConvertV2().dateTimeStringToMinute(specialSchedule ?? "");
     return specialScheduleInMinutes;
   }
 
@@ -473,9 +547,23 @@ class CaptureScheduleModelYaml {
 }
 
 class TransmitScheduleScheduleModelYaml {
-  bool enabled = false;
-  String schedule = "";
-  String destinationID = "";
+  bool? enabled = false;
+  String? schedule = "";
+  String? destinationID = "";
+
+  TransmitScheduleScheduleModelYaml({
+    this.enabled,
+    this.schedule,
+    this.destinationID,
+  });
+
+  static TransmitScheduleScheduleModelYaml fromJson(Map<String, dynamic> json) {
+    return TransmitScheduleScheduleModelYaml(
+      enabled: json['Enabled'],
+      schedule: json['Schedule'],
+      destinationID: json['DestinationID'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -487,7 +575,8 @@ class TransmitScheduleScheduleModelYaml {
 
   // Fungsi untuk mendapatkan Schedule sebagai uint16
   int getScheduleToUint16() {
-    final scheduleInMinutes = ConvertV2().dateTimeStringToMinute(schedule);
+    final scheduleInMinutes =
+        ConvertV2().dateTimeStringToMinute(schedule ?? "");
     return scheduleInMinutes;
   }
 
@@ -498,7 +587,7 @@ class TransmitScheduleScheduleModelYaml {
 
   // Fungsi untuk mendapatkan DestinationID sebagai List<uint8>
   List<int> getDestinationIDToArrayUint8() {
-    return ConvertV2().stringHexAddressToArrayUint8(destinationID, 5);
+    return ConvertV2().stringHexAddressToArrayUint8(destinationID ?? "", 5);
   }
 
   // Fungsi untuk mengubah DestinationID dari List<uint8>
@@ -518,6 +607,27 @@ class TransmitScheduleModelYaml {
     (_) => TransmitScheduleScheduleModelYaml(),
   );
 
+  TransmitScheduleModelYaml();
+
+  TransmitScheduleModelYaml.fromJson(Map<String, dynamic> json) {
+    schedules[0] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule1']);
+    schedules[1] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule2']);
+    schedules[2] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule3']);
+    schedules[3] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule4']);
+    schedules[4] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule5']);
+    schedules[5] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule6']);
+    schedules[6] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule7']);
+    schedules[7] =
+        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule8']);
+  }
+
   Map<String, dynamic> toMap() {
     return {
       "TransmitSchedule": {
@@ -535,9 +645,23 @@ class TransmitScheduleModelYaml {
 }
 
 class ReceiveScheduleScheduleModelYaml {
-  bool enabled = false;
-  String schedule = "";
-  int timeAdjust = 0;
+  bool? enabled = false;
+  String? schedule = "";
+  int? timeAdjust = 0;
+
+  ReceiveScheduleScheduleModelYaml({
+    this.enabled = false,
+    this.schedule = "",
+    this.timeAdjust = 0,
+  });
+
+  static ReceiveScheduleScheduleModelYaml fromJson(Map<String, dynamic> json) {
+    return ReceiveScheduleScheduleModelYaml(
+      enabled: json['Enabled'],
+      schedule: json['Schedule'],
+      timeAdjust: json['TimeAdjust'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -549,7 +673,8 @@ class ReceiveScheduleScheduleModelYaml {
 
   // Fungsi untuk mendapatkan Schedule sebagai uint16
   int getScheduleToUint16() {
-    final scheduleInMinutes = ConvertV2().dateTimeStringToMinute(schedule);
+    final scheduleInMinutes =
+        ConvertV2().dateTimeStringToMinute(schedule ?? "");
     return scheduleInMinutes;
   }
 
@@ -565,6 +690,22 @@ class ReceiveScheduleModelYaml {
     16,
     (_) => ReceiveScheduleScheduleModelYaml(),
   );
+
+  ReceiveScheduleModelYaml();
+
+  ReceiveScheduleModelYaml.fromJson(Map<String, dynamic> json) {
+    schedules[0] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule1']);
+    schedules[1] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule2']);
+    schedules[2] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule3']);
+    schedules[3] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule4']);
+    schedules[4] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule5']);
+    schedules[5] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule6']);
+    schedules[6] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule7']);
+    schedules[7] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule8']);
+    schedules[8] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule9']);
+    schedules[9] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule10']);
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -600,6 +741,18 @@ class UploadScheduleScheduleModelYaml {
   bool enabled = false;
   String schedule = "";
 
+  UploadScheduleScheduleModelYaml({
+    this.enabled = false,
+    this.schedule = "",
+  });
+
+  static UploadScheduleScheduleModelYaml fromJson(Map<String, dynamic> json) {
+    return UploadScheduleScheduleModelYaml(
+      enabled: json['Enabled'],
+      schedule: json['Schedule'],
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       "Enabled": enabled,
@@ -626,6 +779,19 @@ class UploadScheduleModelYaml {
     (_) => UploadScheduleScheduleModelYaml(),
   );
 
+  UploadScheduleModelYaml();
+
+  UploadScheduleModelYaml.fromJson(Map<String, dynamic> json) {
+    schedules[0] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule1']);
+    schedules[1] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule2']);
+    schedules[2] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule3']);
+    schedules[3] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule4']);
+    schedules[4] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule5']);
+    schedules[5] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule6']);
+    schedules[6] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule7']);
+    schedules[7] = UploadScheduleScheduleModelYaml.fromJson(json['Schedule8']);
+  }
+
   Map<String, dynamic> toMap() {
     return {
       "UploadSchedule": {
@@ -651,6 +817,18 @@ class UploadScheduleModelYaml {
 class ChangePasswordModelYaml {
   String oldPassword = "";
   String newPassword = "";
+
+  ChangePasswordModelYaml({
+    this.oldPassword = "",
+    this.newPassword = "",
+  });
+
+  static ChangePasswordModelYaml fromJson(Map<String, dynamic> json) {
+    return ChangePasswordModelYaml(
+      oldPassword: json['OldPassword'],
+      newPassword: json['NewPassword'],
+    );
+  }
 }
 
 class DeviceConfiguration {
@@ -669,6 +847,27 @@ class DeviceConfiguration {
     this.uploadSchedule,
     this.changePassword,
   });
+
+  DeviceConfiguration.fromJson(Map<String, dynamic> json) {
+    administrator = json['Administrator'] != null
+        ? AdministratorModelYaml.fromJson(json['Administrator'])
+        : null;
+    captureSchedule = json['CaptureSchedule'] != null
+        ? CaptureScheduleModelYaml.fromJson(json['CaptureSchedule'])
+        : null;
+    transmitSchedule = json['TransmitSchedule'] != null
+        ? TransmitScheduleModelYaml.fromJson(json['TransmitSchedule'])
+        : null;
+    receiveSchedule = json['ReceiveSchedule'] != null
+        ? ReceiveScheduleModelYaml.fromJson(json['ReceiveSchedule'])
+        : null;
+    uploadSchedule = json['UploadSchedule'] != null
+        ? UploadScheduleModelYaml.fromJson(json['UploadSchedule'])
+        : null;
+    changePassword = json['ChangePassword'] != null
+        ? ChangePasswordModelYaml.fromJson(json['ChangePassword'])
+        : null;
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -696,5 +895,200 @@ class DeviceConfiguration {
     m.addAll(uploadSchedule!.toMap());
 
     return m;
+  }
+
+  void validate() {
+    try {
+      if (administrator == null) {
+        throw "Administrator is null";
+      }
+
+      administrator!.setRole = administrator!.setRole.toLowerCase();
+      String role = administrator!.setRole;
+      if (role != "regular" || role != "gateway") {
+        throw "Role must be regular or gateway";
+      }
+
+      GatewayModelYaml? gateway = administrator!.gateway;
+
+      if (gateway == null) {
+        throw "Value Administrator > Gateway is null";
+      }
+
+      if (gateway.uploadUsing == null) {
+        throw "Value Administrator > Gateway > UploadUsing is null";
+      }
+
+      String uploadUsing = gateway.uploadUsing!;
+      if (!(uploadUsing == "Wifi Internal" ||
+          uploadUsing == "Wifi External" ||
+          uploadUsing == "Mikrotik Hotspot" ||
+          uploadUsing == "Modem GSM UART" ||
+          uploadUsing == "Modem NB-IoT UART")) {
+        throw "Value Administrator > Gateway > UploadUsing must be Wifi Internal, Wifi External, Mikrotik Hotspot, Modem GSM UART, Modem NB-IoT UART";
+      }
+
+      if (gateway.server == null) {
+        throw "Value Administrator > Gateway > Server is null";
+      }
+
+      if (gateway.server!.length > 48) {
+        throw "Value Administrator Gateway > Server must be less than 48 characters";
+      }
+
+      if (gateway.wifiSSID == null) {
+        throw "Value Administrator > Gateway > WifiSSID is null";
+      }
+
+      if (gateway.wifiSSID!.length > 16) {
+        throw "Value Administrator > Gateway > WifiSSID must be less than 16 characters";
+      }
+
+      if (gateway.wifiPassword == null) {
+        throw "Value Administrator > Gateway > WifiPassword is null";
+      }
+
+      if (gateway.modemAPN == null) {
+        throw "Value Administrator > Gateway > ModemAPN is null";
+      }
+
+      if (gateway.modemAPN!.length > 16) {
+        throw "Value Administrator > Gateway > ModemAPN must be less than 16 characters";
+      }
+
+      MetaDataModelYaml? metaData = administrator!.metaData;
+      if (metaData == null) {
+        throw "Value Administrator > MetaData is null";
+      }
+
+      if (metaData.meterModel == null) {
+        throw "Value Administrator > MetaData > MeterModel is null";
+      }
+
+      if (metaData.meterModel!.length > 16) {
+        throw "Value Administrator > MetaData > MeterModel must be less than 16 characters";
+      }
+
+      if (metaData.meterSN == null) {
+        throw "Value Administrator > MetaData > MeterSerialNumber is null";
+      }
+
+      if (metaData.meterSN!.length > 16) {
+        throw "Value Administrator > MetaData > MeterSerialNumber must be less than 16 characters";
+      }
+
+      if (metaData.meterSeal == null) {
+        throw "Value Administrator > MetaData > MeterSeal is null";
+      }
+
+      if (metaData.meterSeal!.length > 16) {
+        throw "Value Administrator > MetaData > MeterSeal must be less than 16 characters";
+      }
+
+      if (metaData.custom == null) {
+        throw "Value Administrator > MetaData > Custom is null";
+      }
+
+      if (metaData.custom!.length > 32) {
+        throw "Value Administrator > MetaData > Custom must be less than 16 characters";
+      }
+
+      if (metaData.timeUTC == null) {
+        throw "Value Administrator > MetaData > TimeUTC is null";
+      }
+      ConvertV2().utcStringToUint8(metaData.timeUTC!);
+
+      // ===  batteryVoltageCoefficient ===
+
+      if (administrator!.batteryVoltageCoefficient == null) {
+        throw "Value Administrator > BatteryVoltageCoefficient is null";
+      }
+
+      if (administrator!.batteryVoltageCoefficient!.voltageCoefficient1 ==
+          null) {
+        throw "Value Administrator > BatteryVoltageCoefficient > VoltageCoefficient1 is null";
+      }
+
+      String? bat1 = checkBattery(
+          administrator!.batteryVoltageCoefficient!.voltageCoefficient1!);
+      if (bat1 != null) {
+        throw "Value Administrator > BatteryVoltageCoefficient > VoltageCoefficient1 $bat1";
+      }
+
+      if (administrator!.batteryVoltageCoefficient!.voltageCoefficient2 ==
+          null) {
+        throw "Value Administrator > BatteryVoltageCoefficient > VoltageCoefficient2 is null";
+      }
+
+      String? bat2 = checkBattery(
+          administrator!.batteryVoltageCoefficient!.voltageCoefficient2!);
+      if (bat2 != null) {
+        throw "Value Administrator > BatteryVoltageCoefficient > VoltageCoefficient2 $bat2";
+      }
+
+      // ===  cameraSetting ===
+
+      CameraSettingModelYaml? camera = administrator!.cameraSetting;
+
+      if (camera == null) {
+        throw "Value Administrator > CameraSetting is null";
+      }
+
+      String? checkBrightness = checkCamera(camera.brightness, "Brigtness");
+      if (checkBrightness != null) {
+        throw checkBrightness;
+      }
+
+      String? checkContrast = checkCamera(camera.contrast, "Contrast");
+      if (checkContrast != null) {
+        throw checkContrast;
+      }
+
+      String? checkSaturation = checkCamera(camera.saturation, "Saturation");
+      if (checkSaturation != null) {
+        throw checkSaturation;
+      }
+
+      String? specialEffect = camera.specialEffect;
+      if (specialEffect != null) {
+        throw "Value Administrator > CameraSetting > SpecialEffect is null";
+      }
+
+      if (!(specialEffect == "no_effect" ||
+          specialEffect == "negative" ||
+          specialEffect == "grayscale" ||
+          specialEffect == "red_tint" ||
+          specialEffect == "green_tint" ||
+          specialEffect == "blue_tint" ||
+          specialEffect == "sephia")) {
+        throw "Value Administrator > CameraSetting > SpecialEffect must between 0 and 6";
+      }
+      if (camera.jpegQuality == null) {
+        throw "Value Administrator > CameraSetting > JpegQuality is null";
+      }
+
+      if (camera.jpegQuality! < 5 || camera.jpegQuality! > 63) {
+        throw "Value Administrator > CameraSetting > JpegQuality must between 5 and 63";
+      }
+    } catch (e) {
+      throw "Error validate catch : $e";
+    }
+  }
+
+  String? checkBattery(double bat) {
+    if (bat < 0.5 || bat > 1.5) {
+      return "must between 0.5 and 1.5";
+    }
+    return null;
+  }
+
+  String? checkCamera(int? value, String name) {
+    if (value == null) {
+      return "Value Administrator > CameraSetting > $name is null";
+    }
+    if (value < -2 || value > 2) {
+      return "Value Administrator > CameraSetting > $name must between -2 and 2";
+    }
+    return null;
   }
 }

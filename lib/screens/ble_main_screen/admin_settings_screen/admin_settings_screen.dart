@@ -11,6 +11,7 @@ import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/config/config.dart';
 import 'package:ble_test/config/hidden.dart';
+import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/device_configuration_screen/device_configuration_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/log_explorer_screen/log_explorer_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -1160,6 +1161,26 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                         icon: const Icon(
                           Icons.history_edu_rounded,
+                        ),
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Konfigurasi Perangkat",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DeviceConfigurationScreen(
+                                device: device,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          CupertinoIcons.gear_solid,
                         ),
                       ),
                     ),

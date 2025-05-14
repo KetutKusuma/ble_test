@@ -90,13 +90,14 @@ enable : $enable \nschedule : $schedule \ntimeAdjust : $timeAdjust
     c.schedules[15].timeAdjust = m[15].timeAdjust;
   }
 
-  static List<ReceiveModel> fromDeviceConfiguration(ReceiveScheduleModelYaml c) {
+  static List<ReceiveModel> fromDeviceConfiguration(
+      ReceiveScheduleModelYaml c) {
     List<ReceiveModel> m = [];
     for (int i = 0; i < c.schedules.length; i++) {
       m.add(ReceiveModel(
-        enable: c.schedules[i].enabled,
+        enable: c.schedules[i].enabled ?? false,
         schedule: c.schedules[i].getScheduleToUint16(),
-        timeAdjust: c.schedules[i].timeAdjust,
+        timeAdjust: c.schedules[i].timeAdjust ?? 0,
       ));
     }
     return m;

@@ -34,11 +34,11 @@ meterModel : $meterModel \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ncustom 
 
   static MetaDataModel fromDeviceConfiguration(MetaDataModelYaml c) {
     return MetaDataModel(
+      paramCount: 7,
       meterModel: c.meterModel ?? "",
       meterSN: c.meterSN ?? "",
       meterSeal: c.meterSeal ?? "",
       custom: c.custom ?? "",
-      paramCount: 0,
       numberDigit: c.numberDigit,
       numberDecimal: c.numberDecimal,
       customerID: c.customerId,

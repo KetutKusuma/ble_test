@@ -1,6 +1,6 @@
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
-import 'package:ble_test/ble-v2/command/command_each_set.dart';
+import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
 import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/camera_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';

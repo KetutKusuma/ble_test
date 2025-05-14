@@ -620,43 +620,6 @@ class _BleMainScreenState extends State<BleMainScreen> {
                     const SizedBox(
                       height: 8,
                     ),
-                    FeatureWidget(
-                      visible: featureC.contains(roleUser),
-                      title: "Download Konfigurasi",
-                      onTap: () async {
-                        try {
-                          DeviceConfiguration? dc =
-                              await FunctionDeviceConfiguration()
-                                  .getDeviceConfiguration(bleProvider);
-                          if (dc == null) {
-                            log("Gagal mendapatkan konfigurasi");
-                            Snackbar.show(ScreenSnackbar.blemain,
-                                "Gagal mendapatkan konfigurasi",
-                                success: false);
-                            return;
-                          }
-                          if (mounted) {
-                            await DownloadUtils.backupYamlToDownload(
-                              context,
-                              ScreenSnackbar.blemain,
-                              dc,
-                            );
-                          }
-                        } catch (e) {
-                          Snackbar.show(
-                            ScreenSnackbar.blemain,
-                            "Gagal mendapatkan konfigurasi : ${e.toString()}",
-                            success: false,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.lock_outlined,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 8,
-                    ),
                     GestureDetector(
                       onTap: () async {
                         Navigator.push(

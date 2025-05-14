@@ -67,7 +67,7 @@ enable : $enable \nschedule : $schedule \ndestinationID : $destinationID
     List<TransmitModel> m = [];
     for (int i = 0; i < c.schedules.length; i++) {
       m.add(TransmitModel(
-        enable: c.schedules[i].enabled,
+        enable: c.schedules[i].enabled ?? false,
         schedule: c.schedules[i].getScheduleToUint16(),
         destinationID: c.schedules[i].getDestinationIDToArrayUint8(),
       ));

@@ -98,13 +98,13 @@ class CaptureModel {
   static CaptureModel fromDeviceConfiguration(CaptureScheduleModelYaml c) {
     return CaptureModel(
       schedule: c.getScheduleToUint16(),
-      count: c.count,
-      interval: c.interval,
+      count: c.count ?? 0,
+      interval: c.interval ?? 0,
       specialDate: c.getSpecialDateToUint32(),
       specialSchedule: c.getSpecialScheduleToUint16(),
-      specialCount: c.specialCount,
-      specialInterval: c.specialInterval,
-      recentCaptureLimit: c.recentCaptureLimit,
+      specialCount: c.specialCount ?? 0,
+      specialInterval: c.specialInterval ?? 0,
+      recentCaptureLimit: c.recentCaptureLimit ?? 0,
     );
   }
 }

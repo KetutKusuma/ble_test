@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_each_get.dart';
+import 'package:ble_test/ble-v2/command/command_set.dart';
 import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
 import 'package:ble_test/ble-v2/model/sub_model/battery_coefficient_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/capture_model.dart';
@@ -11,12 +12,14 @@ import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/receive_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/transmit_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/upload_model.dart';
+import 'package:ble_test/ble-v2/utils/rtc.dart';
 
 import '../model/sub_model/camera_model.dart';
 
 class FunctionDeviceConfiguration {
   final CommandEachGet _commandEachGet = CommandEachGet();
   final Command _command = Command();
+  final CommandSet _commandSet = CommandSet();
   Future<DeviceConfiguration?> getDeviceConfiguration(
       BLEProvider bleProvider) async {
     // try {
@@ -170,5 +173,106 @@ class FunctionDeviceConfiguration {
     //   log("Error getDeviceConfiguration - $e");
     //   throw "Error getDeviceConfiguration - $e");
     // }
+  }
+
+  Future<String> setDeviceConfiguration(
+      BLEProvider bleProvider, DeviceConfiguration dc) async {
+    try {
+      BLEResponse bleResSetRole = await _commandSet.setRole(
+          bleProvider, dc.administrator!.getRoleToUint8());
+      if (!bleResSetRole.status) {
+        return "Error setDeviceConfiguration > role : ${bleResSetRole.message}";
+      }
+
+      BLEResponse bleResSetEnable =
+          await _commandSet.setEnable(bleProvider, dc.administrator!.setEnable);
+      if (!bleResSetEnable.status) {
+        return "Error setDeviceConfiguration > enable : ${bleResSetEnable.message}";
+      }
+
+      if (dc.administrator!.setDateTime) {
+        BLEResponse bleResponseSetDateTime =
+            await _commandSet.setDateTime(bleProvider, RTC.getSeconds() + 1);
+
+        if (!bleResponseSetDateTime.status) {
+          return "Error setDeviceConfiguration > dateTime : ${bleResponseSetDateTime.message}";
+        }
+      }
+      BLEResponse bleResponseSetGateway = await _commandSet.setGateway(
+        bleProvider,
+        GatewayModel.fromDeviceConfiguration(dc.administrator!.gateway!),
+      );
+      if (!bleResponseSetGateway.status) {
+        return "Error setDeviceConfiguration > gateway : ${bleResponseSetGateway.message}";
+      }
+
+      BLEResponse bleResponseSetMetaData = await _commandSet.setMetaData(
+        bleProvider,
+        MetaDataModel.fromDeviceConfiguration(dc.administrator!.metaData!),
+      );
+      if (!bleResponseSetMetaData.status) {
+        return "Error setDeviceConfiguration > metaData : ${bleResponseSetMetaData.message}";
+      }
+
+      BLEResponse bleResponseBatteryVoltageCoefficient =
+          await _commandSet.setBatteryVoltageCoef(
+        bleProvider,
+        BatteryCoefficientModel.fromDeviceConfiguration(
+            dc.administrator!.batteryVoltageCoefficient!),
+      );
+      if (!bleResponseBatteryVoltageCoefficient.status) {
+        return "Error setDeviceConfiguration > batteryVoltageCoefficient : ${bleResponseBatteryVoltageCoefficient.message}";
+      }
+
+      CameraModel cameraModel =
+          CameraModel.fromDeviceConfiguration(dc.administrator!.cameraSetting!);
+      BLEResponse bleResponseSetCamera =
+          await _commandSet.setCamera(bleProvider, cameraModel);
+      if (!bleResponseSetCamera.status) {
+        return "Error setDeviceConfiguration > camera : ${bleResponseSetCamera.message}";
+      }
+
+      BLEResponse bleResponseSetPrintToSerialMonitor =
+          await _commandSet.setPrintSerialMonitor(
+              bleProvider, dc.administrator!.printToSerialMonitor);
+      if (!bleResponseSetPrintToSerialMonitor.status) {
+        return "Error setDeviceConfiguration > printToSerialMonitor : ${bleResponseSetPrintToSerialMonitor.message}";
+      }
+
+      BLEResponse bleTransmitSchedule = await _commandSet.setTransmitSchedule(
+          bleProvider,
+          TransmitModel.fromDeviceConfiguration(dc.transmitSchedule!));
+      if (!bleTransmitSchedule.status) {
+        return "Error setDeviceConfiguration > transmitSchedule : ${bleTransmitSchedule.message}";
+      }
+
+      BLEResponse bleReceiveSchedule = await _commandSet.setReceiveSchedule(
+          bleProvider,
+          ReceiveModel.fromDeviceConfiguration(dc.receiveSchedule!));
+      if (!bleReceiveSchedule.status) {
+        return "Error setDeviceConfiguration > receiveSchedule : ${bleReceiveSchedule.message}";
+      }
+
+      BLEResponse bleUploadSchedule = await _commandSet.setUploadSchedule(
+          bleProvider, UploadModel.fromDeviceConfiguration(dc.uploadSchedule!));
+      if (!bleUploadSchedule.status) {
+        return "Error setDeviceConfiguration > uploadSchedule : ${bleUploadSchedule.message}";
+      }
+
+      if (dc.changePassword != null) {
+        BLEResponse bleChangePassword = await _commandSet.setPassword(
+          bleProvider,
+          dc.changePassword!.oldPassword,
+          dc.changePassword!.newPassword,
+        );
+        if (!bleChangePassword.status) {
+          return "Error setDeviceConfiguration > changePassword : ${bleChangePassword.message}";
+        }
+      }
+
+      return "Sukses setDeviceConfiguration";
+    } catch (e) {
+      return "Error setDeviceConfiguration : $e";
+    }
   }
 }

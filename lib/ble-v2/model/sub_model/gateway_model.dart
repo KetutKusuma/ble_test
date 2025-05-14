@@ -74,7 +74,7 @@ server : $server \nport : $port \nuploadUsing : $uploadUsing \nuploadInitialDela
 
   static GatewayModel fromDeviceConfiguration(GatewayModelYaml gy) {
     return GatewayModel(
-      paramCount: 0,
+      paramCount: 12,
       server: gy.server ?? "",
       port: gy.port ?? 0,
       uploadUsing: GatewayModelYaml().getUploadUsingToUint8(),

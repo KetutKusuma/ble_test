@@ -57,6 +57,7 @@ dependencies:
   flutter_screen_lock: ^8.0.0
   device_info_plus: ^9.1.2
   yaml_writer: ^1.0.3
+  file_picker: ^5.3.1
 
 dev_dependencies:
   flutter_test:
