@@ -26,7 +26,7 @@ class FunctionDeviceConfiguration {
       AdministratorModelYaml administrator = AdministratorModelYaml(
         setRole: "regular",
         setEnable: false,
-        setDateTime: false,
+        setDateTime: true,
         gateway: GatewayModelYaml(),
         metaData: MetaDataModelYaml(),
         batteryVoltageCoefficient: BatteryVoltageCoefficientModelYaml(),

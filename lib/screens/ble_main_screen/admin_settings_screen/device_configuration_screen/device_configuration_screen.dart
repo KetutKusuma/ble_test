@@ -372,7 +372,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                               backgroundColor:
                                                   Colors.transparent,
                                               message:
-                                                  "Harap Tunggu Sedang Implementasi Konfig...",
+                                                  "Harap Tunggu Sedang Implementasi Konfigurasi...",
                                               textStyle: const TextStyle(
                                                 color: Colors.white,
                                               ),

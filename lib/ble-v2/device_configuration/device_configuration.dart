@@ -363,7 +363,7 @@ class CameraSettingModelYaml {
 class AdministratorModelYaml {
   String setRole = "regular";
   bool setEnable = false;
-  bool setDateTime = false;
+  bool setDateTime = true;
   GatewayModelYaml? gateway;
   MetaDataModelYaml? metaData;
   BatteryVoltageCoefficientModelYaml? batteryVoltageCoefficient;
@@ -373,7 +373,7 @@ class AdministratorModelYaml {
   AdministratorModelYaml({
     this.setRole = "regular",
     this.setEnable = false,
-    this.setDateTime = false,
+    this.setDateTime = true,
     this.gateway,
     this.metaData,
     this.batteryVoltageCoefficient,
@@ -424,7 +424,7 @@ class AdministratorModelYaml {
     Map<String, dynamic> m = {
       "SetRole": setRoleFromUint8(getRoleToUint8()),
       "SetEnable": setEnable,
-      "SetDateTime": false,
+      "SetDateTime": true,
       "PrintToSerialMonitor": printToSerialMonitor
     };
     m.addAll(gateway!.toMap());
