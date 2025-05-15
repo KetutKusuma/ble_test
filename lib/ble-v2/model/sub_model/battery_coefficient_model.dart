@@ -24,9 +24,13 @@ coefficient1 : $coefficient1 \ncoefficient2 : $coefficient2
 
   static BatteryCoefficientModel fromDeviceConfiguration(
       BatteryVoltageCoefficientModelYaml c) {
-    return BatteryCoefficientModel(
-      coefficient1: c.voltageCoefficient1 ?? 0,
-      coefficient2: c.voltageCoefficient2 ?? 0,
-    );
+    try {
+      return BatteryCoefficientModel(
+        coefficient1: c.voltageCoefficient1 ?? 0,
+        coefficient2: c.voltageCoefficient2 ?? 0,
+      );
+    } catch (e) {
+      throw "Error in BatteryCoefficientModel.fromDeviceConfiguration: $e";
+    }
   }
 }

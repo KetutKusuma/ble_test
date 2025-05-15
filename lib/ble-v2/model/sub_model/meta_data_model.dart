@@ -33,16 +33,20 @@ meterModel : $meterModel \nmeterSN : $meterSN \nmeterSeal : $meterSeal \ncustom 
   }
 
   static MetaDataModel fromDeviceConfiguration(MetaDataModelYaml c) {
-    return MetaDataModel(
-      paramCount: 7,
-      meterModel: c.meterModel ?? "",
-      meterSN: c.meterSN ?? "",
-      meterSeal: c.meterSeal ?? "",
-      custom: c.custom ?? "",
-      numberDigit: c.numberDigit,
-      numberDecimal: c.numberDecimal,
-      customerID: c.customerId,
-    );
+    try {
+      return MetaDataModel(
+        paramCount: 7,
+        meterModel: c.meterModel ?? "",
+        meterSN: c.meterSN ?? "",
+        meterSeal: c.meterSeal ?? "",
+        custom: c.custom ?? "",
+        numberDigit: c.numberDigit,
+        numberDecimal: c.numberDecimal,
+        customerID: c.customerId,
+      );
+    } catch (e) {
+      throw "Error in MetaDataModel.fromDeviceConfiguration: $e";
+    }
   }
 
   void toDeviceConfiguration(MetaDataModelYaml c) {

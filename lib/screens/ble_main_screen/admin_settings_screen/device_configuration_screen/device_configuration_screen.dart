@@ -1,15 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'package:yaml/yaml.dart' as y;
 
-import 'package:ble_test/ble-v2/ble.dart';
-import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
-import 'package:ble_test/ble-v2/device_configuration/func_device_configuration.dart';
-import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
-import 'package:ble_test/constant/constant_color.dart';
-import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
-import 'package:ble_test/utils/snackbar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +11,14 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import 'package:yaml/yaml.dart';
+
+import 'package:ble_test/ble-v2/ble.dart';
+import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
+import 'package:ble_test/ble-v2/device_configuration/func_device_configuration.dart';
+import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
+import 'package:ble_test/constant/constant_color.dart';
+import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
+import 'package:ble_test/utils/snackbar.dart';
 
 class DeviceConfigurationScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -40,14 +40,18 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
   late SimpleFontelicoProgressDialog _progressDialog;
   String? filePath;
   String yamlContent = "";
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   bool isMax = false;
-  RefreshController _refreshController = RefreshController();
+  final RefreshController _refreshController = RefreshController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _progressDialog = SimpleFontelicoProgressDialog(
+      context: context,
+      barrierDimisable: true,
+    );
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     _connectionStateSubscription = device.connectionState.listen(
       (state) async {
@@ -141,8 +145,6 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
           setState(() {});
         }
       }
-
-      log("Is Max : $isMax");
     });
   }
 
@@ -200,32 +202,45 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                     FeatureWidget(
                       title: "Download Konfigurasi",
                       onTap: () async {
-                        // try {
-                        DeviceConfiguration? dc =
-                            await FunctionDeviceConfiguration()
-                                .getDeviceConfiguration(bleProvider);
-                        if (dc == null) {
-                          log("Gagal mendapatkan konfigurasi");
-                          Snackbar.show(ScreenSnackbar.blemain,
-                              "Gagal mendapatkan konfigurasi",
-                              success: false);
-                          return;
-                        }
-                        if (mounted) {
-                          await DownloadUtils.backupYamlToDownload(
-                            context,
+                        try {
+                          _progressDialog.show(
+                            width: MediaQuery.of(context).size.width / 2,
+                            backgroundColor: Colors.transparent,
+                            message:
+                                "Harap Tunggu Sedang Mendownload Konfigurasi...",
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                            ),
+                          );
+                          DeviceConfiguration? dc =
+                              await FunctionDeviceConfiguration()
+                                  .getDeviceConfiguration(bleProvider);
+                          if (dc == null) {
+                            log("Gagal mendapatkan konfigurasi");
+                            Snackbar.show(ScreenSnackbar.blemain,
+                                "Gagal mendapatkan konfigurasi",
+                                success: false);
+                            _progressDialog.hide();
+                            return;
+                          }
+
+                          if (mounted) {
+                            _progressDialog.hide();
+                            await DownloadUtils.backupYamlToDownload(
+                              context,
+                              ScreenSnackbar.deviceconfigurationscreen,
+                              dc,
+                            );
+                          }
+                        } catch (e) {
+                          log("Gagal download konfigurasi : $e");
+                          _progressDialog.hide();
+                          Snackbar.show(
                             ScreenSnackbar.deviceconfigurationscreen,
-                            dc,
+                            "Gagal download konfigurasi : $e",
+                            success: false,
                           );
                         }
-                        // } catch (e) {
-                        //   log("Gagal download konfigurasi : $e");
-                        //   Snackbar.show(
-                        //     ScreenSnackbar.deviceconfigurationscreen,
-                        //     "Gagal download konfigurasi : $e",
-                        //     success: false,
-                        //   );
-                        // }
                       },
                       icon: const Icon(CupertinoIcons.arrow_down_doc),
                     ),
@@ -347,7 +362,21 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                                 "Gagal impelementasi konfigurasi kosong",
                                                 success: false,
                                               );
+                                              return;
                                             }
+                                            _progressDialog.show(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  2,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              message:
+                                                  "Harap Tunggu Sedang Implementasi Konfig...",
+                                              textStyle: const TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            );
                                             Map<String, dynamic> yamlMap =
                                                 yamlToMap(
                                                     loadYaml(yamlContent));
@@ -364,6 +393,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                               bleProvider,
                                               dc,
                                             );
+                                            _progressDialog.hide();
 
                                             Snackbar.show(
                                               ScreenSnackbar
@@ -372,6 +402,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                               success: res.contains("Sukses"),
                                             );
                                           } catch (e) {
+                                            _progressDialog.hide();
                                             log("error catch : $e");
                                             Snackbar.show(
                                               ScreenSnackbar

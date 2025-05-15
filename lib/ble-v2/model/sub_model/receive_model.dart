@@ -92,14 +92,21 @@ enable : $enable \nschedule : $schedule \ntimeAdjust : $timeAdjust
 
   static List<ReceiveModel> fromDeviceConfiguration(
       ReceiveScheduleModelYaml c) {
-    List<ReceiveModel> m = [];
-    for (int i = 0; i < c.schedules.length; i++) {
-      m.add(ReceiveModel(
-        enable: c.schedules[i].enabled ?? false,
-        schedule: c.schedules[i].getScheduleToUint16(),
-        timeAdjust: c.schedules[i].timeAdjust ?? 0,
-      ));
+    try {
+      if (c.schedules.length != 16) {
+        throw "Receive Schedule length must be 16";
+      }
+      List<ReceiveModel> m = [];
+      for (int i = 0; i < c.schedules.length; i++) {
+        m.add(ReceiveModel(
+          enable: c.schedules[i].enabled ?? false,
+          schedule: c.schedules[i].getScheduleToUint16(),
+          timeAdjust: c.schedules[i].timeAdjust ?? 0,
+        ));
+      }
+      return m;
+    } catch (e) {
+      throw "Error in ReceiveModel.fromDeviceConfiguration: $e";
     }
-    return m;
   }
 }

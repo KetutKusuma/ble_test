@@ -655,6 +655,17 @@ class ReceiveScheduleScheduleModelYaml {
     this.timeAdjust = 0,
   });
 
+  @override
+  String toString() {
+    // TODO: implement toString
+    return '''
+{
+Enabled : $enabled \n
+Schedule : $schedule \n
+TimeAdjust : $timeAdjust \n
+}''';
+  }
+
   static ReceiveScheduleScheduleModelYaml fromJson(Map<String, dynamic> json) {
     return ReceiveScheduleScheduleModelYaml(
       enabled: json['Enabled'],
@@ -685,6 +696,30 @@ class ReceiveScheduleScheduleModelYaml {
 }
 
 class ReceiveScheduleModelYaml {
+  @override
+  String toString() {
+    // TODO: implement toString
+    return '''
+{
+Schedule1 : ${schedules[0]} \n
+Schedule2 : ${schedules[1]} \n
+Schedule3 : ${schedules[2]} \n
+Schedule4 : ${schedules[3]} \n
+Schedule5 : ${schedules[4]} \n
+Schedule6 : ${schedules[5]} \n
+Schedule7 : ${schedules[6]} \n
+Schedule8 : ${schedules[7]} \n
+Schedule9 : ${schedules[8]} \n
+Schedule10 : ${schedules[9]} \n
+Schedule11 : ${schedules[10]} \n
+Schedule12 : ${schedules[11]} \n
+Schedule13 : ${schedules[12]} \n
+Schedule14 : ${schedules[13]} \n
+Schedule15 : ${schedules[14]} \n
+Schedule16 : ${schedules[15]} \n
+}''';
+  }
+
   // Menggunakan List agar lebih clean
   final List<ReceiveScheduleScheduleModelYaml> schedules = List.generate(
     16,
@@ -705,6 +740,18 @@ class ReceiveScheduleModelYaml {
     schedules[8] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule9']);
     schedules[9] =
         ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule10']);
+    schedules[10] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule11']);
+    schedules[11] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule12']);
+    schedules[12] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule13']);
+    schedules[13] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule14']);
+    schedules[14] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule15']);
+    schedules[15] =
+        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule16']);
   }
 
   Map<String, dynamic> toMap() {
@@ -892,6 +939,7 @@ class DeviceConfiguration {
     Map<String, dynamic> m = administrator!.toMap();
     m.addAll(captureSchedule!.toMap());
     m.addAll(transmitSchedule!.toMap());
+    m.addAll(receiveSchedule!.toMap());
     m.addAll(uploadSchedule!.toMap());
 
     return m;

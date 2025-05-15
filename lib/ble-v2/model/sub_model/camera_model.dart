@@ -56,17 +56,21 @@ brightness : $brightness \ncontrast : $contrast \nsaturation : $saturation \nspe
   }
 
   static CameraModel fromDeviceConfiguration(CameraSettingModelYaml c) {
-    return CameraModel(
-      brightness: c.brightness ?? 0,
-      contrast: c.contrast ?? 0,
-      saturation: c.saturation ?? 0,
-      specialEffect: c.getSpecialEffectToUint8(),
-      hMirror: c.hMirror ?? false,
-      vFlip: c.vFlip ?? false,
-      jpegQuality: c.jpegQuality ?? 0,
-      adjustImageRotation:
-          adjustImageRotationFromFloat(c.adjustImageRotation ?? 0.0),
-    );
+    try {
+      return CameraModel(
+        brightness: c.brightness ?? 0,
+        contrast: c.contrast ?? 0,
+        saturation: c.saturation ?? 0,
+        specialEffect: c.getSpecialEffectToUint8(),
+        hMirror: c.hMirror ?? false,
+        vFlip: c.vFlip ?? false,
+        jpegQuality: c.jpegQuality ?? 0,
+        adjustImageRotation:
+            adjustImageRotationFromFloat(c.adjustImageRotation ?? 0.0),
+      );
+    } catch (e) {
+      throw "Error in CameraModel.fromDeviceConfiguration: $e";
+    }
   }
 
   static int adjustImageRotationFromFloat(double value) {

@@ -73,23 +73,27 @@ server : $server \nport : $port \nuploadUsing : $uploadUsing \nuploadInitialDela
   }
 
   static GatewayModel fromDeviceConfiguration(GatewayModelYaml gy) {
-    return GatewayModel(
-      paramCount: 12,
-      server: gy.server ?? "",
-      port: gy.port ?? 0,
-      uploadUsing: GatewayModelYaml().getUploadUsingToUint8(),
-      uploadInitialDelay: gy.uploadInitialDelay ?? 0,
-      modemAPN: gy.modemAPN ?? "",
-      wifi: WifiModel(
-        password: gy.wifiPassword ?? "",
-        secure: gy.wifiSecure ?? true,
-        ssid: gy.wifiSSID ?? "",
-        mikrotikIP: gy.mikrotikIP ?? "",
-        mikrotikLoginSecure: gy.mikrotikLoginSecure ?? false,
-        mikrotikPassword: gy.mikrotikPassword ?? "",
-        mikrotikUsername: gy.mikrotikUsername ?? "",
-      ),
-    );
+    try {
+      return GatewayModel(
+        paramCount: 12,
+        server: gy.server ?? "",
+        port: gy.port ?? 0,
+        uploadUsing: GatewayModelYaml().getUploadUsingToUint8(),
+        uploadInitialDelay: gy.uploadInitialDelay ?? 0,
+        modemAPN: gy.modemAPN ?? "",
+        wifi: WifiModel(
+          password: gy.wifiPassword ?? "",
+          secure: gy.wifiSecure ?? true,
+          ssid: gy.wifiSSID ?? "",
+          mikrotikIP: gy.mikrotikIP ?? "",
+          mikrotikLoginSecure: gy.mikrotikLoginSecure ?? false,
+          mikrotikPassword: gy.mikrotikPassword ?? "",
+          mikrotikUsername: gy.mikrotikUsername ?? "",
+        ),
+      );
+    } catch (e) {
+      throw "Error in GatewayModel.fromDeviceConfiguration: $e";
+    }
   }
 }
 

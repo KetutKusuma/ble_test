@@ -64,14 +64,21 @@ enable : $enable \nschedule : $schedule \ndestinationID : $destinationID
 
   static List<TransmitModel> fromDeviceConfiguration(
       TransmitScheduleModelYaml c) {
-    List<TransmitModel> m = [];
-    for (int i = 0; i < c.schedules.length; i++) {
-      m.add(TransmitModel(
-        enable: c.schedules[i].enabled ?? false,
-        schedule: c.schedules[i].getScheduleToUint16(),
-        destinationID: c.schedules[i].getDestinationIDToArrayUint8(),
-      ));
+    try {
+      if (c.schedules.length != 8) {
+        throw "Transmit Schedule length must be 8";
+      }
+      List<TransmitModel> m = [];
+      for (int i = 0; i < c.schedules.length; i++) {
+        m.add(TransmitModel(
+          enable: c.schedules[i].enabled ?? false,
+          schedule: c.schedules[i].getScheduleToUint16(),
+          destinationID: c.schedules[i].getDestinationIDToArrayUint8(),
+        ));
+      }
+      return m;
+    } catch (e) {
+      throw "Error in TransmitModel.fromDeviceConfiguration: $e";
     }
-    return m;
   }
 }

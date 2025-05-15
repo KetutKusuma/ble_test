@@ -48,13 +48,20 @@ enable : $enable \nschedule : $schedule
   }
 
   static List<UploadModel> fromDeviceConfiguration(UploadScheduleModelYaml c) {
-    List<UploadModel> m = [];
-    for (int i = 0; i < c.schedules.length; i++) {
-      m.add(UploadModel(
-        enable: c.schedules[i].enabled,
-        schedule: c.schedules[i].getScheduleToUint16(),
-      ));
+    try {
+      if (c.schedules.length != 8) {
+        throw "Upload Schedule length must be 8";
+      }
+      List<UploadModel> m = [];
+      for (int i = 0; i < c.schedules.length; i++) {
+        m.add(UploadModel(
+          enable: c.schedules[i].enabled,
+          schedule: c.schedules[i].getScheduleToUint16(),
+        ));
+      }
+      return m;
+    } catch (e) {
+      throw "Error in UploadModel.fromDeviceConfiguration: $e";
     }
-    return m;
   }
 }
