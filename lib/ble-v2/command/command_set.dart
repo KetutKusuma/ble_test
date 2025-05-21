@@ -15,7 +15,7 @@ import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:ble_test/utils/global.dart';
-import 'package:ble_test/utils/extension/string_extension.dart';
+import 'package:ble_test/utils/extension/extension.dart';
 
 class CommandSet {
   static final ivGlobal = InitConfig.data().IV;
@@ -213,17 +213,14 @@ class CommandSet {
         keyGlobal,
         ivGlobal,
       );
-      log("sampe sini ????");
 
       Header headerBLE =
           Header(uniqueID: uniqueID, command: command, status: false);
-      log("sampe sini ?????");
 
       Response responseWrite = await bleProvider.writeData(
         data,
         headerBLE,
       );
-      log("sampe sini ??????");
 
       log("response write set identity : ${responseWrite}");
 
@@ -240,19 +237,32 @@ class CommandSet {
   Future<BLEResponse> setGateway(
       BLEProvider bleProvider, GatewayModel gateway) async {
     try {
+      log("param countnya gateway : ${gateway.paramCount}");
       int command = CommandCode.gateway;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
 
-      messageV2.addString(gateway.server.changeEmptyString(), buffer);
+      messageV2.addString(gateway.server, buffer);
       messageV2.addUint16(gateway.port, buffer);
       messageV2.addUint8(gateway.uploadUsing, buffer);
       messageV2.addUint8(gateway.uploadInitialDelay, buffer);
-      messageV2.addString(gateway.wifiSSID.changeEmptyString(), buffer);
-      messageV2.addString(gateway.wifiPassword.changeEmptyString(), buffer);
-      messageV2.addString(gateway.modemAPN.changeEmptyString(), buffer);
+      messageV2.addString(gateway.wifi.ssid, buffer);
+      messageV2.addString(gateway.wifi.password, buffer);
+      if (gateway.paramCount == 7) {
+        messageV2.addString(gateway.modemAPN, buffer);
+      } else if (gateway.paramCount == 12) {
+        messageV2.addBool(gateway.wifi.secure, buffer);
+        messageV2.addString(gateway.wifi.mikrotikIP, buffer);
+        messageV2.addBool(gateway.wifi.mikrotikLoginSecure, buffer);
+        messageV2.addString(gateway.wifi.mikrotikUsername, buffer);
+        messageV2.addString(gateway.wifi.mikrotikPassword, buffer);
+        messageV2.addString(gateway.modemAPN, buffer);
+      } else {
+        return BLEResponse.error(
+            "Kesalahan pada panjang parameter gateway tidak sesuai");
+      }
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -291,7 +301,17 @@ class CommandSet {
       messageV2.addString(meta.meterModel.changeEmptyString(), buffer);
       messageV2.addString(meta.meterSN.changeEmptyString(), buffer);
       messageV2.addString(meta.meterSeal.changeEmptyString(), buffer);
-      messageV2.addString(meta.custom.changeEmptyString(), buffer);
+
+      if (meta.paramCount == 4) {
+        messageV2.addString(meta.custom.changeEmptyString(), buffer);
+      } else if (meta.paramCount == 7) {
+        messageV2.addString(meta.customerID ?? "-", buffer);
+        messageV2.addUint8(meta.numberDigit ?? 0, buffer);
+        messageV2.addUint8(meta.numberDecimal ?? 0, buffer);
+        messageV2.addString(meta.custom.changeEmptyString(), buffer);
+      } else {
+        return BLEResponse.error("Kesalahan pada panjang parameter meta data");
+      }
       // messageV2.addUint8(meta.timeUTC, buffer);
 
       List<int> data = messageV2.createEnd(

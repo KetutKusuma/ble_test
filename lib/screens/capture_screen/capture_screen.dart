@@ -6,7 +6,7 @@ import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
 import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
-import 'package:ble_test/ble-v2/ocr/ocr.dart';
+import 'package:ble_test/ble-v2/server/server.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/config/config.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import 'package:http/http.dart' as http;
 
 class CaptureScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -87,58 +88,107 @@ class _CaptureScreenState extends State<CaptureScreen> {
     super.dispose();
   }
 
+  List<Widget> buildMetadataTextsV3(ImageMetaDataModel imageMetaData) {
+    final List<Widget> widgets = [];
+
+    void addText(String text) {
+      widgets.add(Text(text));
+    }
+
+    addText(
+        "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}");
+    addText(
+        "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}");
+    addText("ID Pelanggan : ${imageMetaData.customerID}");
+    addText("Tanggal Diambil : ${imageMetaData.getDateTimeTakenString()}");
+    addText(
+        "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}");
+    addText(
+        "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C");
+    addText("Role : ${imageMetaData.getRoleString()}");
+    addText(
+        "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V");
+    addText(
+        "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V");
+    addText("Rotasi Kamera : ${imageMetaData.adjustmentRotation}");
+    addText("Model Meter : ${imageMetaData.meterModel}");
+    addText("Nomor Seri Meter : ${imageMetaData.meterSN}");
+    addText("Segel Meter : ${imageMetaData.meterSeal}");
+    addText(
+        "Angka Bulat/Desimal : ${imageMetaData.numberDigit}/${imageMetaData.numberDecimal}");
+    addText("Kustom : ${imageMetaData.custom}");
+
+    return [
+      for (int i = 0; i < widgets.length; i++) ...[
+        widgets[i],
+        if (i != widgets.length - 1) const SizedBox(height: 3),
+      ]
+    ];
+  }
+
   void _showMetaDataImageDialog(BuildContext context) {
+    if (_imageMetaData == null) {
+      return;
+    }
     showDialog(
         context: context,
         builder: (context) {
           return SimpleDialog(
             title: const Text("Meta Data"),
             children: [
-              SimpleDialogOption(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Firmware : ${_imageMetaData!.firmware}"),
-                    const SizedBox(height: 3),
-                    Text("Version : ${_imageMetaData!.version}"),
-                    const SizedBox(height: 3),
-                    Text(
-                      "ID : ${ConvertV2().arrayUint8ToStringHexAddress((_imageMetaData!.id ?? []))}",
-                    ),
-                    const SizedBox(height: 3),
-                    Text("ID Pelanggan : ${_imageMetaData!.custom}"),
-                    const SizedBox(height: 3),
-                    Text("Model Meter : ${_imageMetaData!.meterModel}"),
-                    const SizedBox(height: 3),
-                    Text("Nomor Seri Meter : ${_imageMetaData!.meterSN}"),
-                    const SizedBox(height: 3),
-                    Text("Segel Meter : ${_imageMetaData!.meterSeal}"),
-                    const SizedBox(height: 3),
-                    Text(
-                        "Tanggal Diambil : ${(_imageMetaData!.getDateTimeTakenString())}"),
-                    const SizedBox(height: 3),
-                    Text(
-                      "Waktu UTC : ${ConvertV2().uint8ToUtcString((_imageMetaData!.timeUTC ?? 0))}",
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      "Tegangan Baterai 1 : ${(_imageMetaData!.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      "Tegangan Baterai 2 : ${(_imageMetaData!.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                        "Rotasi Kamera : ${_imageMetaData!.adjustmentRotation}"),
-                    const SizedBox(height: 3),
-                    Text(
-                      "Suhu : ${(_imageMetaData!.temperature ?? 0).toStringAsFixed(2)}°C",
-                    ),
-                  ],
+              if (double.parse(_imageMetaData!.version!) < 2.21)
+                SimpleDialogOption(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Firmware : ${_imageMetaData!.firmware}"),
+                      const SizedBox(height: 3),
+                      Text("Version : ${_imageMetaData!.version}"),
+                      const SizedBox(height: 3),
+                      Text(
+                        "ID : ${ConvertV2().arrayUint8ToStringHexAddress((_imageMetaData!.id ?? []))}",
+                      ),
+                      const SizedBox(height: 3),
+                      Text("ID Pelanggan : ${_imageMetaData!.custom}"),
+                      const SizedBox(height: 3),
+                      Text("Model Meter : ${_imageMetaData!.meterModel}"),
+                      const SizedBox(height: 3),
+                      Text("Nomor Seri Meter : ${_imageMetaData!.meterSN}"),
+                      const SizedBox(height: 3),
+                      Text("Segel Meter : ${_imageMetaData!.meterSeal}"),
+                      const SizedBox(height: 3),
+                      Text(
+                          "Tanggal Diambil : ${(_imageMetaData!.getDateTimeTakenString())}"),
+                      const SizedBox(height: 3),
+                      Text(
+                        "Waktu UTC : ${ConvertV2().uint8ToUtcString((_imageMetaData!.timeUTC ?? 0))}",
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        "Tegangan Baterai 1 : ${(_imageMetaData!.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        "Tegangan Baterai 2 : ${(_imageMetaData!.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                          "Rotasi Kamera : ${_imageMetaData!.adjustmentRotation}"),
+                      const SizedBox(height: 3),
+                      Text(
+                        "Temperatur : ${(_imageMetaData!.temperature ?? 0).toStringAsFixed(2)}°C",
+                      ),
+                    ],
+                  ),
+                  onPressed: () {},
+                )
+              else
+                SimpleDialogOption(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: buildMetadataTextsV3(_imageMetaData!),
+                  ),
                 ),
-                onPressed: () {},
-              )
             ],
           );
         });
@@ -394,19 +444,17 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                       message:
                                                           "Harap tunggu hasil OCR...");
 
-                                                  String resultOCR =
-                                                      await OCRBLE().ocr(
+                                                  http.Response resultOCR =
+                                                      await ToServer()
+                                                          .postRequest(
                                                     configProvider
                                                         .config.urlTestOCR,
                                                     bufferData,
-                                                    // dataParse['img'],
+                                                    _imageMetaData!,
                                                   );
 
                                                   _progressDialog.hide();
 
-                                                  String newResultFormat =
-                                                      OCRBLE.formatResponse(
-                                                          resultOCR);
                                                   showDialog(
                                                     context: context,
                                                     builder: (context) {
@@ -416,7 +464,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                         children: [
                                                           SimpleDialogOption(
                                                             child: Text(
-                                                              newResultFormat,
+                                                              "Kode Status : ${resultOCR.statusCode}\nData : ${resultOCR.body}",
                                                             ),
                                                           )
                                                         ],

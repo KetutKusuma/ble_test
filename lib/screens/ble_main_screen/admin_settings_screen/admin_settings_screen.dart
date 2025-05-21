@@ -11,6 +11,7 @@ import 'package:ble_test/ble-v2/model/sub_model/identity_model.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/config/config.dart';
 import 'package:ble_test/config/hidden.dart';
+import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/device_configuration_screen/device_configuration_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/log_explorer_screen/log_explorer_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
@@ -25,8 +26,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../constant/constant_color.dart';
-import 'package:ble_test/utils/extension/string_extension.dart';
-import 'package:http/http.dart' as http;
+import 'package:ble_test/utils/extension/extension.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -273,12 +273,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               adminResponse.data!.identityModel!.hardwareID);
           voltCoef1Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient1
-              .toStringAsFixed(1)
-              .toString();
+              .formatDouble();
           voltCoef2Txt = adminResponse
               .data!.batteryCoefficientModel!.coefficient2
-              .toStringAsFixed(1)
-              .toString();
+              .formatDouble();
 
           brightnessText = adminResponse.data!.cameraModel!.brightness
               .toString()
@@ -1163,6 +1161,26 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                         icon: const Icon(
                           Icons.history_edu_rounded,
+                        ),
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Konfigurasi Perangkat",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DeviceConfigurationScreen(
+                                device: device,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          CupertinoIcons.gear_solid,
                         ),
                       ),
                     ),

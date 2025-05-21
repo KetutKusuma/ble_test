@@ -5,8 +5,8 @@ import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/utils/enum/role.dart';
-import 'package:ble_test/utils/extra.dart';
 import 'package:ble_test/utils/global.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -15,7 +15,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../../../ble-v2/command/command_set.dart';
 import '../../../utils/snackbar.dart';
-import 'package:ble_test/utils/extension/string_extension.dart';
+import 'package:ble_test/utils/extension/extension.dart';
 
 class MetaDataSettingsScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -38,7 +38,6 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   String meterModelTxt = '-',
       meterSnTxt = '-',
       meterSealTxt = '-',
-      customTxt = "-",
       idPelangganTxt = '-';
   TextEditingController controller = TextEditingController();
   TextEditingController meterModelTxtController = TextEditingController();
@@ -51,6 +50,13 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   // v2
   late MetaDataModel metaData;
   final _commandSet = CommandSet();
+
+  // v2 handle >= 2.21
+  TextEditingController numberDigitTxtController = TextEditingController();
+  TextEditingController numberDecimalTxtController = TextEditingController();
+  TextEditingController customTxtController = TextEditingController();
+
+  String customTxt = "-", numberDigitTxt = "-", numberDecimalTxt = "-";
 
   @override
   void initState() {
@@ -105,6 +111,13 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   initGetMetaData() async {
     try {
       if (isConnected) {
+        metaData = MetaDataModel(
+          meterModel: "-",
+          meterSN: "-",
+          meterSeal: "-",
+          custom: "-",
+          paramCount: 4,
+        );
         BLEResponse<MetaDataModel> response =
             await Command().getMetaData(bleProvider);
         _progressDialog.hide();
@@ -114,7 +127,15 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
             meterModelTxt = response.data!.meterModel.changeEmptyString();
             meterSnTxt = response.data!.meterSN.changeEmptyString();
             meterSealTxt = response.data!.meterSeal.changeEmptyString();
-            customTxt = response.data!.custom.changeEmptyString();
+            if (metaData.paramCount == 4) {
+              customTxt = response.data!.custom.changeEmptyString();
+            } else {
+              idPelangganTxt =
+                  (response.data!.customerID ?? "-").changeEmptyString();
+              numberDigitTxt = response.data!.numberDigit.toString();
+              numberDecimalTxt = response.data!.numberDecimal.toString();
+              customTxt = response.data!.custom.changeEmptyString();
+            }
           });
         } else {
           Snackbar.show(
@@ -132,8 +153,11 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   }
 
   Future<String?> _showInputDialog(
-      TextEditingController controller, String field,
-      {List<TextInputFormatter>? addInputFormatters}) async {
+    TextEditingController controller,
+    String field, {
+    List<TextInputFormatter>? addInputFormatters,
+    TextInputType? keyboardType,
+  }) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -148,7 +172,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType: TextInputType.text,
+              keyboardType: keyboardType ?? TextInputType.text,
               inputFormatters: inputFormatters,
               decoration: InputDecoration(
                 labelText: "Masukan $field",
@@ -289,79 +313,172 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         Icons.shield_outlined,
                       ),
                     ),
-                    SettingsContainer(
-                      title: "ID Pelanggan",
-                      data: customTxt,
-                      onTap: () async {
-                        if (!featureA.contains(roleUser)) {
-                          return;
-                        }
-                        idPelangganTxtController.text = customTxt;
-                        String? input = await _showInputDialog(
-                            idPelangganTxtController, "Id Pelanggan",
-                            addInputFormatters: [
-                              LengthLimitingTextInputFormatter(32)
-                            ]);
-                        if (input != null && input.isNotEmpty) {
-                          metaData.custom = input;
-                          BLEResponse resBLE = await _commandSet.setMetaData(
-                            bleProvider,
-                            metaData,
-                          );
-                          Snackbar.showHelperV2(
-                            ScreenSnackbar.metadatasettings,
-                            resBLE,
-                            onSuccess: onRefresh,
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.description_rounded,
-                      ),
-                    ),
-                    // SettingsContainer(
-                    //   title: "Waktu UTC",
-                    //   data: timeUTCTxt,
-                    //   onTap: () async {
-                    //     timeUTCTxtController.text = timeUTCTxt;
-                    //     // String? input =
-                    //     //     await _showInputDialogTimeUTC(timeUTCTxtController);
-                    //     String? input =
-                    //         await _showSelectionPopupUTC(context, utcList);
-                    //     if (input != null) {
-                    //       if (!input.contains("+") && !input.contains("-")) {
-                    //         Snackbar.show(
-                    //           ScreenSnackbar.metadatasettings,
-                    //           "Masukan data waktu UTC dengan benar, kurang - atau +",
-                    //           success: false,
-                    //         );
-                    //         return;
-                    //       }
-                    //       if (!input.contains(":")) {
-                    //         Snackbar.show(
-                    //           ScreenSnackbar.metadatasettings,
-                    //           "Masukan data waktu UTC dengan benar, kurang :",
-                    //           success: false,
-                    //         );
-                    //       } else {
-                    //         int data = ConvertV2().utcStringToUint8(input);
-                    //         // metaData.timeUTC = data;
-                    //         BLEResponse resBLE = await _commandSet.setMetaData(
-                    //           bleProvider,
-                    //           metaData,
-                    //         );
-                    //         Snackbar.showHelperV2(
-                    //           ScreenSnackbar.metadatasettings,
-                    //           resBLE,
-                    //           onSuccess: onRefresh,
-                    //         );
-                    //       }
-                    //     }
-                    //   },
-                    //   icon: const Icon(
-                    //     Icons.access_time,
-                    //   ),
-                    // ),
+                    (metaData.paramCount == 4)
+                        ? SettingsContainer(
+                            title: "ID Pelanggan",
+                            data: customTxt,
+                            onTap: () async {
+                              if (!featureA.contains(roleUser)) {
+                                return;
+                              }
+                              idPelangganTxtController.text = customTxt;
+                              String? input = await _showInputDialog(
+                                  idPelangganTxtController, "Id Pelanggan",
+                                  addInputFormatters: [
+                                    LengthLimitingTextInputFormatter(20)
+                                  ]);
+                              if (input != null && input.isNotEmpty) {
+                                metaData.custom = input;
+                                BLEResponse resBLE =
+                                    await _commandSet.setMetaData(
+                                  bleProvider,
+                                  metaData,
+                                );
+                                Snackbar.showHelperV2(
+                                  ScreenSnackbar.metadatasettings,
+                                  resBLE,
+                                  onSuccess: onRefresh,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.description_rounded,
+                            ),
+                          )
+                        : Column(
+                            children: [
+                              SettingsContainer(
+                                title: "ID Pelanggan",
+                                data: idPelangganTxt,
+                                onTap: () async {
+                                  if (!featureA.contains(roleUser)) {
+                                    return;
+                                  }
+                                  idPelangganTxtController.text =
+                                      idPelangganTxt;
+                                  String? input = await _showInputDialog(
+                                      idPelangganTxtController, "Id Pelanggan",
+                                      addInputFormatters: [
+                                        LengthLimitingTextInputFormatter(20)
+                                      ]);
+                                  if (input != null && input.isNotEmpty) {
+                                    metaData.customerID = input;
+                                    BLEResponse resBLE =
+                                        await _commandSet.setMetaData(
+                                      bleProvider,
+                                      metaData,
+                                    );
+                                    Snackbar.showHelperV2(
+                                      ScreenSnackbar.metadatasettings,
+                                      resBLE,
+                                      onSuccess: onRefresh,
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.description_rounded,
+                                ),
+                              ),
+                              SettingsContainer(
+                                title: "Angka didepan koma",
+                                data: numberDigitTxt,
+                                onTap: () async {
+                                  if (!featureA.contains(roleUser)) {
+                                    return;
+                                  }
+                                  numberDigitTxtController.text =
+                                      numberDigitTxt;
+                                  String? input = await _showInputDialog(
+                                      numberDigitTxtController,
+                                      "Angka didepan koma",
+                                      keyboardType: TextInputType.number,
+                                      addInputFormatters: [
+                                        LengthLimitingTextInputFormatter(4)
+                                      ]);
+                                  if (input != null && input.isNotEmpty) {
+                                    metaData.numberDigit = int.parse(input);
+                                    BLEResponse resBLE =
+                                        await _commandSet.setMetaData(
+                                      bleProvider,
+                                      metaData,
+                                    );
+                                    Snackbar.showHelperV2(
+                                      ScreenSnackbar.metadatasettings,
+                                      resBLE,
+                                      onSuccess: onRefresh,
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  CupertinoIcons.number_circle,
+                                ),
+                              ),
+                              SettingsContainer(
+                                title: "Angka dibelakang koma",
+                                data: numberDecimalTxt,
+                                onTap: () async {
+                                  if (!featureA.contains(roleUser)) {
+                                    return;
+                                  }
+                                  numberDecimalTxtController.text = customTxt;
+                                  String? input = await _showInputDialog(
+                                      numberDecimalTxtController,
+                                      "Angka dibelakang koma",
+                                      keyboardType: TextInputType.number,
+                                      addInputFormatters: [
+                                        LengthLimitingTextInputFormatter(4)
+                                      ]);
+                                  if (input != null && input.isNotEmpty) {
+                                    metaData.numberDecimal = int.parse(input);
+                                    BLEResponse resBLE =
+                                        await _commandSet.setMetaData(
+                                      bleProvider,
+                                      metaData,
+                                    );
+                                    Snackbar.showHelperV2(
+                                      ScreenSnackbar.metadatasettings,
+                                      resBLE,
+                                      onSuccess: onRefresh,
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  CupertinoIcons.number_circle_fill,
+                                ),
+                              ),
+                              SettingsContainer(
+                                title: "Custom",
+                                data: customTxt,
+                                onTap: () async {
+                                  if (!featureA.contains(roleUser)) {
+                                    return;
+                                  }
+                                  customTxtController.text = customTxt;
+                                  String? input = await _showInputDialog(
+                                      customTxtController, "Custom",
+                                      addInputFormatters: [
+                                        LengthLimitingTextInputFormatter(36)
+                                      ]);
+                                  if (input != null && input.isNotEmpty) {
+                                    metaData.custom = input;
+                                    BLEResponse resBLE =
+                                        await _commandSet.setMetaData(
+                                      bleProvider,
+                                      metaData,
+                                    );
+                                    Snackbar.showHelperV2(
+                                      ScreenSnackbar.metadatasettings,
+                                      resBLE,
+                                      onSuccess: onRefresh,
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.description_rounded,
+                                ),
+                              ),
+                            ],
+                          )
                   ],
                 ),
               )

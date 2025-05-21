@@ -91,22 +91,26 @@ class ConvertV2 {
   }
 
   int utcStringToUint8(String utc) {
-    utc = formatNumberForUTC(utc);
+    try {
+      utc = formatNumberForUTC(utc);
 
-    RegExp regExp = RegExp(r"^[-+]?(0[0-9]|1[0-2]):(00|30)$");
-    if (!regExp.hasMatch(utc)) {
-      throw const FormatException("Invalid format");
-    }
+      RegExp regExp = RegExp(r"^[-+]?(0[0-9]|1[0-2]):(00|30)$");
+      if (!regExp.hasMatch(utc)) {
+        throw const FormatException("Invalid format");
+      }
 
-    if (utc.length == 5) {
-      utc = "+" + utc;
-    }
-    int h = int.parse(utc.substring(1, 3));
-    int m = utc.substring(4, 6) == "30" ? 1 : 0;
-    if (utc[0] == '-') {
-      return (12 - h) * 2 - m;
-    } else {
-      return 24 + h * 2 + m;
+      if (utc.length == 5) {
+        utc = "+" + utc;
+      }
+      int h = int.parse(utc.substring(1, 3));
+      int m = utc.substring(4, 6) == "30" ? 1 : 0;
+      if (utc[0] == '-') {
+        return (12 - h) * 2 - m;
+      } else {
+        return 24 + h * 2 + m;
+      }
+    } catch (e) {
+      throw "Error catch on utcStringToUint8: $e";
     }
   }
 

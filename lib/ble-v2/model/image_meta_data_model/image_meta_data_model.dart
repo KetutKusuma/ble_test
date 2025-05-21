@@ -22,6 +22,12 @@ class ImageMetaDataModel {
   String? meterSeal;
   String? custom;
 
+  // for handle >= 2.21
+  int? role;
+  int? numberDigit;
+  int? numberDecimal;
+  String? customerID;
+
   ImageMetaDataModel({
     this.firmware,
     this.version,
@@ -36,6 +42,10 @@ class ImageMetaDataModel {
     this.meterSeal,
     this.custom,
     this.timeUTC,
+    this.role,
+    this.numberDigit,
+    this.numberDecimal,
+    this.customerID,
   });
 
   String getIDString() {
@@ -44,14 +54,26 @@ class ImageMetaDataModel {
   }
 
   String getDateTimeTakenString() {
-    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
-        (dateTimeTaken! + 946684800) * 1000);
+    DateTime dateTime =
+        DateTime.fromMillisecondsSinceEpoch((dateTimeTaken! + 946684800) * 1000)
+            .toUtc();
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 
   String getTemperatureString() {
     if (temperature == null) return '-';
     return '${temperature!.toStringAsFixed(1)}°C';
+  }
+
+  String getRoleString() {
+    switch (role) {
+      case 0:
+        return "Regular";
+      case 1:
+        return "Gateway";
+      default:
+        return "Unknown";
+    }
   }
 
   String getVoltageBattery1String() {
@@ -307,6 +329,91 @@ class ImageMetaDataModelParse {
           meterModel: meterModel,
           meterSN: meterSN,
           meterSeal: meterSeal,
+          custom: custom,
+        );
+        return {
+          'img': img,
+          'metaData': meta,
+        };
+      } else if (version == 4) {
+        // tambahkan meta data:
+        // [0:1]    marker begin
+        // [1:16]   firmware
+        // [17:8]   version
+        // [25:5]   id
+        // [30:4]   date time
+        // [34:1]   time utc
+        // [35:4]   temperature
+        // [39:1]   role
+        // [40:4]   voltage battery1
+        // [44:4]   voltage battery2
+        // [48:2]   adjust image rotation
+        // [50:16]  INDEX_METER_MODEL
+        // [66:16]  INDEX_METER_SN
+        // [82:16]  INDEX_METER_SEAL
+        // [98:16]  INDEX_META_DATA_CUSTOMER_ID
+        // [114:1]  INDEX_META_DATA_NUMBER_DIGIT
+        // [115:1]  INDEX_META_DATA_NUMBER_DECIMAL
+        // [116:32] INDEX_CUSTOM
+        // [148:2]  start index of meta data
+        // [150:1]  meta data version
+        // [151:1]  marker end
+        Uint8List metaData = temp.sublist(startIndex);
+        Uint8List img = temp.sublist(0, startIndex);
+        int index = 0;
+
+        String firmware = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String version = ConvertV2().bufferToStringUTF8(metaData, index, 8);
+        index += 8;
+        List<int> id = metaData.sublist(index, index + 5);
+        index += 5;
+        int dateTime = ConvertV2().bufferToUint32(metaData, index);
+        index += 4;
+        int timeUTC = ConvertV2().bufferToUint8(metaData, index);
+        index += 1;
+        double temperature = ConvertV2().bufferToFloat32(metaData, index);
+        index += 4;
+        int role = ConvertV2().bufferToUint8(metaData, index);
+        index += 1;
+        double voltageBattery1 = ConvertV2().bufferToFloat32(metaData, index);
+        index += 4;
+        double voltageBattery2 = ConvertV2().bufferToFloat32(metaData, index);
+        index += 4;
+        int adjustmentRotation = ConvertV2().bufferToUint16(metaData, index);
+        index += 2;
+        String meterModel = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String meterSN = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String meterSeal = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        String customerId = ConvertV2().bufferToStringUTF8(metaData, index, 16);
+        index += 16;
+        int numberDigit = ConvertV2().bufferToUint8(metaData, index);
+        index += 1;
+        int numberDecimal = ConvertV2().bufferToUint8(metaData, index);
+        index += 1;
+        String custom = ConvertV2().bufferToStringUTF8(metaData, index, 32);
+        index += 32;
+
+        ImageMetaDataModel meta = ImageMetaDataModel(
+          firmware: firmware,
+          version: version,
+          id: id,
+          dateTimeTaken: dateTime,
+          timeUTC: timeUTC,
+          temperature: temperature,
+          role: role,
+          voltageBattery1: voltageBattery1,
+          voltageBattery2: voltageBattery2,
+          adjustmentRotation: adjustmentRotation,
+          meterModel: meterModel,
+          meterSN: meterSN,
+          meterSeal: meterSeal,
+          customerID: customerId,
+          numberDigit: numberDigit,
+          numberDecimal: numberDecimal,
           custom: custom,
         );
         return {

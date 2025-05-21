@@ -5,6 +5,9 @@ import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_radio_checker.dart';
+import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
+import 'package:ble_test/ble-v2/device_configuration/func_device_configuration.dart';
+import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
@@ -338,99 +341,46 @@ class _BleMainScreenState extends State<BleMainScreen> {
     log("ROLE : $roleUser");
     return WillPopScope(
       onWillPop: () async => false,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Pengaturan Menu'),
-          centerTitle: true,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        body: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  FeatureWidget(
-                    visible: featureD.contains(roleUser),
-                    title: "Pengaturan Admin",
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AdminSettingsScreen(
-                              device: device,
-                            ),
-                          ));
-                    },
-                  ),
-                  FeatureWidget(
-                    visible: featureB.contains(roleUser),
-                    title: "Pengaturan Pengambilan Gambar",
-                    icon: const Icon(Icons.camera_alt_outlined),
-                    onTap: () {
-                      if (isConnected) {
+      child: ScaffoldMessenger(
+        key: Snackbar.snackBarKeyBleMain,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Pengaturan Menu'),
+            centerTitle: true,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+          ),
+          body: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    FeatureWidget(
+                      visible: featureD.contains(roleUser),
+                      title: "Pengaturan Admin",
+                      icon: const Icon(Icons.admin_panel_settings_outlined),
+                      onTap: () {
                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CaptureSettingsScreen(
-                              device: device,
-                            ),
-                          ),
-                        );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                  ),
-                  FeatureWidget(
-                    visible: featureB.contains(roleUser),
-                    title: "Pengaturan Penerimaan Data",
-                    icon: const Icon(Icons.download_outlined),
-                    onTap: () {
-                      if (isConnected) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ReceiveDataSettingsScreen(device: device),
-                          ),
-                        );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                  ),
-                  FeatureWidget(
-                    visible: featureB.contains(roleUser),
-                    title: "Pengaturan Pengiriman Data",
-                    icon: const Icon(CupertinoIcons.paperplane),
-                    onTap: () {
-                      if (isConnected) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                TransmitSettingsScreen(device: device),
-                          ),
-                        );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                  ),
-                  Visibility(
-                    visible: featureB.contains(roleUser),
-                    child: FeatureWidget(
-                      title: "Pengaturan Unggah Data",
-                      icon: const Icon(Icons.upload_outlined),
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AdminSettingsScreen(
+                                device: device,
+                              ),
+                            ));
+                      },
+                    ),
+                    FeatureWidget(
+                      visible: featureB.contains(roleUser),
+                      title: "Pengaturan Pengambilan Gambar",
+                      icon: const Icon(Icons.camera_alt_outlined),
                       onTap: () {
                         if (isConnected) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  UploadSettingsScreen(device: device),
+                              builder: (context) => CaptureSettingsScreen(
+                                device: device,
+                              ),
                             ),
                           );
                         } else {
@@ -439,37 +389,17 @@ class _BleMainScreenState extends State<BleMainScreen> {
                         }
                       },
                     ),
-                  ),
-                  FeatureWidget(
-                    visible: featureB.contains(roleUser),
-                    title: "Pengaturan Meta Data",
-                    icon: const Icon(Icons.code),
-                    onTap: () {
-                      if (isConnected) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MetaDataSettingsScreen(device: device),
-                          ),
-                        );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                  ),
-                  Visibility(
-                    visible: featureC.contains(roleUser),
-                    child: FeatureWidget(
-                      visible: featureC.contains(roleUser),
-                      title: "Status Perangkat",
+                    FeatureWidget(
+                      visible: featureB.contains(roleUser),
+                      title: "Pengaturan Penerimaan Data",
+                      icon: const Icon(Icons.download_outlined),
                       onTap: () {
                         if (isConnected) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  DeviceScreen(device: device),
+                                  ReceiveDataSettingsScreen(device: device),
                             ),
                           );
                         } else {
@@ -477,240 +407,327 @@ class _BleMainScreenState extends State<BleMainScreen> {
                               ScreenSnackbar.blemain);
                         }
                       },
-                      icon: const Icon(
-                        CupertinoIcons.device_phone_portrait,
+                    ),
+                    FeatureWidget(
+                      visible: featureB.contains(roleUser),
+                      title: "Pengaturan Pengiriman Data",
+                      icon: const Icon(CupertinoIcons.paperplane),
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TransmitSettingsScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                    ),
+                    Visibility(
+                      visible: featureB.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Pengaturan Unggah Data",
+                        icon: const Icon(Icons.upload_outlined),
+                        onTap: () {
+                          if (isConnected) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    UploadSettingsScreen(device: device),
+                              ),
+                            );
+                          } else {
+                            Snackbar.showNotConnectedFalse(
+                                ScreenSnackbar.blemain);
+                          }
+                        },
                       ),
                     ),
-                  ),
-                  Visibility(
-                    visible: featureA.contains(roleUser),
-                    child: FeatureWidget(
-                      title: "Tes Radio sebagai Penerima",
-                      onTap: () async {
-                        bool? input = await _showAdmitRadioReceiveDialog(
-                            context, "Mulai tes radio sebagai penerima?");
-                        if (input != null) {
-                          if (input == true) {
-                            // lakukan start test radio sebagai penerima
-                            // muncul pop uup
-                            // jika selesai pencet tombol, lakukan stop test radio sebagai penerima
-
-                            BLEResponse resBLE = await CommandRadioChecker()
-                                .radioTestAsReceiverStart(bleProvider);
-
-                            if (!resBLE.status) {
-                              Snackbar.show(
-                                  ScreenSnackbar.blemain, resBLE.message,
-                                  success: false);
-                              return;
-                            }
-
-                            // ignore: use_build_context_synchronously
-                            bool input =
-                                await _showStopRadioReceiveDialog(context);
+                    FeatureWidget(
+                      visible: featureB.contains(roleUser),
+                      title: "Pengaturan Meta Data",
+                      icon: const Icon(Icons.code),
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MetaDataSettingsScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                    ),
+                    Visibility(
+                      visible: featureC.contains(roleUser),
+                      child: FeatureWidget(
+                        visible: featureC.contains(roleUser),
+                        title: "Status Perangkat",
+                        onTap: () {
+                          if (isConnected) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DeviceScreen(device: device),
+                              ),
+                            );
+                          } else {
+                            Snackbar.showNotConnectedFalse(
+                                ScreenSnackbar.blemain);
+                          }
+                        },
+                        icon: const Icon(
+                          CupertinoIcons.device_phone_portrait,
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Tes Radio sebagai Penerima",
+                        onTap: () async {
+                          bool? input = await _showAdmitRadioReceiveDialog(
+                              context, "Mulai tes radio sebagai penerima?");
+                          if (input != null) {
                             if (input == true) {
+                              // lakukan start test radio sebagai penerima
+                              // muncul pop uup
+                              // jika selesai pencet tombol, lakukan stop test radio sebagai penerima
+
                               BLEResponse resBLE = await CommandRadioChecker()
-                                  .radioTestAsReceiverStop(bleProvider);
-                              Snackbar.show(
-                                  ScreenSnackbar.blemain, resBLE.message,
-                                  success: resBLE.status);
+                                  .radioTestAsReceiverStart(bleProvider);
+
+                              if (!resBLE.status) {
+                                Snackbar.show(
+                                    ScreenSnackbar.blemain, resBLE.message,
+                                    success: false);
+                                return;
+                              }
+
+                              // ignore: use_build_context_synchronously
+                              bool input =
+                                  await _showStopRadioReceiveDialog(context);
+                              if (input == true) {
+                                BLEResponse resBLE = await CommandRadioChecker()
+                                    .radioTestAsReceiverStop(bleProvider);
+                                Snackbar.show(
+                                    ScreenSnackbar.blemain, resBLE.message,
+                                    success: resBLE.status);
+                              }
                             }
+                          }
+                        },
+                        icon: const Icon(Icons.call_received_rounded),
+                      ),
+                    ),
+                    Visibility(
+                      visible: featureA.contains(roleUser),
+                      child: FeatureWidget(
+                        title: "Tes Radio sebagai Pengirim",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RadioTestAsTransmit(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.arrow_outward_rounded,
+                        ),
+                      ),
+                    ),
+                    FeatureWidget(
+                      visible: featureA.contains(roleUser),
+                      title: "Tugaskan Langsung",
+                      onTap: () async {
+                        /// tugas langsung
+                        int? input = await _showForceTaskDialog(context,
+                            "Pilih tugas yang akan dijalankan langsung");
+                        if (input != null) {
+                          if (input == 1) {
+                            // force task capture
+                            BLEResponse resBLE =
+                                await Command().forceTaskCapture(bleProvider);
+                            Snackbar.showHelperV2(
+                                ScreenSnackbar.blemain, resBLE);
+                          }
+                          if (input == 2) {
+                            /// force task upload
+                            BLEResponse resBLE =
+                                await Command().forceTaskUpload(bleProvider);
+                            Snackbar.showHelperV2(
+                                ScreenSnackbar.blemain, resBLE);
                           }
                         }
                       },
-                      icon: const Icon(Icons.call_received_rounded),
+                      icon: const Icon(
+                        Icons.task_outlined,
+                      ),
                     ),
-                  ),
-                  Visibility(
-                    visible: featureA.contains(roleUser),
-                    child: FeatureWidget(
-                      title: "Tes Radio sebagai Pengirim",
+                    FeatureWidget(
+                      visible: featureA.contains(roleUser),
+                      title: "Berkas Gambar",
                       onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ImageExplorerScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.image_outlined,
+                      ),
+                    ),
+                    FeatureWidget(
+                      visible: featureC.contains(roleUser),
+                      title: "Ubah Password",
+                      onTap: () {
+                        if (isConnected) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SetPasswordScreen(device: device),
+                            ),
+                          );
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.lock_outlined,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    GestureDetector(
+                      onTap: () async {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const RadioTestAsTransmit(),
+                            builder: (context) => CaptureScreen(device: device),
                           ),
                         );
                       },
-                      icon: const Icon(
-                        Icons.arrow_outward_rounded,
-                      ),
-                    ),
-                  ),
-                  FeatureWidget(
-                    visible: featureA.contains(roleUser),
-                    title: "Tugaskan Langsung",
-                    onTap: () async {
-                      /// tugas langsung
-                      int? input = await _showForceTaskDialog(
-                          context, "Pilih tugas yang akan dijalankan langsung");
-                      if (input != null) {
-                        if (input == 1) {
-                          // force task capture
-                          BLEResponse resBLE =
-                              await Command().forceTaskCapture(bleProvider);
-                          Snackbar.showHelperV2(ScreenSnackbar.blemain, resBLE);
-                        }
-                        if (input == 2) {
-                          /// force task upload
-                          BLEResponse resBLE =
-                              await Command().forceTaskUpload(bleProvider);
-                          Snackbar.showHelperV2(ScreenSnackbar.blemain, resBLE);
-                        }
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.task_outlined,
-                    ),
-                  ),
-                  FeatureWidget(
-                    visible: featureA.contains(roleUser),
-                    title: "Berkas Gambar",
-                    onTap: () {
-                      if (isConnected) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ImageExplorerScreen(device: device),
-                          ),
-                        );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.image_outlined,
-                    ),
-                  ),
-                  FeatureWidget(
-                    visible: featureC.contains(roleUser),
-                    title: "Ubah Password",
-                    onTap: () {
-                      if (isConnected) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                SetPasswordScreen(device: device),
-                          ),
-                        );
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.lock_outlined,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  GestureDetector(
-                    onTap: () async {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CaptureScreen(device: device),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.shade200,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent.shade200,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      width: MediaQuery.of(context).size.width,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.camera,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            "Pengambilan Gambar",
-                            style: GoogleFonts.readexPro(
-                              fontSize: 16,
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              CupertinoIcons.camera,
                               color: Colors.white,
-                              fontWeight: FontWeight.w500,
                             ),
-                          ),
-                        ],
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              "Pengambilan Gambar",
+                              style: GoogleFonts.readexPro(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  GestureDetector(
-                    onTap: () async {
-                      await storage.deleteAll();
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        await storage.deleteAll();
 
-                      if (isConnected) {
-                        List<int> list = utf8.encode("logout!");
-                        Uint8List bytes = Uint8List.fromList(list);
-                        BLEUtils.funcWrite(bytes, "Logout success", device);
-                        // ini harusnya dengan disconnect juga
-                        onDisconnectPressed();
-                        if (mounted) {
-                          Navigator.popUntil(context, (route) => route.isFirst);
+                        if (isConnected) {
+                          List<int> list = utf8.encode("logout!");
+                          Uint8List bytes = Uint8List.fromList(list);
+                          BLEUtils.funcWrite(bytes, "Logout success", device);
+                          // ini harusnya dengan disconnect juga
+                          onDisconnectPressed();
+                          if (mounted) {
+                            Navigator.popUntil(
+                                context, (route) => route.isFirst);
+                          }
+                        } else {
+                          Snackbar.showNotConnectedFalse(
+                              ScreenSnackbar.blemain);
+                          await Future.delayed(const Duration(seconds: 2));
+                          if (mounted) {
+                            Navigator.popUntil(
+                                context, (route) => route.isFirst);
+                          }
                         }
-                      } else {
-                        Snackbar.showNotConnectedFalse(ScreenSnackbar.blemain);
-                        await Future.delayed(const Duration(seconds: 2));
-                        if (mounted) {
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                        }
-                      }
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade800,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      width: MediaQuery.of(context).size.width,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.logout_outlined,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            "Keluar",
-                            style: GoogleFonts.readexPro(
-                              fontSize: 16,
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade800,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.logout_outlined,
                               color: Colors.white,
-                              fontWeight: FontWeight.w500,
                             ),
-                          ),
-                        ],
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              "Keluar",
+                              style: GoogleFonts.readexPro(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 30,
-                  )
-                ],
+                    const SizedBox(
+                      height: 30,
+                    )
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

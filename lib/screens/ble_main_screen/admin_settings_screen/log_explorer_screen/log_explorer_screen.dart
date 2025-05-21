@@ -14,7 +14,6 @@ import 'package:ble_test/utils/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
@@ -253,9 +252,10 @@ class _LogExplorerScreenState extends State<LogExplorerScreen> {
                       onPressed: () async {
                         try {
                           DateTime dateTime = DateTime.now();
-                          String datetimenow = DateFormat('yyyy-MM-dd_HH#mm#ss')
-                              .format(dateTime);
-                          String fileName = "log_$datetimenow.txt";
+                          String datetimenow =
+                              DateFormat('yyyyMMddHHmmss').format(dateTime);
+                          String fileName =
+                              "log_${fileNameString}_$datetimenow.txt";
                           if (mounted) {
                             Navigator.pop(context);
                             await DownloadUtils.saveToDownload(

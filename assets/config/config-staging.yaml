@@ -8,4 +8,6 @@ upload:
 help_upload:
   url: https://toppi-backend.bimasaktisanjaya.net/upload
 test_ocr:
-  url: https://toppi-backend.bimasaktisanjaya.net/upload?test=1
+  # url: https://toppi-backend.bimasaktisanjaya.net/upload?test=1
+  # url: https://toppi-entrypoint-compat-v3.bimasaktisanjaya.net/upload?test=1
+  url: https://toppi-entrypoint-v3.bimasaktisanjaya.net/test

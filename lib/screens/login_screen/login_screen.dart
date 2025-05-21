@@ -56,7 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isFoundbyId = false;
   bool isFoundbyMacAddress = false;
-  static int firstInt = 0;
 
   // version app
   String versionApp = "2.0.0";
@@ -197,6 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
             if (_scanResultsSubscription != null) {
               _scanResultsSubscription!.cancel();
             }
+            storeSecureOptionLogin(indexPage);
             isFoundbyId = true;
             break;
           }
@@ -211,6 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
             if (_scanResultsSubscription != null) {
               _scanResultsSubscription!.cancel();
             }
+            storeSecureOptionLogin(indexPage);
             isFoundbyMacAddress = true;
             break;
           }
@@ -218,6 +219,39 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     });
   }
+
+  // *******************************
+  //! INI UNTUK TEST BLE OPSI LOGIN
+  // *******************************
+  Future<void> storeSecureOptionLogin(int loginWithValue) async {
+    try {
+      await storage.write(
+        key: "login_with",
+        value: loginWithValue.toString(),
+      );
+    } catch (e) {
+      log('error write on secure storage option login : $e');
+    }
+  }
+
+  Future<void> getSecureOptionLogin() async {
+    try {
+      String? option = await storage.read(key: "login_with");
+      if (option != null) {
+        indexPage = int.parse(option);
+        _pageController.jumpTo(double.parse(option));
+      } else {
+        indexPage = 0;
+        _pageController.jumpTo(0);
+      }
+    } catch (e) {
+      log('error get on secure storage option login : $e');
+    }
+  }
+
+  // *********************************
+  //! ==== OPSI BLE END LOGIN =======
+  // *********************************
 
   /// ==== FOR REMEMBER ME =====
   Future<void> rememberMeProcess(String username, String password,
@@ -784,6 +818,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 rememberMeProcess(
                                     userRoleTxtController.text.trim(),
                                     passwordTxtController.text.trim());
+                                storeSecureOptionLogin(2);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -793,16 +828,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ).then((value) {
-                                  firstInt = 0;
                                   indexPage = 0;
                                   _pageController.jumpToPage(0);
                                   // userRoleTxtController.clear();
                                   // passwordTxtController.clear();
                                 });
                               } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
-                                    success: false);
+                                Snackbar.show(
+                                  ScreenSnackbar.loginscreen,
+                                  "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
+                                  success: false,
+                                );
                               }
                             },
                             child: Container(

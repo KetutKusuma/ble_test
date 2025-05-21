@@ -37,17 +37,18 @@ class CommandCode {
   static const int forceTaskUpload = 16;
   static const int dataBufferTransmit = 17;
   static const int captureTest = 18;
-  static const int imageFileDelete = 19;
-  static const int imageFilePrepareTransmit = 20;
-  static const int logFilePrepareTransmit = 21;
-  static const int resetConfig = 22;
-  static const int radioTestAsReceiverStart = 23;
-  static const int radioTestAsReceiverStop = 24;
-  static const int radioTestAsTransmitterStart = 25;
-  static const int radioTestAsTransmitterSequence = 26;
-  static const int radioTestAsTransmitterStop = 27;
-  static const int clearNeodumiumNotRemovedCounter = 28;
-  static const int clearCriticalBatteryCounter = 29;
+  static const int imageFileRename = 19;
+  static const int imageFileDelete = 20;
+  static const int imageFilePrepareTransmit = 21;
+  static const int logFilePrepareTransmit = 22;
+  static const int resetConfig = 23;
+  static const int radioTestAsReceiverStart = 24;
+  static const int radioTestAsReceiverStop = 25;
+  static const int radioTestAsTransmitterStart = 26;
+  static const int radioTestAsTransmitterSequence = 27;
+  static const int radioTestAsTransmitterStop = 28;
+  static const int clearNeodumiumNotRemovedCounter = 29;
+  static const int clearCriticalBatteryCounter = 30;
   static const int get = 99;
   static const int firmware = 101;
   static const int identity = 102;
@@ -959,29 +960,72 @@ class Command {
         params.add(param);
       }
 
-      log("params : ${params}");
+      log("params : $params");
 
       int startIndex = 0;
-      String server = ConvertV2().bufferToString(params[startIndex]);
-      int port = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
-      int uploadUsing = ConvertV2().bufferToUint8(params[startIndex + 2], 0);
-      int uploadInitialDelay =
-          ConvertV2().bufferToUint8(params[startIndex + 3], 0);
-      String wifiSSID = ConvertV2().bufferToString(params[startIndex + 4]);
-      String wifiPassword = ConvertV2().bufferToString(params[startIndex + 5]);
-      String modemAPN = ConvertV2().bufferToString(params[startIndex + 6]);
+      int paramLen = params.length;
+
+      GatewayModel gModel = GatewayModel(
+        paramCount: 0,
+        server: "",
+        port: 0,
+        uploadUsing: 0,
+        uploadInitialDelay: 0,
+        modemAPN: "",
+        wifi: WifiModel(
+          ssid: "",
+          password: "",
+          secure: true,
+          mikrotikIP: "",
+          mikrotikLoginSecure: false,
+          mikrotikUsername: "",
+          mikrotikPassword: "",
+        ),
+      );
+
+      if (paramLen == 7) {
+        gModel.server = ConvertV2().bufferToString(params[startIndex]);
+        gModel.port = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+        gModel.uploadUsing =
+            ConvertV2().bufferToUint8(params[startIndex + 2], 0);
+        gModel.uploadInitialDelay =
+            ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+        gModel.wifi.ssid = ConvertV2().bufferToString(params[startIndex + 4]);
+        gModel.wifi.password =
+            ConvertV2().bufferToString(params[startIndex + 5]);
+        gModel.modemAPN = ConvertV2().bufferToString(params[startIndex + 6]);
+      } else if (paramLen == 12) {
+        gModel.server = ConvertV2().bufferToString(params[startIndex]);
+        gModel.port = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
+        gModel.uploadUsing =
+            ConvertV2().bufferToUint8(params[startIndex + 2], 0);
+        gModel.uploadInitialDelay =
+            ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+        gModel.wifi.ssid = ConvertV2().bufferToString(params[startIndex + 4]);
+        gModel.wifi.password =
+            ConvertV2().bufferToString(params[startIndex + 5]);
+        gModel.wifi.secure =
+            ConvertV2().bufferToBool(params[startIndex + 6], 0);
+        gModel.wifi.mikrotikIP =
+            ConvertV2().bufferToString(params[startIndex + 7]);
+        gModel.wifi.mikrotikLoginSecure =
+            ConvertV2().bufferToBool(params[startIndex + 8], 0);
+        gModel.wifi.mikrotikUsername =
+            ConvertV2().bufferToString(params[startIndex + 9]);
+        gModel.wifi.mikrotikPassword =
+            ConvertV2().bufferToString(params[startIndex + 10]);
+        gModel.modemAPN = ConvertV2().bufferToString(params[startIndex + 11]);
+      } else {
+        return BLEResponse.error(
+          "Kesalahan pada panjang parameter data gateway tidak sesuai",
+          data: gModel,
+        );
+      }
+      gModel.paramCount = paramLen;
 
       return BLEResponse.success(
         "Sukses dapat gateway",
-        data: GatewayModel(
-          server: server,
-          port: port,
-          uploadUsing: uploadUsing,
-          uploadInitialDelay: uploadInitialDelay,
-          wifiSSID: wifiSSID,
-          wifiPassword: wifiPassword,
-          modemAPN: modemAPN,
-        ),
+        data: gModel,
       );
     } catch (e) {
       return BLEResponse.error("Error dapat gateway : $e");
@@ -1030,20 +1074,43 @@ class Command {
       }
 
       int startIndex = 0;
-      String meterModel = ConvertV2().bufferToString(params[startIndex]);
-      String meterSN = ConvertV2().bufferToString(params[startIndex + 1]);
-      String meterSeal = ConvertV2().bufferToString(params[startIndex + 2]);
-      String custom = ConvertV2().bufferToString(params[startIndex + 3]);
-      // int timeUTC = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
+      int paramLen = params.length;
+
+      MetaDataModel m = MetaDataModel(
+        custom: '',
+        meterModel: '',
+        meterSeal: '',
+        meterSN: '',
+        paramCount: 0,
+        numberDecimal: 0,
+        numberDigit: 0,
+      );
+      m.paramCount = paramLen;
+      if (paramLen == 4) {
+        m.meterModel = ConvertV2().bufferToString(params[startIndex]);
+        m.meterSN = ConvertV2().bufferToString(params[startIndex + 1]);
+        m.meterSeal = ConvertV2().bufferToString(params[startIndex + 2]);
+        m.custom = ConvertV2().bufferToString(params[startIndex + 3]);
+      } else if (paramLen == 7) {
+        m.meterModel = ConvertV2().bufferToString(params[startIndex]);
+        m.meterSN = ConvertV2().bufferToString(params[startIndex + 1]);
+        m.meterSeal = ConvertV2().bufferToString(params[startIndex + 2]);
+
+        m.customerID = ConvertV2().bufferToString(params[startIndex + 3]);
+        m.numberDigit = ConvertV2().bufferToUint8(params[startIndex + 4], 0);
+        m.numberDecimal = ConvertV2().bufferToUint8(params[startIndex + 5], 0);
+
+        m.custom = ConvertV2().bufferToString(params[startIndex + 6]);
+      } else {
+        return BLEResponse.error(
+          "Kesalahan pada panjang parameter meta data tidak sesuai",
+          data: m,
+        );
+      }
 
       return BLEResponse.success(
         "Sukses dapat meta data",
-        data: MetaDataModel(
-          meterModel: meterModel,
-          meterSN: meterSN,
-          meterSeal: meterSeal,
-          custom: custom,
-        ),
+        data: m,
       );
     } catch (e) {
       return BLEResponse.error("Error dapat meta data : $e");
