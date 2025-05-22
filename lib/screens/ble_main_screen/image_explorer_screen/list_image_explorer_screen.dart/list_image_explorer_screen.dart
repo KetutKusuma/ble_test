@@ -340,7 +340,8 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
       showDialog(
         context: context,
         builder: (context) {
-          return StatefulBuilder(builder: (context, setState) {
+          return StatefulBuilder(builder: (context, setStateSB) {
+            listImageExplorer = listImageExplorer;
             return Dialog(
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
@@ -371,7 +372,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                         ),
                       ),
 
-                      // for handle v2.21
+                      // for handle v2.21/v3 and v2.20
                       if (double.parse(imageMetaData.version ?? "0.0") < 2.21)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,14 +381,16 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                               height: 5,
                             ),
                             Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: const EdgeInsets.all(8),
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: Text(listImageExplorer[index]
-                                    .getDirIndexString())),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                listImageExplorer[index].getDirIndexString(),
+                              ),
+                            ),
                             ...buildMetadataTextsV2(imageMetaData),
                           ],
                         )
@@ -444,8 +447,6 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                       1,
                                     );
                                     if (!ch) {
-                                      imgFileName =
-                                          renameFileTo(imgFileName, 1);
                                       CommandImageFile().imageFileRename(
                                         bleProvider,
                                         listImageExplorer[index].dirIndex,
@@ -453,12 +454,15 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                         1,
                                       );
                                       if (mounted) {
-                                        setState(() {});
+                                        setStateSB(() {
+                                          imgFileName =
+                                              renameFileTo(imgFileName, 1);
+                                        });
                                       }
                                     }
 
                                     // refresh
-                                    onRefresh();
+                                    // onRefresh();
                                   }
                                   await showDialog(
                                     context: context,
@@ -719,9 +723,11 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
 
   String renameFileTo(String nameStr, int to) {
     try {
-      nameStr.replaceRange(0, 1, to.toString());
+      nameStr = nameStr.substring(1);
+      nameStr = "1$nameStr";
       return nameStr;
     } catch (e) {
+      log("Error catch renameFileTo : $e");
       return nameStr;
     }
   }
