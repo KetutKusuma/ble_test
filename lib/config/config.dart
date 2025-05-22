@@ -52,14 +52,11 @@ class ConfigProvider with ChangeNotifier {
 
     final packageInfo = await PackageInfo.fromPlatform();
     String versionApp = packageInfo.version;
-    log("masuk kah ni ?");
     if (versionApp.contains("staging")) {
-      log('staging');
       configFile = 'config.yaml';
     }
 
     if (config.config == 'production') {
-      log('production');
       configFile = 'config-staging.yaml';
     }
 
