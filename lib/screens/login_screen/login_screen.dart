@@ -885,10 +885,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         setState(() {
                           _tapCount++;
                         });
-                        if (_tapCount == 10) {
+                        log("tap count : $_tapCount");
+                        if (_tapCount >= 10) {
                           configProvider.loadConfig();
 
                           _tapCount = 0;
+                          return;
                         }
                       },
                       child: Text(

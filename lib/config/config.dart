@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -50,11 +52,14 @@ class ConfigProvider with ChangeNotifier {
 
     final packageInfo = await PackageInfo.fromPlatform();
     String versionApp = packageInfo.version;
+    log("masuk kah ni ?");
     if (versionApp.contains("staging")) {
-      configFile = 'config-staging.yaml';
+      log('staging');
+      configFile = 'config.yaml';
     }
 
     if (config.config == 'production') {
+      log('production');
       configFile = 'config-staging.yaml';
     }
 
