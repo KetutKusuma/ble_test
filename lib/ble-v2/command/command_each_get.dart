@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
@@ -15,11 +17,12 @@ class CommandEachGet {
 
   Future<BLEResponse<int>> getRole(BLEProvider bleProvider) async {
     try {
-      int command = CommandCode.role;
+      int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
+      messageV2.addArrayOfUint8([CommandCode.role], buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:flutter/services.dart';
 
@@ -263,6 +265,15 @@ class CameraSettingModelYaml {
     };
   }
 
+  @override
+  toString() {
+    // TODO: implement toString
+    return '''
+{
+brightness : $brightness \ncontrast : $contrast \nsaturation : $saturation \nspecialEffect : $specialEffect \nhMirror : $hMirror \nvFlip : $vFlip \njpegQuality : $jpegQuality
+    }''';
+  }
+
   List<int> toBytes() {
     if (brightness == null ||
         contrast == null ||
@@ -383,17 +394,20 @@ class AdministratorModelYaml {
 
   // Fungsi untuk mendapatkan role sebagai uint8
   int getRoleToUint8() {
-    return setRole == "gateway" ? 1 : 0;
+    return setRole.toLowerCase() == "gateway" ? 1 : 0;
   }
 
   // Fungsi untuk mengubah role berdasarkan uint8
   String setRoleFromUint8(int role) {
     switch (role) {
       case 0:
+        setRole = "regular";
         return "regular";
       case 1:
+        setRole = "gateway";
         return "gateway";
       default:
+        setRole = "regular";
         return "regular";
     }
   }
@@ -946,6 +960,7 @@ class DeviceConfiguration {
   }
 
   void validate() {
+    log("validate run");
     try {
       if (administrator == null) {
         throw "Administrator is null";
@@ -953,7 +968,7 @@ class DeviceConfiguration {
 
       administrator!.setRole = administrator!.setRole.toLowerCase();
       String role = administrator!.setRole;
-      if (role != "regular" || role != "gateway") {
+      if (role != "regular" && role != "gateway") {
         throw "Role must be regular or gateway";
       }
 
@@ -1098,7 +1113,7 @@ class DeviceConfiguration {
       }
 
       String? specialEffect = camera.specialEffect;
-      if (specialEffect != null) {
+      if (specialEffect == null) {
         throw "Value Administrator > CameraSetting > SpecialEffect is null";
       }
 
