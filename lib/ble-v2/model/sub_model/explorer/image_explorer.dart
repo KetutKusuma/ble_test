@@ -17,6 +17,10 @@ class ImageExplorerModel {
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 
+  String getDateTimeStringToUTC() {
+    return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime.toUtc());
+  }
+
   String getDirIndexString() {
     return dirIndex == 1 ? 'Gambar Toppi lain' : 'Gambar Toppi ini';
   }

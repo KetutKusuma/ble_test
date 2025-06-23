@@ -313,7 +313,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                         Text("Segel Meter : ${imageMetaData.meterSeal}"),
                         const SizedBox(height: 3),
                         Text(
-                            "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenString())}"),
+                            "Tanggal Diambil : ${(imageMetaData.getDateTimeTakenStringToUTC())}"),
                         const SizedBox(height: 3),
                         Text(
                           "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
@@ -706,7 +706,7 @@ class _ListImageExplorerScreenState extends State<ListImageExplorerScreen> {
                                             fit: BoxFit.scaleDown,
                                             child: Text(
                                               listImageExplorer[index]
-                                                  .getDateTimeString(),
+                                                  .getDateTimeStringToUTC(),
                                             ),
                                           ),
                                         ],

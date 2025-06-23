@@ -43,10 +43,18 @@ class ImageMetaDataModel {
     return id!.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
   }
 
+  // ini sedikit miss karena tidak utc
   String getDateTimeTakenString() {
     DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
         (dateTimeTaken! + 946684800) * 1000);
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
+  }
+
+  // ini yg bener
+  String getDateTimeTakenStringToUTC() {
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+        (dateTimeTaken! + 946684800) * 1000);
+    return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime.toUtc());
   }
 
   String getTemperatureString() {
