@@ -1,6 +1,7 @@
+
 # ble_test
 
-A new Flutter project.
+A new Flutter project. Use flutter version 3.7.11
 
 ## Getting Started
 
