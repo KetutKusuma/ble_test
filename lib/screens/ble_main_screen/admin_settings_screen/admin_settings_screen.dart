@@ -188,6 +188,27 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         }
       }
     });
+    // adjustmentImageRotationController.addListener(() {
+    //   final text = adjustmentImageRotationController.text;
+    //   if (text.isNotEmpty) {
+    //     final value = int.tryParse(text);
+    //     if (value != null) {
+    //       if (value < 0) {
+    //         adjustmentImageRotationController.text = '0';
+    //         adjustmentImageRotationController.selection = TextSelection.fromPosition(
+    //             TextPosition(
+    //                 offset: adjustmentImageRotationController
+    //                     .text.length));
+    //       } else if (value > 255) {
+    //         adjustmentImageRotationController.text = '255';
+    //         adjustmentImageRotationController.selection = TextSelection.fromPosition(
+    //             TextPosition(
+    //                 offset: adjustmentImageRotationController
+    //                     .text.length));
+    //       }
+    //     }
+    //   }
+    // });
     // licenseTxtController.addListener(() {
     //   _onTextChanged(licenseTxtController);
     // });
@@ -295,8 +316,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           vFlipText = adminResponse.data!.cameraModel!.vFlip.toString();
           cameraJpgQualityTxt =
               adminResponse.data!.cameraModel!.jpegQuality.toString();
-          adjustmentImageRotationTxt =
-              adminResponse.data!.cameraModel!.adjustImageRotation.toString();
+          int rawAdjustImageRotation = adminResponse.data!.cameraModel!.adjustImageRotation;
+          log("[DEBUG] Raw adjustImageRotation from BLE: $rawAdjustImageRotation");
+          // Convert from backend value (x100) to display value (degrees)
+          double displayDegrees = rawAdjustImageRotation / 100.0;
+          adjustmentImageRotationTxt = displayDegrees.toStringAsFixed(displayDegrees.truncateToDouble() == displayDegrees ? 0 : 2);
+          log("[DEBUG] Display value adjustmentImageRotationTxt: $adjustmentImageRotationTxt degrees (from raw: $rawAdjustImageRotation)");
           roleTxt = getRole(adminResponse.data!.role ?? 0);
           enableTxt = adminResponse.data!.enable.toString();
           printToSerialMonitorTxt =
@@ -465,6 +490,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 if (value == null || value.isEmpty) {
                   return 'Tolong diisi sebuah data';
                 }
+                // Special validation for rotation degrees
+                if (title.contains('Rotasi Gambar')) {
+                  double? degrees = double.tryParse(value);
+                  if (degrees == null) {
+                    return 'Masukan angka yang valid';
+                  }
+                  if (degrees < 0 || degrees >= 360) {
+                    return 'Nilai harus antara 0° sampai 359.99°';
+                  }
+                }
                 return null;
               },
               inputFormatters: inputFormatters,
@@ -480,6 +515,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             ),
             TextButton(
               onPressed: () {
+                // Additional validation for rotation degrees
+                if (title.contains('Rotasi Gambar')) {
+                  double? degrees = double.tryParse(controller.text);
+                  if (degrees == null || degrees < 0 || degrees >= 360) {
+                    return; // Don't close dialog if invalid
+                  }
+                }
+                
                 if (lengthTextNeed != 0 &&
                     lengthTextNeed! < controller.text.length) {
                   Navigator.pop(context, controller.text);
@@ -1093,25 +1136,45 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         title: "Penyesuaian Rotasi Gambar",
                         data: "$adjustmentImageRotationTxt°",
                         onTap: () async {
+                          // Set current display value (in degrees) to the controller
                           adjustmentImageRotationController.text =
                               adjustmentImageRotationTxt;
                           String? input = await _showInputDialog(
-                            cameraJpegQualityController,
+                            adjustmentImageRotationController,
                             "Penyesuaian Rotasi Gambar",
-                            label: "0° sampai 180°",
-                            keyboardType: TextInputType.number,
+                            label: "0° sampai 359.99°",
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.digitsOnly
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                              LengthLimitingTextInputFormatter(6) // Allow for decimal places
                             ],
                           );
-                          log("input : $input");
                           if (input != null) {
-                            int dataUpdate = int.parse(input);
+                            log("[DEBUG] User input: $input degrees");
+                            double degreesInput = double.parse(input);
+                            log("[DEBUG] Parsed degrees: $degreesInput");
+                            
+                            // Validate degree range (0-359.99)
+                            if (degreesInput < 0 || degreesInput >= 360) {
+                              Snackbar.show(
+                                ScreenSnackbar.adminsettings,
+                                "Nilai derajat harus antara 0° sampai 359.99°",
+                                success: false,
+                              );
+                              return;
+                            }
+                            
+                            // Convert degrees to backend format (multiply by 100)
+                            int dataUpdate = (degreesInput * 100).round();
+                            log("[DEBUG] Backend value (degrees x100): $dataUpdate");
+                            
                             CameraModel camera = adminModels.cameraModel!;
+                            log("[DEBUG] Before update - camera.adjustImageRotation: ${camera.adjustImageRotation}");
                             camera.adjustImageRotation = dataUpdate;
+                            log("[DEBUG] After update - camera.adjustImageRotation: ${camera.adjustImageRotation}");
                             BLEResponse resBLE = await _commandSet.setCamera(
                                 bleProvider, camera);
+                            log("[DEBUG] BLE Response status: ${resBLE.status}, message: ${resBLE.message}");
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,

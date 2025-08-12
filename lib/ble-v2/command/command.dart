@@ -427,7 +427,7 @@ class Command {
       bool vFlip = ConvertV2().bufferToBool(params[startIndex + 5], 0);
       int jpegQuality = ConvertV2().bufferToUint8(params[startIndex + 6], 0);
       int adjustImageRotation =
-          ConvertV2().bufferToUint8(params[startIndex + 7], 0);
+          ConvertV2().bufferToUint16(params[startIndex + 7], 0);
 
       // role
       startIndex = 13;
