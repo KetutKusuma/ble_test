@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'dart:math';
 import 'dart:developer' as developerDart;
 import 'dart:typed_data';
-
-import 'package:ble_test/utils/converter/bytes_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -16,9 +15,11 @@ class CharacteristicTile extends StatefulWidget {
   final BluetoothCharacteristic characteristic;
   final List<DescriptorTile> descriptorTiles;
 
-  const CharacteristicTile(
-      {Key? key, required this.characteristic, required this.descriptorTiles})
-      : super(key: key);
+  const CharacteristicTile({
+    Key? key,
+    required this.characteristic,
+    required this.descriptorTiles,
+  }) : super(key: key);
 
   @override
   State<CharacteristicTile> createState() => _CharacteristicTileState();
@@ -35,8 +36,9 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
   @override
   void initState() {
     super.initState();
-    _lastValueSubscription =
-        widget.characteristic.lastValueStream.listen((value) {
+    _lastValueSubscription = widget.characteristic.lastValueStream.listen((
+      value,
+    ) {
       developerDart.log("message : $value");
       _value = value;
       if (mounted) {
@@ -53,13 +55,13 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
 
   BluetoothCharacteristic get c => widget.characteristic;
 
-  List<int> _getRandomBytes() {
+  List<int> getRandomBytes() {
     final math = Random();
     return [
       math.nextInt(255),
       math.nextInt(255),
       math.nextInt(255),
-      math.nextInt(255)
+      math.nextInt(255),
     ];
   }
 
@@ -68,8 +70,11 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
       await c.read();
       Snackbar.show(ScreenSnackbar.device, "Read: Success", success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.device, prettyException("Read Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.device,
+        prettyException("Read Error:", e),
+        success: false,
+      );
       print(e);
     }
   }
@@ -109,10 +114,15 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
                   if (_textController.text.isNotEmpty) {
                     List<int> list = utf8.encode(_textController.text);
                     Uint8List bytes = Uint8List.fromList(list);
-                    await c.write(bytes,
-                        withoutResponse: c.properties.writeWithoutResponse);
-                    Snackbar.show(ScreenSnackbar.device, "Write: Success",
-                        success: true);
+                    await c.write(
+                      bytes,
+                      withoutResponse: c.properties.writeWithoutResponse,
+                    );
+                    Snackbar.show(
+                      ScreenSnackbar.device,
+                      "Write: Success",
+                      success: true,
+                    );
                     if (c.properties.read) {
                       await c.read();
                     }
@@ -128,8 +138,11 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
         },
       );
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.device, prettyException("Write Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.device,
+        prettyException("Write Error:", e),
+        success: false,
+      );
       print(e);
     }
   }
@@ -147,8 +160,10 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
       }
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.device, prettyException("Subscribe Error:", e),
-          success: false);
+        ScreenSnackbar.device,
+        prettyException("Subscribe Error:", e),
+        success: false,
+      );
       print(e);
     }
   }
@@ -166,37 +181,40 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
 
   Widget buildReadButton(BuildContext context) {
     return TextButton(
-        child: const Text("Read"),
-        onPressed: () async {
-          await onReadPressed();
-          if (mounted) {
-            setState(() {});
-          }
-        });
+      child: const Text("Read"),
+      onPressed: () async {
+        await onReadPressed();
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   Widget buildWriteButton(BuildContext context) {
     bool withoutResp = widget.characteristic.properties.writeWithoutResponse;
     return TextButton(
-        child: Text(withoutResp ? "WriteNoResp" : "Write"),
-        onPressed: () async {
-          await onWritePressed();
-          if (mounted) {
-            setState(() {});
-          }
-        });
+      child: Text(withoutResp ? "WriteNoResp" : "Write"),
+      onPressed: () async {
+        await onWritePressed();
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   Widget buildSubscribeButton(BuildContext context) {
     bool isNotifying = widget.characteristic.isNotifying;
     return TextButton(
-        child: Text(isNotifying ? "Unsubscribe" : "Subscribe"),
-        onPressed: () async {
-          await onSubscribePressed();
-          if (mounted) {
-            setState(() {});
-          }
-        });
+      child: Text(isNotifying ? "Unsubscribe" : "Subscribe"),
+      onPressed: () async {
+        await onSubscribePressed();
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   Widget buildButtonRow(BuildContext context) {
@@ -209,37 +227,40 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
       children: [
         if (read)
           TextButton(
-              child: const Text("Read"),
-              onPressed: () async {
-                await onReadPressed();
-                if (mounted) {
-                  setState(() {});
-                }
-              }),
+            child: const Text("Read"),
+            onPressed: () async {
+              await onReadPressed();
+              if (mounted) {
+                setState(() {});
+              }
+            },
+          ),
         if (write)
           (BuildContext context) {
             bool withoutResp =
                 widget.characteristic.properties.writeWithoutResponse;
             return TextButton(
-                child: Text(withoutResp ? "WriteNoResp" : "Write"),
-                onPressed: () async {
-                  await onWritePressed();
-                  if (mounted) {
-                    setState(() {});
-                  }
-                });
+              child: Text(withoutResp ? "WriteNoResp" : "Write"),
+              onPressed: () async {
+                await onWritePressed();
+                if (mounted) {
+                  setState(() {});
+                }
+              },
+            );
           }(context),
         if (notify || indicate)
           (BuildContext context) {
             bool isNotifying = widget.characteristic.isNotifying;
             return TextButton(
-                child: Text(isNotifying ? "Unsubscribe" : "Subscribe"),
-                onPressed: () async {
-                  await onSubscribePressed();
-                  if (mounted) {
-                    setState(() {});
-                  }
-                });
+              child: Text(isNotifying ? "Unsubscribe" : "Subscribe"),
+              onPressed: () async {
+                await onSubscribePressed();
+                if (mounted) {
+                  setState(() {});
+                }
+              },
+            );
           }(context),
       ],
     );
@@ -259,8 +280,8 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
             (widget.characteristic.properties.write)
                 ? const Text('RX Characteristic')
                 : (widget.characteristic.properties.notify)
-                    ? const Text('TX Characteristic')
-                    : const Text("Characteristic"),
+                ? const Text('TX Characteristic')
+                : const Text("Characteristic"),
             (BuildContext context) {
               String uuid = '0x${widget.characteristic.uuid.str}';
               return Text("UUID : $uuid", style: const TextStyle(fontSize: 13));
@@ -281,13 +302,17 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
 
               return (data.isNotEmpty)
                   ? (widget.characteristic.properties.notify && !isNotifying
-                      ? const SizedBox()
-                      : Padding(
-                          padding: const EdgeInsets.only(top: 5.0),
-                          child: Text("Value : $data",
+                        ? const SizedBox()
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: Text(
+                              "Value : $data",
                               style: const TextStyle(
-                                  fontSize: 13, color: Colors.black87)),
-                        ))
+                                fontSize: 13,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ))
                   : const SizedBox();
             }(context),
           ],
@@ -302,37 +327,40 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
             children: [
               if (read)
                 TextButton(
-                    child: const Text("Read"),
-                    onPressed: () async {
-                      await onReadPressed();
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    }),
+                  child: const Text("Read"),
+                  onPressed: () async {
+                    await onReadPressed();
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                ),
               if (write)
                 (BuildContext context) {
                   bool withoutResp =
                       widget.characteristic.properties.writeWithoutResponse;
                   return TextButton(
-                      child: Text(withoutResp ? "WriteNoResp" : "Write"),
-                      onPressed: () async {
-                        await onWritePressed();
-                        if (mounted) {
-                          setState(() {});
-                        }
-                      });
+                    child: Text(withoutResp ? "WriteNoResp" : "Write"),
+                    onPressed: () async {
+                      await onWritePressed();
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
+                  );
                 }(context),
               if (notify || indicate)
                 (BuildContext context) {
                   bool isNotifying = widget.characteristic.isNotifying;
                   return TextButton(
-                      child: Text(isNotifying ? "Unsubscribe" : "Subscribe"),
-                      onPressed: () async {
-                        await onSubscribePressed();
-                        if (mounted) {
-                          setState(() {});
-                        }
-                      });
+                    child: Text(isNotifying ? "Unsubscribe" : "Subscribe"),
+                    onPressed: () async {
+                      await onSubscribePressed();
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
+                  );
                 }(context),
             ],
           );

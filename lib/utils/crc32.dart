@@ -5,8 +5,6 @@
 library crc32;
 
 import 'dart:convert';
-import 'dart:math';
-import 'dart:developer' as devp;
 
 /// Computes Cyclic Redundancy Check values.
 class CRC32 {
@@ -16,9 +14,8 @@ class CRC32 {
   ///
   /// You may optionally specify the beginning CRC value.
   static int compute(var input, [int crc = 0]) {
-    if (input == null) throw new ArgumentError.notNull('input');
+    if (input == null) throw ArgumentError.notNull('input');
     if (input is String) input = utf8.encode(input);
-    if (crc == null) crc = 0;
 
     crc = crc ^ (0xffffffff);
 
@@ -293,6 +290,6 @@ class CRC32 {
     0xB40BBE37,
     0xC30C8EA1,
     0x5A05DF1B,
-    0x2D02EF8D
+    0x2D02EF8D,
   ];
 }

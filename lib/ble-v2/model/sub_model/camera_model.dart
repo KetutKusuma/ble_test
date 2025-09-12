@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
 
 class CameraModel {
@@ -65,8 +63,9 @@ brightness : $brightness \ncontrast : $contrast \nsaturation : $saturation \nspe
         hMirror: c.hMirror ?? false,
         vFlip: c.vFlip ?? false,
         jpegQuality: c.jpegQuality ?? 0,
-        adjustImageRotation:
-            adjustImageRotationFromFloat(c.adjustImageRotation ?? 0.0),
+        adjustImageRotation: adjustImageRotationFromFloat(
+          c.adjustImageRotation ?? 0.0,
+        ),
       );
     } catch (e) {
       throw "Error in CameraModel.fromDeviceConfiguration: $e";
@@ -76,7 +75,8 @@ brightness : $brightness \ncontrast : $contrast \nsaturation : $saturation \nspe
   static int adjustImageRotationFromFloat(double value) {
     if (value < 0 || value >= 360) {
       throw ArgumentError(
-          "Adjust image rotation value is overflow, must be >0 and <365");
+        "Adjust image rotation value is overflow, must be >0 and <365",
+      );
     }
     return (value * 100).toInt();
   }

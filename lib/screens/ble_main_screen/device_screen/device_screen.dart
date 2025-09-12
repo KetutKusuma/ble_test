@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -33,7 +34,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
   final RefreshController _refreshController = RefreshController();
   String timeTxt = "-",
       firmwareTxt = "-",
@@ -85,23 +86,20 @@ class _DeviceScreenState extends State<DeviceScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     initGetDeviceStatus();
   }
 
@@ -113,9 +111,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -129,32 +125,35 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Future<int?> _showClearCounterkDialog(
-      BuildContext context, String msg) async {
+    BuildContext context,
+    String msg,
+  ) async {
     int? selectedValue = await showDialog<int>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-            title: Text(msg),
-            actionsAlignment: MainAxisAlignment.start,
-            alignment: Alignment.center,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, 1); // Return true
-                  },
-                  child: const Text('Hitungan magnet tidak diangkat'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, 2); // Return false
-                  },
-                  child: const Text('Hitungan baterai kritis'),
-                ),
-              ],
-            ));
+          title: Text(msg),
+          actionsAlignment: MainAxisAlignment.start,
+          alignment: Alignment.center,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, 1); // Return true
+                },
+                child: const Text('Hitungan magnet tidak diangkat'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, 2); // Return false
+                },
+                child: const Text('Hitungan baterai kritis'),
+              ),
+            ],
+          ),
+        );
       },
     );
 
@@ -163,8 +162,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   initGetDeviceStatus() async {
     try {
-      BLEResponse<DeviceStatusModels> resDeviceStatus =
-          await Command().getDeviceStatus(device, bleProvider);
+      BLEResponse<DeviceStatusModels> resDeviceStatus = await Command()
+          .getDeviceStatus(device, bleProvider);
       log("hasil get device status : $resDeviceStatus");
       _progressDialog.hide();
       if (resDeviceStatus.status) {
@@ -174,16 +173,18 @@ class _DeviceScreenState extends State<DeviceScreen> {
           firmwareTxt = dS.firmwareModel!.name;
           versionTxt = dS.firmwareModel!.version;
           temperatureTxt = dS.temperature.toString();
-          battery1Txt =
-              dS.batteryVoltageModel!.batteryVoltage1.toStringAsFixed(2);
+          battery1Txt = dS.batteryVoltageModel!.batteryVoltage1.toStringAsFixed(
+            2,
+          );
 
-          battery2Txt =
-              dS.batteryVoltageModel!.batteryVoltage2.toStringAsFixed(2);
+          battery2Txt = dS.batteryVoltageModel!.batteryVoltage2.toStringAsFixed(
+            2,
+          );
           timeUTCText = ConvertV2().uint8ToUtcString(dS.timeUTC!);
-          critBattery1CounterTxt =
-              dS.otherModel!.criticalBattery1Counter.toString();
-          critBattery2CounterTxt =
-              dS.otherModel!.criticalBattery2Counter.toString();
+          critBattery1CounterTxt = dS.otherModel!.criticalBattery1Counter
+              .toString();
+          critBattery2CounterTxt = dS.otherModel!.criticalBattery2Counter
+              .toString();
           setState(() {});
         }
       } else {
@@ -203,7 +204,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Future<String?> _showSelectionPopupUTC(
-      BuildContext context, List<String> dataList) async {
+    BuildContext context,
+    List<String> dataList,
+  ) async {
     String? result = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -211,7 +214,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
           title: const Text('Pilih Sebuah Opsi'),
           content: ConstrainedBox(
             constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4),
+              maxHeight: MediaQuery.of(context).size.height * 0.4,
+            ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -225,19 +229,20 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     subtitle: Row(
                       children: [
                         const Icon(Icons.radio_button_checked_outlined),
-                        const SizedBox(
-                          width: 20,
-                        ),
+                        const SizedBox(width: 20),
                         Text(
                           item,
                           style: const TextStyle(
-                              fontSize: 14, color: Colors.black),
+                            fontSize: 14,
+                            color: Colors.black,
+                          ),
                         ),
                       ],
                     ),
                     onTap: () {
-                      Navigator.of(context)
-                          .pop(item); // Return the selected item
+                      Navigator.of(
+                        context,
+                      ).pop(item); // Return the selected item
                     },
                   );
                 }).toList(),
@@ -255,10 +260,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyDeviceScreen,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Status Perangkat'),
-          elevation: 0,
-        ),
+        appBar: AppBar(title: const Text('Status Perangkat'), elevation: 0),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
@@ -300,35 +302,27 @@ class _DeviceScreenState extends State<DeviceScreen> {
                             }
                           }
                         },
-                        icon: const Icon(
-                          CupertinoIcons.gobackward,
-                        ),
+                        icon: const Icon(CupertinoIcons.gobackward),
                       ),
                     ),
                     SettingsContainer(
                       title: "Perangkat Tertanam",
                       data: firmwareTxt.trim(),
                       onTap: () {},
-                      icon: const Icon(
-                        Icons.memory_rounded,
-                      ),
+                      icon: const Icon(Icons.memory_rounded),
                     ),
                     SettingsContainer(
                       title: "Versi",
                       data: versionTxt,
                       onTap: () {},
-                      icon: const Icon(
-                        Icons.settings_suggest_outlined,
-                      ),
+                      icon: const Icon(Icons.settings_suggest_outlined),
                     ),
 
                     SettingsContainer(
                       title: "Temperatur",
                       data: "$temperatureTxt °C",
                       onTap: () {},
-                      icon: const Icon(
-                        Icons.thermostat,
-                      ),
+                      icon: const Icon(Icons.thermostat),
                     ),
 
                     /// BATTERY
@@ -337,26 +331,24 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         SettingsContainer(
                           title: "Baterai 1",
                           data: "$battery1Txt volt",
-                          description: critBattery1CounterTxt == "0" ||
+                          description:
+                              critBattery1CounterTxt == "0" ||
                                   critBattery1CounterTxt == '-'
                               ? null
                               : "(Jumlah hitungan kritis : $critBattery1CounterTxt)",
                           onTap: () {},
-                          icon: const Icon(
-                            Icons.battery_5_bar_outlined,
-                          ),
+                          icon: const Icon(Icons.battery_5_bar_outlined),
                         ),
                         SettingsContainer(
                           title: "Baterai 2",
                           data: "$battery2Txt volt",
-                          description: critBattery2CounterTxt == "0" ||
+                          description:
+                              critBattery2CounterTxt == "0" ||
                                   critBattery2CounterTxt == '-'
                               ? null
                               : "(Jumlah hitungan kritis : $critBattery2CounterTxt)",
                           onTap: () {},
-                          icon: const Icon(
-                            Icons.battery_full,
-                          ),
+                          icon: const Icon(Icons.battery_full),
                         ),
                       ],
                     ),
@@ -374,21 +366,18 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
-                      icon: const Icon(
-                        Icons.sd_storage_outlined,
-                      ),
+                      icon: const Icon(Icons.sd_storage_outlined),
                     ),
 
                     SettingsContainer(
                       title: "Waktu",
                       data: timeTxt,
                       onTap: () async {},
-                      icon: const Icon(
-                        CupertinoIcons.time,
-                      ),
+                      icon: const Icon(CupertinoIcons.time),
                     ),
                     SettingsContainer(
                       title: "Waktu UTC",
@@ -398,12 +387,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           return;
                         }
                         timeUTCTxtController.text = timeUTCText;
-                        String? input =
-                            await _showSelectionPopupUTC(context, utcList);
+                        String? input = await _showSelectionPopupUTC(
+                          context,
+                          utcList,
+                        );
                         if (input != null) {
                           int data = ConvertV2().utcStringToUint8(input);
-                          BLEResponse resBLE =
-                              await _commandSet.setTimeUTC(bleProvider, data);
+                          BLEResponse resBLE = await _commandSet.setTimeUTC(
+                            bleProvider,
+                            data,
+                          );
                           Snackbar.showHelperV2(
                             ScreenSnackbar.devicescreen,
                             resBLE,
@@ -411,13 +404,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.access_time,
-                      ),
+                      icon: const Icon(Icons.access_time),
                     ),
-                    const SizedBox(
-                      height: 5,
-                    ),
+                    const SizedBox(height: 5),
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
@@ -426,7 +415,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
                           int dataUpdate = timeNowSeconds;
                           BLEResponse resBLE = await _commandSet.setDateTime(
-                              bleProvider, dataUpdate);
+                            bleProvider,
+                            dataUpdate,
+                          );
                           if (resBLE.status) {
                             DateTime now = DateTime.now();
                             Duration offset = now.timeZoneOffset;
@@ -434,8 +425,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
                             // Format offset as +hh:mm or -hh:mm
                             String formattedOffset =
                                 "${offset.isNegative ? "-" : "+"}${offset.inHours.abs().toString().padLeft(2, '0')}:${(offset.inMinutes.abs() % 60).toString().padLeft(2, '0')}";
-                            int timeUTC =
-                                ConvertV2().utcStringToUint8(formattedOffset);
+                            int timeUTC = ConvertV2().utcStringToUint8(
+                              formattedOffset,
+                            );
                             resBLE = await _commandSet.setTimeUTC(
                               bleProvider,
                               timeUTC,
@@ -443,9 +435,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
                           }
                           if (resBLE.status) {
                             onRefresh();
-                            Snackbar.show(ScreenSnackbar.devicescreen,
-                                "Waktu berhasil diatur",
-                                success: true);
+                            Snackbar.show(
+                              ScreenSnackbar.devicescreen,
+                              "Waktu berhasil diatur",
+                              success: true,
+                            );
                           } else {
                             Snackbar.showHelperV2(
                               ScreenSnackbar.devicescreen,
@@ -455,9 +449,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         },
                         child: Container(
                           margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.blue.shade600,
                             borderRadius: BorderRadius.circular(10),
@@ -471,9 +470,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                                 Icons.check_circle_outline,
                                 color: Colors.white,
                               ),
-                              const SizedBox(
-                                width: 5,
-                              ),
+                              const SizedBox(width: 5),
                               Text(
                                 "Atur Waktu",
                                 style: GoogleFonts.readexPro(
@@ -489,7 +486,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),

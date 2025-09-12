@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
@@ -31,13 +29,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -78,13 +76,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -106,9 +104,7 @@ class CommandEachGet {
           data: params[0][0] == 1 ? true : false,
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get enable : $e");
@@ -130,13 +126,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -158,9 +154,7 @@ class CommandEachGet {
           data: params[0][0] == 1 ? true : false,
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get enable : $e");
@@ -182,13 +176,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -210,9 +204,7 @@ class CommandEachGet {
           data: params[0][0],
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get available memory : $e");
@@ -241,10 +233,7 @@ class CommandEachGet {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -266,9 +255,7 @@ class CommandEachGet {
           data: params[0][0] == 1 ? true : false,
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get print to serial : $e");
@@ -290,13 +277,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -315,9 +302,9 @@ class CommandEachGet {
       int dateTimeMiliSeconds =
           ConvertV2().bufferToUint32(params[0], 0) + (946684800);
       // log("datetime before : ${}")
-      DateTime dateTimeFromBle =
-          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000)
-              .toUtc();
+      DateTime dateTimeFromBle = DateTime.fromMillisecondsSinceEpoch(
+        dateTimeMiliSeconds * 1000,
+      ).toUtc();
 
       if (responseWrite.header.status) {
         return BLEResponse.success(
@@ -325,9 +312,7 @@ class CommandEachGet {
           data: dateTimeFromBle,
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get date time : $e");
@@ -349,13 +334,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -377,9 +362,7 @@ class CommandEachGet {
           data: ConvertV2().bufferToUint32(params[0], 0),
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get time UTC : $e");
@@ -387,15 +370,18 @@ class CommandEachGet {
   }
 
   Future<BLEResponse<DateTimeWithUTCModelModelYaml>> getDateTimeWithUTC(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2
-          .addArrayOfUint8([CommandCode.dateTime, CommandCode.timeUTC], buffer);
+      messageV2.addArrayOfUint8([
+        CommandCode.dateTime,
+        CommandCode.timeUTC,
+      ], buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -404,13 +390,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -429,9 +415,9 @@ class CommandEachGet {
       int dateTimeMiliSeconds =
           ConvertV2().bufferToUint32(params[0], 0) + (946684800);
       // log("datetime before : ${}")
-      DateTime dateTimeFromBle =
-          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000)
-              .toUtc();
+      DateTime dateTimeFromBle = DateTime.fromMillisecondsSinceEpoch(
+        dateTimeMiliSeconds * 1000,
+      ).toUtc();
 
       if (responseWrite.header.status) {
         return BLEResponse.success(
@@ -442,9 +428,7 @@ class CommandEachGet {
           ),
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get date time : $e");
@@ -452,15 +436,17 @@ class CommandEachGet {
   }
 
   Future<BLEResponse<BatteryCoefficientModel>> getBatteryVoltageCoefficient(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2
-          .addArrayOfUint8([CommandCode.batteryVoltageCoefficient], buffer);
+      messageV2.addArrayOfUint8([
+        CommandCode.batteryVoltageCoefficient,
+      ], buffer);
 
       List<int> data = messageV2.createEnd(
         sessionID,
@@ -469,13 +455,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -501,18 +487,18 @@ class CommandEachGet {
           ),
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error(
-          "Error dapat get battery voltage coefficient : $e");
+        "Error dapat get battery voltage coefficient : $e",
+      );
     }
   }
 
   Future<BLEResponse<CameraModel>> getCameraSetting(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -528,13 +514,13 @@ class CommandEachGet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -562,14 +548,14 @@ class CommandEachGet {
             hMirror: ConvertV2().bufferToBool(params[startIndex + 4], 0),
             vFlip: ConvertV2().bufferToBool(params[startIndex + 5], 0),
             jpegQuality: ConvertV2().bufferToUint8(params[startIndex + 6], 0),
-            adjustImageRotation:
-                ConvertV2().bufferToUint16(params[startIndex + 7], 0),
+            adjustImageRotation: ConvertV2().bufferToUint16(
+              params[startIndex + 7],
+              0,
+            ),
           ),
         );
       } else {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
     } catch (e) {
       return BLEResponse.error("Error dapat get camera setting : $e");

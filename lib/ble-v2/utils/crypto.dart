@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:pointycastle/export.dart';
-import 'package:encrypt/encrypt.dart' as encrypt;
-
 import '../../utils/crc32.dart';
 
 class CryptoUtilsV2 {
@@ -33,19 +31,27 @@ class CryptoUtilsV2 {
   static List<int> aesEncrypt(List<int> input, List<int> key, List<int> iv) {
     final cipher = CBCBlockCipher(AESFastEngine())
       ..init(
-          true,
-          ParametersWithIV(KeyParameter(Uint8List.fromList(key)),
-              Uint8List.fromList(iv))); // true untuk encrypt
+        true,
+        ParametersWithIV(
+          KeyParameter(Uint8List.fromList(key)),
+          Uint8List.fromList(iv),
+        ),
+      ); // true untuk encrypt
     return _processBlocks(
-        cipher, pkcs5Padding(Uint8List.fromList(input), cipher.blockSize));
+      cipher,
+      pkcs5Padding(Uint8List.fromList(input), cipher.blockSize),
+    );
   }
 
   static List<int> aesDecrypt(List<int> input, List<int> key, List<int> iv) {
     final cipher = CBCBlockCipher(AESFastEngine())
       ..init(
-          false,
-          ParametersWithIV(KeyParameter(Uint8List.fromList(key)),
-              Uint8List.fromList(iv))); // false untuk decrypt
+        false,
+        ParametersWithIV(
+          KeyParameter(Uint8List.fromList(key)),
+          Uint8List.fromList(iv),
+        ),
+      ); // false untuk decrypt
     final decrypted = _processBlocks(cipher, Uint8List.fromList(input));
     return pkcs5Unpadding(decrypted);
   }
@@ -62,7 +68,11 @@ class CryptoUtilsV2 {
     final output = Uint8List(input.length);
     for (int offset = 0; offset < input.length;) {
       offset += cipher.processBlock(
-          Uint8List.fromList(input), offset, output, offset);
+        Uint8List.fromList(input),
+        offset,
+        output,
+        offset,
+      );
     }
     return output;
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/config/config.dart';
@@ -45,11 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final PageController _pageController = PageController();
 
-  List<String> pageListPumpDetail = [
-    "Id",
-    "Alamat Mac",
-    "Pemindaian",
-  ];
+  List<String> pageListPumpDetail = ["Id", "Alamat Mac", "Pemindaian"];
 
   int indexPage = 0;
   late SimpleFontelicoProgressDialog pd;
@@ -127,11 +124,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     List<int> challenge = resHandshake.data!;
     BLEResponse resLogin = await Command().login(
-        device,
-        bleProvider,
-        userRoleTxtController.text.trim(),
-        passwordTxtController.text.trim(),
-        challenge);
+      device,
+      bleProvider,
+      userRoleTxtController.text.trim(),
+      passwordTxtController.text.trim(),
+      challenge,
+    );
     log("resLogin : $resLogin");
     pd.hide();
     if (resLogin.status == false) {
@@ -170,8 +168,9 @@ class _LoginScreenState extends State<LoginScreen> {
       controller.value = controller.value.copyWith(
         text: formattedText,
         selection: TextSelection.collapsed(
-            offset: cursorPosition +
-                (formattedText.length - controller.text.length)),
+          offset:
+              cursorPosition + (formattedText.length - controller.text.length),
+        ),
       );
     }
   }
@@ -225,10 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // *******************************
   Future<void> storeSecureOptionLogin(int loginWithValue) async {
     try {
-      await storage.write(
-        key: "login_with",
-        value: loginWithValue.toString(),
-      );
+      await storage.write(key: "login_with", value: loginWithValue.toString());
     } catch (e) {
       log('error write on secure storage option login : $e');
     }
@@ -254,8 +250,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // *********************************
 
   /// ==== FOR REMEMBER ME =====
-  Future<void> rememberMeProcess(String username, String password,
-      {String? id, String? macaddress}) async {
+  Future<void> rememberMeProcess(
+    String username,
+    String password, {
+    String? id,
+    String? macaddress,
+  }) async {
     if (rememberMe) {
       try {
         await storage.write(key: "username", value: username);
@@ -319,8 +319,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void sendRequest(String hardwareID, String toppiID) async {
     try {
       log("data send : $hardwareID, $toppiID");
-      final response = await Hidden()
-          .sendRequest(hardwareID, toppiID, configProvider.config);
+      final response = await Hidden().sendRequest(
+        hardwareID,
+        toppiID,
+        configProvider.config,
+      );
       log("data anying : $response");
       if (response.statusCode == 200) {
         setState(() {
@@ -370,9 +373,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
               Form(
                 child: TextFormField(
                   controller: idToppiHiddenTxtController,
@@ -390,22 +391,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   inputFormatters: inputFormatters,
                 ),
               ),
-              const SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
               Row(
                 children: [
                   Text("Lisensinya adalah : $theLicense"),
-                  const SizedBox(
-                    width: 5,
-                  ),
+                  const SizedBox(width: 5),
                   GestureDetector(
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: theLicense));
                     },
-                    child: const Icon(
-                      Icons.copy,
-                    ),
+                    child: const Icon(Icons.copy),
                   ),
                 ],
               ),
@@ -451,13 +446,8 @@ class _LoginScreenState extends State<LoginScreen> {
               SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.10,
-                    ),
-                    const Icon(
-                      Icons.bluetooth_audio_rounded,
-                      size: 30,
-                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.10),
+                    const Icon(Icons.bluetooth_audio_rounded, size: 30),
                     GestureDetector(
                       onTap: () {
                         setState(() {
@@ -490,12 +480,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         "BLE-TOPPI",
                         style: GoogleFonts.readexPro(
-                            fontSize: 35, fontWeight: FontWeight.bold),
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const SizedBox(
-                      height: 30,
-                    )
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -516,7 +506,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         "Masuk ke perangkat Toppi Anda",
                         style: GoogleFonts.readexPro(),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -526,12 +516,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 20),
+                      vertical: 10.0,
+                      horizontal: 20,
+                    ),
                     child: Column(
                       children: [
-                        const SizedBox(
-                          height: 10,
-                        ),
+                        const SizedBox(height: 10),
                         TextFormField(
                           style: GoogleFonts.readexPro(),
                           controller: userRoleTxtController,
@@ -544,43 +534,41 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          height: 10,
-                        ),
+                        const SizedBox(height: 10),
                         TextFormField(
                           obscureText: isObscureText,
                           style: GoogleFonts.readexPro(),
                           cursorColor: Colors.transparent,
                           controller: passwordTxtController,
                           decoration: InputDecoration(
-                              labelText: "Kata Sandi",
-                              border: const OutlineInputBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
+                            labelText: "Kata Sandi",
+                            border: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
                               ),
-                              suffixIcon: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    isObscureText = !isObscureText;
-                                  });
-                                },
-                                child: Icon(
-                                  isObscureText
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                              )),
+                            ),
+                            suffixIcon: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isObscureText = !isObscureText;
+                                });
+                              },
+                              child: Icon(
+                                isObscureText
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                            ),
+                          ),
                         ),
-                        const SizedBox(
-                          height: 10,
-                        ),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             Checkbox(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
-                                    5.0), // Set the radius here
+                                  5.0,
+                                ), // Set the radius here
                               ),
                               value: rememberMe,
                               onChanged: (value) {
@@ -589,10 +577,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               },
                             ),
-                            Text(
-                              "Ingat Saya",
-                              style: GoogleFonts.readexPro(),
-                            ),
+                            Text("Ingat Saya", style: GoogleFonts.readexPro()),
                           ],
                         ),
                       ],
@@ -602,10 +587,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.only(left: 20.0, right: 20, bottom: 5),
-                  child: Text("Pilih cara untuk masuk",
-                      style: GoogleFonts.readexPro()),
+                  padding: const EdgeInsets.only(
+                    left: 20.0,
+                    right: 20,
+                    bottom: 5,
+                  ),
+                  child: Text(
+                    "Pilih cara untuk masuk",
+                    style: GoogleFonts.readexPro(),
+                  ),
                 ),
               ),
               SliverPadding(
@@ -637,12 +627,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Card(
                           elevation: 1.5,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              10,
-                            ),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          color:
-                              indexPage == index ? Colors.blue : Colors.white,
+                          color: indexPage == index
+                              ? Colors.blue
+                              : Colors.white,
                           child: Center(
                             child: Text(
                               pageListPumpDetail[index],
@@ -671,9 +660,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Column(
                         // login use id
                         children: [
-                          const SizedBox(
-                            height: 5,
-                          ),
+                          const SizedBox(height: 5),
                           TextFormField(
                             style: GoogleFonts.readexPro(),
                             cursorColor: Colors.transparent,
@@ -688,9 +675,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             inputFormatters: const [],
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
+                          const SizedBox(height: 10),
                           // LOGIN WITH ID
                           GestureDetector(
                             onTap: () async {
@@ -699,21 +684,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (idTxtController.text.isNotEmpty) {
                                   // save user name and password process
                                   rememberMeProcess(
-                                      userRoleTxtController.text.trim(),
-                                      passwordTxtController.text.trim(),
-                                      id: idTxtController.text.trim());
+                                    userRoleTxtController.text.trim(),
+                                    passwordTxtController.text.trim(),
+                                    id: idTxtController.text.trim(),
+                                  );
                                   searchForDevices();
                                 }
                               } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
-                                    success: false);
+                                Snackbar.show(
+                                  ScreenSnackbar.loginscreen,
+                                  "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
+                                  success: false,
+                                );
                               }
                             },
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: 0),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
+                                horizontal: 10,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade600,
                                 borderRadius: BorderRadius.circular(10),
@@ -740,9 +730,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Column(
                         /// login use mac address
                         children: [
-                          const SizedBox(
-                            height: 5,
-                          ),
+                          const SizedBox(height: 5),
                           TextFormField(
                             style: GoogleFonts.readexPro(),
                             cursorColor: Colors.transparent,
@@ -756,9 +744,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
+                          const SizedBox(height: 10),
                           // LOGIN WITH MAC ADDRESS
                           GestureDetector(
                             onTap: () async {
@@ -775,15 +761,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                   searchForDevices();
                                 }
                               } else {
-                                Snackbar.show(ScreenSnackbar.loginscreen,
-                                    "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
-                                    success: false);
+                                Snackbar.show(
+                                  ScreenSnackbar.loginscreen,
+                                  "Tolong isi Nama Pengguna dan Kata Sandi sebelum masuk",
+                                  success: false,
+                                );
                               }
                             },
                             child: Container(
                               margin: const EdgeInsets.only(top: 0),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
+                                horizontal: 10,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade600,
                                 borderRadius: BorderRadius.circular(10),
@@ -816,8 +806,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   passwordTxtController.text.isNotEmpty) {
                                 // save user name and password process
                                 rememberMeProcess(
-                                    userRoleTxtController.text.trim(),
-                                    passwordTxtController.text.trim());
+                                  userRoleTxtController.text.trim(),
+                                  passwordTxtController.text.trim(),
+                                );
                                 storeSecureOptionLogin(2);
                                 Navigator.push(
                                   context,
@@ -900,9 +891,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      height: 10,
-                    )
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),

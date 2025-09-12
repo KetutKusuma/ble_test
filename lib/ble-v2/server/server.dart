@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
+
 import 'package:ble_test/ble-v2/model/image_meta_data_model/image_meta_data_model.dart';
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/convert.dart';
@@ -49,7 +49,7 @@ class ToServer {
         ...timestampBuffer,
         ...[utc], // v2.21
         ...checksumBuffer,
-        ...InitConfig.data().md5Salt
+        ...InitConfig.data().md5Salt,
       ];
 
       Digest signature = md5.convert(signatureInput);
@@ -68,11 +68,7 @@ class ToServer {
       var request = http.MultipartRequest("POST", Uri.parse(url));
       request.headers.addAll(headers);
       request.files.add(
-        http.MultipartFile.fromBytes(
-          'Data',
-          data,
-          filename: fileName,
-        ),
+        http.MultipartFile.fromBytes('Data', data, filename: fileName),
       );
 
       var streamedResponse = await request.send();

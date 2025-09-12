@@ -26,14 +26,16 @@ class AdminSettingsConverter {
     // log("list 7 : ${bytes[7]}");
     log("sublist 6,10 : ${bytes.sublist(6, 10)}");
     double floatVoltageCoef1 = BytesConvert.bytesToFloatorDouble(
-        bytes.sublist(6, 10),
-        isBigEndian: false);
+      bytes.sublist(6, 10),
+      isBigEndian: false,
+    );
 
     // 10:13 -> bytes to float
     log("sublist 10,13 : ${bytes.sublist(10, 14)}");
     double floatVoltageCoef2 = BytesConvert.bytesToFloatorDouble(
-        bytes.sublist(10, 14),
-        isBigEndian: false);
+      bytes.sublist(10, 14),
+      isBigEndian: false,
+    );
 
     bool printToSerialMonitorBool = bytes[14] == 1;
     int brightnessInt = BytesConvert.bytesToInt8([bytes[15]]);
@@ -74,7 +76,7 @@ class AdminSettingsConverter {
       hmirrorBool,
       vflipBool,
       cameraJpgQuality,
-      intRole
+      intRole,
     ];
   }
 
@@ -103,7 +105,7 @@ class AdminSettingsConverter {
     return value - 2; // Map 0->-2, 1->-1, 2->0, 3->1
   }
 
-// Function to convert bits directly to integer
+  // Function to convert bits directly to integer
   int bitsToInt(List<int> bits) {
     int value = 0;
     for (int i = 0; i < bits.length; i++) {
@@ -112,7 +114,7 @@ class AdminSettingsConverter {
     return value;
   }
 
-// Function to convert a single bit to boolean
+  // Function to convert a single bit to boolean
   bool bitToBool(int bit) {
     return bit == 1;
   }

@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScanResultTile extends StatefulWidget {
   const ScanResultTile({Key? key, required this.result, this.onTap})
-      : super(key: key);
+    : super(key: key);
 
   final ScanResult result;
   final VoidCallback? onTap;
@@ -20,14 +19,15 @@ class _ScanResultTileState extends State<ScanResultTile> {
       BluetoothConnectionState.disconnected;
 
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    _connectionStateSubscription =
-        widget.result.device.connectionState.listen((state) {
+    _connectionStateSubscription = widget.result.device.connectionState.listen((
+      state,
+    ) {
       _connectionState = state;
       if (mounted) {
         setState(() {});
@@ -80,7 +80,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
           Text(
             "remote ID : ${widget.result.device.remoteId.str}",
             style: Theme.of(context).textTheme.bodySmall,
-          )
+          ),
         ],
       );
     } else {
@@ -95,8 +95,9 @@ class _ScanResultTileState extends State<ScanResultTile> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      onPressed:
-          (widget.result.advertisementData.connectable) ? widget.onTap : null,
+      onPressed: (widget.result.advertisementData.connectable)
+          ? widget.onTap
+          : null,
     );
   }
 
@@ -107,16 +108,13 @@ class _ScanResultTileState extends State<ScanResultTile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(title, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(
-            width: 12.0,
-          ),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.apply(color: Colors.black),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.apply(color: Colors.black),
               softWrap: true,
             ),
           ),
@@ -140,36 +138,48 @@ class _ScanResultTileState extends State<ScanResultTile> {
           _buildAdvRow(context, 'Tx Power Level', '${adv.txPowerLevel}'),
         if ((adv.appearance ?? 0) > 0)
           _buildAdvRow(
-              context, 'Appearance', '0x${adv.appearance!.toRadixString(16)}'),
+            context,
+            'Appearance',
+            '0x${adv.appearance!.toRadixString(16)}',
+          ),
         if (adv.msd.isNotEmpty)
           _buildAdvRow(
-              context, 'Manufacturer Data', getNiceManufacturerData(adv.msd)),
+            context,
+            'Manufacturer Data',
+            getNiceManufacturerData(adv.msd),
+          ),
         if (adv.serviceUuids.isNotEmpty)
           _buildAdvRow(
-              context, 'Service UUIDs', getNiceServiceUuids(adv.serviceUuids)),
+            context,
+            'Service UUIDs',
+            getNiceServiceUuids(adv.serviceUuids),
+          ),
         if (adv.serviceData.isNotEmpty)
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 4.0,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Service Data',
-                    style: Theme.of(context).textTheme.bodySmall),
-                const SizedBox(
-                  width: 12.0,
+                Text(
+                  'Service Data',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
+                const SizedBox(width: 12.0),
                 Expanded(
                   child: Text(
                     adv.serviceData.entries
-                        .map((v) =>
-                            '${v.key}: ${'[${v.value.map((i) => i.toRadixString(16).padLeft(2, '0')).join(', ')}]'}')
+                        .map(
+                          (v) =>
+                              '${v.key}: ${'[${v.value.map((i) => i.toRadixString(16).padLeft(2, '0')).join(', ')}]'}',
+                        )
                         .join(', ')
                         .toUpperCase(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.apply(color: Colors.black),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.apply(color: Colors.black),
                     softWrap: true,
                   ),
                 ),

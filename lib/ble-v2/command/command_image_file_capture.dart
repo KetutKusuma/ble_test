@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/test_capture_model.dart';
@@ -8,6 +6,7 @@ import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/crypto.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:ble_test/utils/global.dart';
+import 'dart:developer';
 
 /// parameter untuk filter image explorer
 class ParameterImageExplorer {
@@ -36,7 +35,9 @@ class CommandImageFile {
   // image file prepare transmit []
 
   Future<BLEResponse<ToppiFileModel>> testCapture(
-      BLEProvider bleProvider, int bytePerChunk) async {
+    BLEProvider bleProvider,
+    int bytePerChunk,
+  ) async {
     try {
       int command = CommandCode.captureTest;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -51,13 +52,13 @@ class CommandImageFile {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -78,7 +79,8 @@ class CommandImageFile {
 
       if (params.length != 3) {
         return BLEResponse.error(
-            "Error tes pengambilan gambar : parameter tidak sesuai");
+          "Error tes pengambilan gambar : parameter tidak sesuai",
+        );
       }
 
       int fileSize = ConvertV2().bufferToUint16(params[0], 0);
@@ -100,14 +102,18 @@ class CommandImageFile {
     }
   }
 
-  Future<BLEResponse<List<int>>> dataBufferTransmit(BLEProvider bleProvider,
-      ToppiFileModel toppiFileModel, int bytePerChunk) async {
+  Future<BLEResponse<List<int>>> dataBufferTransmit(
+    BLEProvider bleProvider,
+    ToppiFileModel toppiFileModel,
+    int bytePerChunk,
+  ) async {
     try {
       int command = CommandCode.dataBufferTransmit;
 
       List<int> buffer = [];
       for (var i = 0; i < toppiFileModel.totalChunck; i++) {
         bool _success = false;
+        // ignore: dead_code
         for (var j = 0; j < 5; i++) {
           int uniqueID = UniqueIDManager().getUniqueID();
 
@@ -122,8 +128,11 @@ class CommandImageFile {
             ivGlobal,
           );
 
-          Header headerBLE =
-              Header(uniqueID: uniqueID, command: command, status: false);
+          Header headerBLE = Header(
+            uniqueID: uniqueID,
+            command: command,
+            status: false,
+          );
 
           Response responseWrite = await bleProvider.writeData(
             idata,
@@ -136,8 +145,10 @@ class CommandImageFile {
 
           List<List<int>> params = [];
           for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
-            List<int>? param =
-                MessageV2().getParameter(responseWrite.buffer, i);
+            List<int>? param = MessageV2().getParameter(
+              responseWrite.buffer,
+              i,
+            );
             if (param == null) {
               throw Exception("Gagal untuk mengembalikan parameter");
             }
@@ -156,8 +167,8 @@ class CommandImageFile {
             throw Exception("crc32 tidak sesuai");
           }
 
-          int startIndex = i * bytePerChunk;
-          int endIndex = (i + 1) * bytePerChunk;
+          int _ = i * bytePerChunk;
+          int _ = (i + 1) * bytePerChunk;
           // buffer.setRange(startIndex, endIndex, params[1]);
           buffer.addAll(params[1]);
           _success = true;
@@ -176,8 +187,12 @@ class CommandImageFile {
     }
   }
 
-  Future<BLEResponse> imageFileRename(BLEProvider bleProvider, int flagDir,
-      List<int> fileName, int renameTo) async {
+  Future<BLEResponse> imageFileRename(
+    BLEProvider bleProvider,
+    int flagDir,
+    List<int> fileName,
+    int renameTo,
+  ) async {
     try {
       int command = CommandCode.imageFileRename;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -195,8 +210,11 @@ class CommandImageFile {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
 
       Response responseWrite = await bleProvider.writeData(data, headerBLE);
       if (responseWrite.header.status) {
@@ -210,7 +228,10 @@ class CommandImageFile {
   }
 
   Future<BLEResponse> imageFileDelete(
-      BLEProvider bleProvider, int flagDir, List<int> fileName) async {
+    BLEProvider bleProvider,
+    int flagDir,
+    List<int> fileName,
+  ) async {
     try {
       int command = CommandCode.imageFileDelete;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -227,13 +248,13 @@ class CommandImageFile {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses hapus berkas gambar");
       } else {
@@ -265,13 +286,13 @@ class CommandImageFile {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -305,10 +326,11 @@ class CommandImageFile {
   }
 
   Future<BLEResponse<ToppiFileModel>> imageFilePrepareTransmit(
-      BLEProvider bleProvider,
-      int flagDir,
-      List<int> fileName,
-      int bytePerChunk) async {
+    BLEProvider bleProvider,
+    int flagDir,
+    List<int> fileName,
+    int bytePerChunk,
+  ) async {
     try {
       int command = CommandCode.imageFilePrepareTransmit;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -326,13 +348,13 @@ class CommandImageFile {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
 
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -351,7 +373,8 @@ class CommandImageFile {
 
       if (params.length != 3) {
         throw Exception(
-            "Gagal persiapan mengirim berkas gambar : parameter tidak sesuai");
+          "Gagal persiapan mengirim berkas gambar : parameter tidak sesuai",
+        );
       }
 
       ToppiFileModel img = ToppiFileModel(
@@ -370,7 +393,9 @@ class CommandImageFile {
   }
 
   Future<BLEResponse<ToppiExplorerModel>> getLogExplorer(
-      BLEProvider bleProvider, int bytePerChunk) async {
+    BLEProvider bleProvider,
+    int bytePerChunk,
+  ) async {
     try {
       int command = CommandCode.logExplorer;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -392,10 +417,7 @@ class CommandImageFile {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -423,15 +445,20 @@ class CommandImageFile {
         crc32: ConvertV2().bufferToUint32(params[3], 0),
       );
 
-      return BLEResponse.success("Sukses ambil daftar catatan",
-          data: logExplorer);
+      return BLEResponse.success(
+        "Sukses ambil daftar catatan",
+        data: logExplorer,
+      );
     } catch (e) {
       return BLEResponse.error("Error dapat ambil daftar catatan ; $e");
     }
   }
 
   Future<BLEResponse<ToppiFileModel>> logFilePrepareTransmit(
-      BLEProvider bleProvider, List<int> fileName, int bytePerChunk) async {
+    BLEProvider bleProvider,
+    List<int> fileName,
+    int bytePerChunk,
+  ) async {
     try {
       int command = CommandCode.logFilePrepareTransmit;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -448,13 +475,13 @@ class CommandImageFile {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
 
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -473,7 +500,8 @@ class CommandImageFile {
 
       if (params.length != 3) {
         throw Exception(
-            "Gagal persiapan mengirim berkas catatan : parameter tidak sesuai");
+          "Gagal persiapan mengirim berkas catatan : parameter tidak sesuai",
+        );
       }
 
       ToppiFileModel img = ToppiFileModel(

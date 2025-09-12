@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'dart:typed_data';
 
 class BytesConvert {
@@ -8,8 +9,9 @@ class BytesConvert {
   }
 
   static String bytesToString(List<int> bytes) {
-    String result =
-        String.fromCharCodes(bytes.where((element) => element != 0).toList());
+    String result = String.fromCharCodes(
+      bytes.where((element) => element != 0).toList(),
+    );
     return result;
   }
 
@@ -48,8 +50,10 @@ class BytesConvert {
     return value;
   }
 
-  static double bytesToFloatorDouble(List<int> bytes,
-      {bool isBigEndian = true}) {
+  static double bytesToFloatorDouble(
+    List<int> bytes, {
+    bool isBigEndian = true,
+  }) {
     try {
       Uint8List uint8list = Uint8List.fromList(bytes);
 
@@ -57,8 +61,10 @@ class BytesConvert {
       ByteData byteData = uint8list.buffer.asByteData();
 
       // Read the float from the ByteData (little-endian)
-      double value =
-          byteData.getFloat32(0, isBigEndian ? Endian.big : Endian.little);
+      double value = byteData.getFloat32(
+        0,
+        isBigEndian ? Endian.big : Endian.little,
+      );
       return (value * 100).truncateToDouble() / 100;
     } catch (e) {
       log("error When convert bytes to float : $e");
@@ -66,15 +72,19 @@ class BytesConvert {
     }
   }
 
-  static double bytesToFloatorDoubleV2(List<int> bytes,
-      {bool isBigEndian = true}) {
+  static double bytesToFloatorDoubleV2(
+    List<int> bytes, {
+    bool isBigEndian = true,
+  }) {
     try {
       // Convert the list to a ByteData object
       ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
       // Read the value as a 32-bit float
-      double value =
-          byteData.getFloat32(0, isBigEndian ? Endian.big : Endian.little);
+      double value = byteData.getFloat32(
+        0,
+        isBigEndian ? Endian.big : Endian.little,
+      );
 
       return value;
     } catch (e) {

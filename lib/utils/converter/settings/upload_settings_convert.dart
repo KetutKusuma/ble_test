@@ -12,15 +12,16 @@ class UploadSettingsConverter {
     String server = BytesConvert.bytesToString(bytes.sublist(1, 49));
     int port = BytesConvert.bytesToInt16(bytes.sublist(49, 51));
     // =======
-    List<bool> uploadEnable =
-        convertUploadEnable(bytes[51]).map((value) => value == 1).toList();
-    List<int> uploadSchedule = convertUploadSchedule(
-      bytes.sublist(52, 68),
-    );
+    List<bool> uploadEnable = convertUploadEnable(
+      bytes[51],
+    ).map((value) => value == 1).toList();
+    List<int> uploadSchedule = convertUploadSchedule(bytes.sublist(52, 68));
     // =======
     int uploadUsingInt = BytesConvert.bytesToInt8([bytes[68]]);
-    int uploadInitialDelay =
-        BytesConvert.bytesToInt16(bytes.sublist(69, 71), isBigEndian: false);
+    int uploadInitialDelay = BytesConvert.bytesToInt16(
+      bytes.sublist(69, 71),
+      isBigEndian: false,
+    );
     String wifiSsid = BytesConvert.bytesToString(bytes.sublist(71, 87));
     String wifiPassword = BytesConvert.bytesToString(bytes.sublist(87, 103));
     String modemApn = BytesConvert.bytesToString(bytes.sublist(103, 119));
@@ -61,7 +62,7 @@ class UploadSettingsConverter {
       uploadInitialDelay,
       wifiSsid,
       wifiPassword,
-      modemApn
+      modemApn,
     ];
   }
 

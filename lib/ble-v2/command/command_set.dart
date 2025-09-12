@@ -23,7 +23,9 @@ class CommandSet {
   static final messageV2 = MessageV2();
 
   Future<BLEResponse> setCaptureSchedule(
-      BLEProvider bleProvider, CaptureModel captureModel) async {
+    BLEProvider bleProvider,
+    CaptureModel captureModel,
+  ) async {
     try {
       int command = CommandCode.captureSchedule;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -48,16 +50,18 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (responseWrite.header.status) {
-        return BLEResponse.success("Sukses ubah jadwal pengambilan gambar",
-            data: null);
+        return BLEResponse.success(
+          "Sukses ubah jadwal pengambilan gambar",
+          data: null,
+        );
       } else {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -67,10 +71,13 @@ class CommandSet {
   }
 
   Future<BLEResponse> setTransmitSchedule(
-      BLEProvider bleProvider, List<TransmitModel> transmit) async {
+    BLEProvider bleProvider,
+    List<TransmitModel> transmit,
+  ) async {
     if (transmit.isEmpty || transmit.length != 8) {
       return BLEResponse.error(
-          "Error ubah jadwal kirim data : jumlah kirim data tidak sesuai ${transmit.length}");
+        "Error ubah jadwal kirim data : jumlah kirim data tidak sesuai ${transmit.length}",
+      );
     }
     try {
       int command = CommandCode.transmitSchedule;
@@ -92,13 +99,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah jadwal kirim data", data: null);
@@ -111,7 +118,9 @@ class CommandSet {
   }
 
   Future<BLEResponse> setReceiveSchedule(
-      BLEProvider bleProvider, List<ReceiveModel> listReceive) async {
+    BLEProvider bleProvider,
+    List<ReceiveModel> listReceive,
+  ) async {
     try {
       int command = CommandCode.receiveSchedule;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -132,17 +141,19 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
 
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+
       if (responseWrite.header.status) {
-        return BLEResponse.success("Sukses ubah jadwal terima data",
-            data: null);
+        return BLEResponse.success(
+          "Sukses ubah jadwal terima data",
+          data: null,
+        );
       } else {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -152,10 +163,13 @@ class CommandSet {
   }
 
   Future<BLEResponse> setUploadSchedule(
-      BLEProvider bleProvider, List<UploadModel> upload) async {
+    BLEProvider bleProvider,
+    List<UploadModel> upload,
+  ) async {
     if (upload.isEmpty || upload.length != 8) {
       return BLEResponse.error(
-          "Error ubah jadwal upload : jumlah upload tidak sesuai ${upload.length}");
+        "Error ubah jadwal upload : jumlah upload tidak sesuai ${upload.length}",
+      );
     }
     try {
       int command = CommandCode.uploadSchedule;
@@ -176,13 +190,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah jadwal upload", data: null);
@@ -195,7 +209,10 @@ class CommandSet {
   }
 
   Future<BLEResponse> setIdentity(
-      BLEProvider bleProvider, IdentityModel identity, String license) async {
+    BLEProvider bleProvider,
+    IdentityModel identity,
+    String license,
+  ) async {
     try {
       int command = CommandCode.identity;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -214,13 +231,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       log("response write set identity : ${responseWrite}");
 
@@ -235,7 +252,9 @@ class CommandSet {
   }
 
   Future<BLEResponse> setGateway(
-      BLEProvider bleProvider, GatewayModel gateway) async {
+    BLEProvider bleProvider,
+    GatewayModel gateway,
+  ) async {
     try {
       log("param countnya gateway : ${gateway.paramCount}");
       int command = CommandCode.gateway;
@@ -261,7 +280,8 @@ class CommandSet {
         messageV2.addString(gateway.modemAPN, buffer);
       } else {
         return BLEResponse.error(
-            "Kesalahan pada panjang parameter gateway tidak sesuai");
+          "Kesalahan pada panjang parameter gateway tidak sesuai",
+        );
       }
 
       List<int> data = messageV2.createEnd(
@@ -271,13 +291,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah gateway", data: null);
@@ -290,7 +310,9 @@ class CommandSet {
   }
 
   Future<BLEResponse> setMetaData(
-      BLEProvider bleProvider, MetaDataModel meta) async {
+    BLEProvider bleProvider,
+    MetaDataModel meta,
+  ) async {
     try {
       int command = CommandCode.metaData;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -321,13 +343,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah meta data", data: null);
@@ -340,7 +362,9 @@ class CommandSet {
   }
 
   Future<BLEResponse> setCamera(
-      BLEProvider bleProvider, CameraModel camera) async {
+    BLEProvider bleProvider,
+    CameraModel camera,
+  ) async {
     try {
       int command = CommandCode.cameraSetting;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -364,13 +388,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah kamera", data: null);
@@ -383,7 +407,9 @@ class CommandSet {
   }
 
   Future<BLEResponse> setPrintSerialMonitor(
-      BLEProvider bleProvider, bool b) async {
+    BLEProvider bleProvider,
+    bool b,
+  ) async {
     try {
       int command = CommandCode.printToSerialMonitor;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -400,13 +426,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah layar serial", data: null);
@@ -435,13 +461,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah status toppi", data: null);
@@ -470,13 +496,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah waktu", data: null);
@@ -505,13 +531,13 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses ubah role", data: null);
@@ -524,7 +550,9 @@ class CommandSet {
   }
 
   Future<BLEResponse> setBatteryVoltageCoef(
-      BLEProvider bleProvider, BatteryCoefficientModel b) async {
+    BLEProvider bleProvider,
+    BatteryCoefficientModel b,
+  ) async {
     try {
       int command = CommandCode.batteryVoltageCoefficient;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -541,8 +569,11 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
 
       Response responseWrite = await bleProvider.writeData(data, headerBLE);
       if (responseWrite.header.status) {
@@ -556,7 +587,10 @@ class CommandSet {
   }
 
   Future<BLEResponse> setPassword(
-      BLEProvider bleProvider, String oldPassword, String newPassword) async {
+    BLEProvider bleProvider,
+    String oldPassword,
+    String newPassword,
+  ) async {
     try {
       int command = CommandCode.changePassword;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -573,8 +607,11 @@ class CommandSet {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
 
       Response responseWrite = await bleProvider.writeData(data, headerBLE);
       if (responseWrite.header.status) {
@@ -595,11 +632,18 @@ class CommandSet {
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
       messageV2.addUint8(timeUTC, buffer);
-      List<int> data =
-          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
 
       Response responseWrite = await bleProvider.writeData(data, headerBLE);
       if (responseWrite.header.status) {

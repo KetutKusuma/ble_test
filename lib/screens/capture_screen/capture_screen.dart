@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_image_file_capture.dart';
@@ -40,10 +41,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
       BluetoothConnectionState.connected;
 
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
 
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  final RefreshController refreshController = RefreshController(
+    initialRefresh: false,
+  );
   Timer? debounceTimer;
   late SimpleFontelicoProgressDialog _progressDialog;
 
@@ -64,22 +66,17 @@ class _CaptureScreenState extends State<CaptureScreen> {
       context: context,
       barrierDimisable: true,
     );
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          if (mounted) {
-            Navigator.popUntil(
-              context,
-              (route) => route.isFirst,
-            );
-          }
-        }
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
         if (mounted) {
-          setState(() {});
+          Navigator.popUntil(context, (route) => route.isFirst);
         }
-      },
-    );
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -96,33 +93,40 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
 
     addText(
-        "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}");
+      "Firmware & Version : ${imageMetaData.firmware} v${imageMetaData.version}",
+    );
     addText(
-        "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}");
+      "ID : ${ConvertV2().arrayUint8ToStringHexAddress((imageMetaData.id ?? []))}",
+    );
     addText("ID Pelanggan : ${imageMetaData.customerID}");
     addText("Tanggal Diambil : ${imageMetaData.getDateTimeTakenString()}");
     addText(
-        "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}");
+      "Waktu UTC : ${ConvertV2().uint8ToUtcString((imageMetaData.timeUTC ?? 0))}",
+    );
     addText(
-        "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C");
+      "Temperatur : ${(imageMetaData.temperature ?? 0).toStringAsFixed(2)}°C",
+    );
     addText("Role : ${imageMetaData.getRoleString()}");
     addText(
-        "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V");
+      "Tegangan Baterai 1 : ${(imageMetaData.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
+    );
     addText(
-        "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V");
+      "Tegangan Baterai 2 : ${(imageMetaData.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
+    );
     addText("Rotasi Kamera : ${imageMetaData.adjustmentRotation}");
     addText("Model Meter : ${imageMetaData.meterModel}");
     addText("Nomor Seri Meter : ${imageMetaData.meterSN}");
     addText("Segel Meter : ${imageMetaData.meterSeal}");
     addText(
-        "Angka Bulat/Desimal : ${imageMetaData.numberDigit}/${imageMetaData.numberDecimal}");
+      "Angka Bulat/Desimal : ${imageMetaData.numberDigit}/${imageMetaData.numberDecimal}",
+    );
     addText("Kustom : ${imageMetaData.custom}");
 
     return [
       for (int i = 0; i < widgets.length; i++) ...[
         widgets[i],
         if (i != widgets.length - 1) const SizedBox(height: 3),
-      ]
+      ],
     ];
   }
 
@@ -131,67 +135,70 @@ class _CaptureScreenState extends State<CaptureScreen> {
       return;
     }
     showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: const Text("Meta Data"),
-            children: [
-              if (double.parse(_imageMetaData!.version!) < 2.21)
-                SimpleDialogOption(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Firmware : ${_imageMetaData!.firmware}"),
-                      const SizedBox(height: 3),
-                      Text("Version : ${_imageMetaData!.version}"),
-                      const SizedBox(height: 3),
-                      Text(
-                        "ID : ${ConvertV2().arrayUint8ToStringHexAddress((_imageMetaData!.id ?? []))}",
-                      ),
-                      const SizedBox(height: 3),
-                      Text("ID Pelanggan : ${_imageMetaData!.custom}"),
-                      const SizedBox(height: 3),
-                      Text("Model Meter : ${_imageMetaData!.meterModel}"),
-                      const SizedBox(height: 3),
-                      Text("Nomor Seri Meter : ${_imageMetaData!.meterSN}"),
-                      const SizedBox(height: 3),
-                      Text("Segel Meter : ${_imageMetaData!.meterSeal}"),
-                      const SizedBox(height: 3),
-                      Text(
-                          "Tanggal Diambil : ${(_imageMetaData!.getDateTimeTakenString())}"),
-                      const SizedBox(height: 3),
-                      Text(
-                        "Waktu UTC : ${ConvertV2().uint8ToUtcString((_imageMetaData!.timeUTC ?? 0))}",
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        "Tegangan Baterai 1 : ${(_imageMetaData!.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        "Tegangan Baterai 2 : ${(_imageMetaData!.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                          "Rotasi Kamera : ${_imageMetaData!.adjustmentRotation}"),
-                      const SizedBox(height: 3),
-                      Text(
-                        "Temperatur : ${(_imageMetaData!.temperature ?? 0).toStringAsFixed(2)}°C",
-                      ),
-                    ],
-                  ),
-                  onPressed: () {},
-                )
-              else
-                SimpleDialogOption(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: buildMetadataTextsV3(_imageMetaData!),
-                  ),
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text("Meta Data"),
+          children: [
+            if (double.parse(_imageMetaData!.version!) < 2.21)
+              SimpleDialogOption(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Firmware : ${_imageMetaData!.firmware}"),
+                    const SizedBox(height: 3),
+                    Text("Version : ${_imageMetaData!.version}"),
+                    const SizedBox(height: 3),
+                    Text(
+                      "ID : ${ConvertV2().arrayUint8ToStringHexAddress((_imageMetaData!.id ?? []))}",
+                    ),
+                    const SizedBox(height: 3),
+                    Text("ID Pelanggan : ${_imageMetaData!.custom}"),
+                    const SizedBox(height: 3),
+                    Text("Model Meter : ${_imageMetaData!.meterModel}"),
+                    const SizedBox(height: 3),
+                    Text("Nomor Seri Meter : ${_imageMetaData!.meterSN}"),
+                    const SizedBox(height: 3),
+                    Text("Segel Meter : ${_imageMetaData!.meterSeal}"),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Tanggal Diambil : ${(_imageMetaData!.getDateTimeTakenString())}",
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Waktu UTC : ${ConvertV2().uint8ToUtcString((_imageMetaData!.timeUTC ?? 0))}",
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Tegangan Baterai 1 : ${(_imageMetaData!.voltageBattery1 ?? 0).toStringAsFixed(2)} V",
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Tegangan Baterai 2 : ${(_imageMetaData!.voltageBattery2 ?? 0).toStringAsFixed(2)} V",
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Rotasi Kamera : ${_imageMetaData!.adjustmentRotation}",
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Temperatur : ${(_imageMetaData!.temperature ?? 0).toStringAsFixed(2)}°C",
+                    ),
+                  ],
                 ),
-            ],
-          );
-        });
+                onPressed: () {},
+              )
+            else
+              SimpleDialogOption(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: buildMetadataTextsV3(_imageMetaData!),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   void _showZoomableImageDialog(BuildContext context, Uint8List imageBytes) {
@@ -201,20 +208,22 @@ class _CaptureScreenState extends State<CaptureScreen> {
         return Dialog(
           insetPadding: const EdgeInsets.all(0),
           backgroundColor: Colors.transparent,
-          child: LayoutBuilder(builder: (context, constraints) {
-            return InteractiveViewer(
-              scaleFactor: 400,
-              clipBehavior: Clip.none,
-              boundaryMargin: const EdgeInsets.all(20),
-              minScale: 1,
-              maxScale: 3.0,
-              child: Image.memory(
-                imageBytes,
-                fit: BoxFit.cover,
-                width: MediaQuery.of(context).size.width,
-              ),
-            );
-          }),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return InteractiveViewer(
+                scaleFactor: 400,
+                clipBehavior: Clip.none,
+                boundaryMargin: const EdgeInsets.all(20),
+                minScale: 1,
+                maxScale: 3.0,
+                child: Image.memory(
+                  imageBytes,
+                  fit: BoxFit.cover,
+                  width: MediaQuery.of(context).size.width,
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -235,10 +244,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       child: ScaffoldMessenger(
         key: Snackbar.snackBarCapture,
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text("Pengambilan Gambar"),
-            elevation: 0,
-          ),
+          appBar: AppBar(title: const Text("Pengambilan Gambar"), elevation: 0),
           body: CustomScrollView(
             slivers: [
               SliverFillRemaining(
@@ -249,7 +255,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   children: [
                     Container(
                       margin: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 10),
+                        vertical: 10,
+                        horizontal: 10,
+                      ),
                       padding: const EdgeInsets.all(5),
                       width: MediaQuery.of(context).size.width,
                       height: 290,
@@ -259,42 +267,42 @@ class _CaptureScreenState extends State<CaptureScreen> {
                       ),
                       child: !isCapturing
                           ? (isCaptureDone
-                              ? (GestureDetector(
-                                  onTap: () {
-                                    _showZoomableImageDialog(
-                                      context,
-                                      Uint8List.fromList(imageBytes),
-                                    );
-                                  },
-                                  child: FittedBox(
-                                    child: Center(
-                                      child: Image.memory(
+                                ? (GestureDetector(
+                                    onTap: () {
+                                      _showZoomableImageDialog(
+                                        context,
                                         Uint8List.fromList(imageBytes),
-                                        fit: BoxFit.fill,
-                                        scale: 1,
+                                      );
+                                    },
+                                    child: FittedBox(
+                                      child: Center(
+                                        child: Image.memory(
+                                          Uint8List.fromList(imageBytes),
+                                          fit: BoxFit.fill,
+                                          scale: 1,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ))
-                              : const Icon(
-                                  CupertinoIcons.photo,
-                                  color: Colors.black45,
-                                  size: 40,
-                                ))
+                                  ))
+                                : const Icon(
+                                    CupertinoIcons.photo,
+                                    color: Colors.black45,
+                                    size: 40,
+                                  ))
                           : (isCapturing && !isCaptureDone)
-                              ? const SizedBox(
-                                  height: 30,
-                                  width: 30,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                              : const Icon(
-                                  CupertinoIcons.photo,
-                                  color: Colors.black45,
-                                  size: 40,
-                                ),
+                          ? const SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : const Icon(
+                              CupertinoIcons.photo,
+                              color: Colors.black45,
+                              size: 40,
+                            ),
                     ),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -302,7 +310,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0, vertical: 2),
+                            horizontal: 10.0,
+                            vertical: 2,
+                          ),
                           child: Column(
                             children: [
                               Row(
@@ -317,31 +327,33 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                               backgroundColor: Colors.blue,
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 20),
+                                                    vertical: 10,
+                                                    horizontal: 20,
+                                                  ),
                                               elevation: 0,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                    10), // Set the corner radius
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      10,
+                                                    ), // Set the corner radius
                                               ),
                                             ),
                                             onPressed: () async {
                                               DateTime dateTime =
                                                   DateTime.now();
                                               String datetimenow = DateFormat(
-                                                      'yyyy-MM-dd_HH#mm#ss')
-                                                  .format(dateTime);
+                                                'yyyy-MM-dd_HH#mm#ss',
+                                              ).format(dateTime);
                                               String fileName =
                                                   "img_$datetimenow.jpg";
 
                                               String? hasil =
-                                                  await DownloadUtils
-                                                      .saveToDownload(
-                                                context,
-                                                ScreenSnackbar.capture,
-                                                imageBytes,
-                                                fileName,
-                                              );
+                                                  await DownloadUtils.saveToDownload(
+                                                    context,
+                                                    ScreenSnackbar.capture,
+                                                    imageBytes,
+                                                    fileName,
+                                                  );
                                               if (hasil != null) {
                                                 Snackbar.show(
                                                   ScreenSnackbar.capture,
@@ -353,9 +365,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                             child: const Text("Simpan"),
                                           ),
                                         ),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
+                                  const SizedBox(width: 5),
                                   _imageMetaData == null
                                       ? const SizedBox()
                                       : Expanded(
@@ -365,20 +375,21 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                   Colors.blue.shade700,
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 20),
+                                                    vertical: 10,
+                                                    horizontal: 20,
+                                                  ),
                                               elevation: 0,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                    10), // Set the corner radius
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      10,
+                                                    ), // Set the corner radius
                                               ),
                                             ),
                                             onPressed: () {
                                               _showMetaDataImageDialog(context);
                                             },
-                                            child: const Text(
-                                              "Info",
-                                            ),
+                                            child: const Text("Info"),
                                           ),
                                         ),
                                 ],
@@ -396,14 +407,15 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                     Colors.amber.shade800,
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                        vertical: 10,
-                                                        horizontal: 20),
+                                                      vertical: 10,
+                                                      horizontal: 20,
+                                                    ),
                                                 elevation: 0,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                    10,
-                                                  ), // Set the corner radius
+                                                        10,
+                                                      ), // Set the corner radius
                                                 ),
                                               ),
                                               onPressed: () async {
@@ -418,9 +430,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                               child: const Text("Rotasi"),
                                             ),
                                           ),
-                                    const SizedBox(
-                                      width: 5,
-                                    ),
+                                    const SizedBox(width: 5),
                                     imageBytes.isEmpty
                                         ? const SizedBox()
                                         : Expanded(
@@ -429,29 +439,33 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                 backgroundColor: Colors.green,
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                        vertical: 10,
-                                                        horizontal: 20),
+                                                      vertical: 10,
+                                                      horizontal: 20,
+                                                    ),
                                                 elevation: 0,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                          10), // Set the corner radius
+                                                        10,
+                                                      ), // Set the corner radius
                                                 ),
                                               ),
                                               onPressed: () async {
                                                 try {
                                                   _progressDialog.show(
-                                                      message:
-                                                          "Harap tunggu hasil OCR...");
+                                                    message:
+                                                        "Harap tunggu hasil OCR...",
+                                                  );
 
                                                   http.Response resultOCR =
                                                       await ToServer()
                                                           .postRequest(
-                                                    configProvider
-                                                        .config.urlTestOCR,
-                                                    bufferData,
-                                                    _imageMetaData!,
-                                                  );
+                                                            configProvider
+                                                                .config
+                                                                .urlTestOCR,
+                                                            bufferData,
+                                                            _imageMetaData!,
+                                                          );
 
                                                   _progressDialog.hide();
 
@@ -460,13 +474,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                     builder: (context) {
                                                       return SimpleDialog(
                                                         title: const Text(
-                                                            "Hasil OCR"),
+                                                          "Hasil OCR",
+                                                        ),
                                                         children: [
                                                           SimpleDialogOption(
                                                             child: Text(
                                                               "Kode Status : ${resultOCR.statusCode}\nData : ${resultOCR.body}",
                                                             ),
-                                                          )
+                                                          ),
                                                         ],
                                                       );
                                                     },
@@ -474,19 +489,22 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                                 } catch (e) {
                                                   _progressDialog.hide();
                                                   showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        return SimpleDialog(
-                                                          title: const Text(
-                                                              "Hasil OCR"),
-                                                          children: [
-                                                            SimpleDialogOption(
-                                                              child: Text(
-                                                                  "Error dapat OCR : $e"),
-                                                            )
-                                                          ],
-                                                        );
-                                                      });
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return SimpleDialog(
+                                                        title: const Text(
+                                                          "Hasil OCR",
+                                                        ),
+                                                        children: [
+                                                          SimpleDialogOption(
+                                                            child: Text(
+                                                              "Error dapat OCR : $e",
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
                                                 }
                                               },
                                               child: const Text("Tes OCR"),
@@ -511,9 +529,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                 color: Colors.black,
                                 width: 2.0,
                               ),
-                              borderRadius: BorderRadius.circular(
-                                100,
-                              ),
+                              borderRadius: BorderRadius.circular(100),
                               // Set the corner radius
                             ),
                           ),
@@ -527,29 +543,35 @@ class _CaptureScreenState extends State<CaptureScreen> {
                             try {
                               BLEResponse<ToppiFileModel> bleResponse =
                                   await _CommandImageFile.testCapture(
-                                      bleProvider, bytePerChunk);
+                                    bleProvider,
+                                    bytePerChunk,
+                                  );
                               log("test capture : $bleResponse");
 
                               if (bleResponse.data == null) {
                                 isCapturing = false;
                                 setState(() {});
-                                Snackbar.show(ScreenSnackbar.capture,
-                                    "Error Pengambilan gambar, data kosong",
-                                    success: false);
+                                Snackbar.show(
+                                  ScreenSnackbar.capture,
+                                  "Error Pengambilan gambar, data kosong",
+                                  success: false,
+                                );
                               }
                               if (!bleResponse.status) {
                                 isCapturing = false;
                                 setState(() {});
                                 Snackbar.show(
-                                    ScreenSnackbar.capture, bleResponse.message,
-                                    success: false);
+                                  ScreenSnackbar.capture,
+                                  bleResponse.message,
+                                  success: false,
+                                );
                               } else {
                                 BLEResponse<List<int>> data =
                                     await _CommandImageFile.dataBufferTransmit(
-                                  bleProvider,
-                                  bleResponse.data!,
-                                  bytePerChunk,
-                                );
+                                      bleProvider,
+                                      bleResponse.data!,
+                                      bytePerChunk,
+                                    );
 
                                 // log("data buffer transmit : $data");
 
@@ -557,8 +579,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                                   isCapturing = false;
                                   setState(() {});
                                   Snackbar.show(
-                                      ScreenSnackbar.capture, data.message,
-                                      success: false);
+                                    ScreenSnackbar.capture,
+                                    data.message,
+                                    success: false,
+                                  );
                                 } else {
                                   isCaptureDone = true;
                                   isCapturing = false;
@@ -574,8 +598,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                               }
                             } catch (e) {
                               Snackbar.show(
-                                  ScreenSnackbar.capture, "Error Capture! : $e",
-                                  success: false);
+                                ScreenSnackbar.capture,
+                                "Error Capture! : $e",
+                                success: false,
+                              );
                             }
                           },
                           child: const Icon(
@@ -588,7 +614,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -622,8 +648,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
         // ignore connections canceled by the user
       } else {
         Snackbar.show(
-            ScreenSnackbar.capture, prettyException("Connect Error:", e),
-            success: false);
+          ScreenSnackbar.capture,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -634,8 +662,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
       await device.disconnectAndUpdateStream(queue: false);
       Snackbar.show(ScreenSnackbar.capture, "Cancel: Success", success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capture, prettyException("Cancel Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.capture,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -643,12 +674,17 @@ class _CaptureScreenState extends State<CaptureScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.capture, "Disconnect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.capture,
+        "Disconnect: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.capture, prettyException("Disconnect Error:", e),
-          success: false);
+        ScreenSnackbar.capture,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }

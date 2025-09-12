@@ -26,13 +26,13 @@ class CommandRadioChecker {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
       log("response write radio test as receiver start : $responseWrite");
 
       if (responseWrite.header.status) {
@@ -60,13 +60,13 @@ class CommandRadioChecker {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
 
       log("response write radio test as receiver stop : $responseWrite");
 
@@ -81,7 +81,9 @@ class CommandRadioChecker {
   }
 
   Future<BLEResponse> radioTestAsTransmitterStart(
-      BLEProvider bleProvider, List<int> destinationID) async {
+    BLEProvider bleProvider,
+    List<int> destinationID,
+  ) async {
     try {
       int command = CommandCode.radioTestAsTransmitterStart;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -97,17 +99,19 @@ class CommandRadioChecker {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
 
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+
       if (responseWrite.header.status) {
-        return BLEResponse.success("Sukses test as transmitter start",
-            data: null);
+        return BLEResponse.success(
+          "Sukses test as transmitter start",
+          data: null,
+        );
       } else {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -117,7 +121,9 @@ class CommandRadioChecker {
   }
 
   Future<BLEResponse> radioTestAsTransmitterSequence(
-      BLEProvider bleProvider, int sequence) async {
+    BLEProvider bleProvider,
+    int sequence,
+  ) async {
     try {
       int command = CommandCode.radioTestAsTransmitterSequence;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -132,17 +138,19 @@ class CommandRadioChecker {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
 
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+
       if (responseWrite.header.status) {
-        return BLEResponse.success("Sukses test as transmitter sequence",
-            data: null);
+        return BLEResponse.success(
+          "Sukses test as transmitter sequence",
+          data: null,
+        );
       } else {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -152,7 +160,8 @@ class CommandRadioChecker {
   }
 
   Future<BLEResponse> radioTestAsTransmitterStop(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.radioTestAsTransmitterStop;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -167,17 +176,19 @@ class CommandRadioChecker {
         ivGlobal,
       );
 
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
 
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+
       if (responseWrite.header.status) {
-        return BLEResponse.success("Sukses test as transmitter stop",
-            data: null);
+        return BLEResponse.success(
+          "Sukses test as transmitter stop",
+          data: null,
+        );
       } else {
         return BLEResponse.errorFromBLE(responseWrite);
       }

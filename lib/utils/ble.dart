@@ -5,7 +5,10 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class BLEUtils {
   static Future<void> funcWrite(
-      Uint8List bytes, String msg, BluetoothDevice device) async {
+    Uint8List bytes,
+    String msg,
+    BluetoothDevice device,
+  ) async {
     try {
       for (var service in device.servicesList) {
         for (var element in service.characteristics) {

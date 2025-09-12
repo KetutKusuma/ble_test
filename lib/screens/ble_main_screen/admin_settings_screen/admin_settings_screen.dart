@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -43,10 +44,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
 
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
   String idTxt = '-',
       voltCoef1Txt = '-',
       voltCoef2Txt = '-',
@@ -111,31 +113,28 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     super.initState();
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     configProvider = Provider.of<ConfigProvider>(context, listen: false);
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          if (mounted) {
-            Navigator.popUntil(
-              context,
-              (route) => route.isFirst,
-            );
-
-            Snackbar.show(
-              ScreenSnackbar.adminsettings,
-              "Perangkat Tidak Terhubung",
-              success: false,
-            );
-          }
-        }
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
         if (mounted) {
-          setState(() {});
+          Navigator.popUntil(context, (route) => route.isFirst);
+
+          Snackbar.show(
+            ScreenSnackbar.adminsettings,
+            "Perangkat Tidak Terhubung",
+            success: false,
+          );
         }
-      },
-    );
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
 
@@ -151,16 +150,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             // Otomatis set menjadi 0.5 jika kurang dari 0.5
             voltageCoefTxtController.text = '0.5';
             voltageCoefTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: voltageCoefTxtController
-                        .text.length)); // Memastikan cursor di akhir
+              TextPosition(offset: voltageCoefTxtController.text.length),
+            ); // Memastikan cursor di akhir
           } else if (value > 1.5) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
             voltageCoefTxtController.text = '1.5';
             voltageCoefTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: voltageCoefTxtController
-                        .text.length)); // Memastikan cursor di akhir
+              TextPosition(offset: voltageCoefTxtController.text.length),
+            ); // Memastikan cursor di akhir
           }
         }
       }
@@ -174,16 +171,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             // Otomatis set menjadi 0.5 jika kurang dari 0.5
             voltageCoefTxtController.text = '0';
             voltageCoefTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: voltageCoefTxtController
-                        .text.length)); // Memastikan cursor di akhir
+              TextPosition(offset: voltageCoefTxtController.text.length),
+            ); // Memastikan cursor di akhir
           } else if (value > 63) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
             voltageCoefTxtController.text = '63';
             voltageCoefTxtController.selection = TextSelection.fromPosition(
-                TextPosition(
-                    offset: voltageCoefTxtController
-                        .text.length)); // Memastikan cursor di akhir
+              TextPosition(offset: voltageCoefTxtController.text.length),
+            ); // Memastikan cursor di akhir
           }
         }
       }
@@ -203,15 +198,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   void _onTextChanged(TextEditingController textEditingController) {
     // Step 1: Remove invalid characters (allow only a-f, A-F, and 0-9)
-    String text =
-        textEditingController.text.replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
+    String text = textEditingController.text.replaceAll(
+      RegExp(r'[^a-fA-F0-9]'),
+      '',
+    );
 
     // Step 2: Format the text with colons
     String formattedText = "";
@@ -229,8 +224,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       textEditingController.value = textEditingController.value.copyWith(
         text: formattedText,
         selection: TextSelection.collapsed(
-            offset: cursorPosition +
-                (formattedText.length - textEditingController.text.length)),
+          offset:
+              cursorPosition +
+              (formattedText.length - textEditingController.text.length),
+        ),
       );
     }
   }
@@ -238,9 +235,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   onRefresh() async {
     try {
       initGetAdmin();
-      await Future.delayed(
-        const Duration(seconds: 1),
-      );
+      await Future.delayed(const Duration(seconds: 1));
       _refreshController.refreshCompleted();
     } catch (e) {
       log("Error on refresh : $e");
@@ -261,21 +256,29 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Future initGetAdmin() async {
     try {
       if (isConnected) {
-        BLEResponse<AdminModels> adminResponse =
-            await _command.getAdminData(device, bleProvider);
+        BLEResponse<AdminModels> adminResponse = await _command.getAdminData(
+          device,
+          bleProvider,
+        );
         _progressDialog.hide();
         log("admin response : $adminResponse");
         if (adminResponse.status) {
           adminModels = adminResponse.data!;
           idTxt = ConvertV2().arrayUint8ToStringHexAddress(
-              adminResponse.data!.identityModel!.toppiID);
+            adminResponse.data!.identityModel!.toppiID,
+          );
           hardwareIDTxt = ConvertV2().arrayUint8ToString(
-              adminResponse.data!.identityModel!.hardwareID);
+            adminResponse.data!.identityModel!.hardwareID,
+          );
           voltCoef1Txt = adminResponse
-              .data!.batteryCoefficientModel!.coefficient1
+              .data!
+              .batteryCoefficientModel!
+              .coefficient1
               .formatDouble();
           voltCoef2Txt = adminResponse
-              .data!.batteryCoefficientModel!.coefficient2
+              .data!
+              .batteryCoefficientModel!
+              .coefficient2
               .formatDouble();
 
           brightnessText = adminResponse.data!.cameraModel!.brightness
@@ -288,26 +291,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               .toString()
               .changeForCamera();
           specialEffectText = getSpecialEffectString(
-              adminResponse.data!.cameraModel!.specialEffect);
+            adminResponse.data!.cameraModel!.specialEffect,
+          );
           hMirrorText = adminResponse.data!.cameraModel!.hMirror.toString();
           vFlipText = adminResponse.data!.cameraModel!.vFlip.toString();
-          cameraJpgQualityTxt =
-              adminResponse.data!.cameraModel!.jpegQuality.toString();
-          adjustmentImageRotationTxt =
-              adminResponse.data!.cameraModel!.adjustImageRotation.toString();
+          cameraJpgQualityTxt = adminResponse.data!.cameraModel!.jpegQuality
+              .toString();
+          adjustmentImageRotationTxt = adminResponse
+              .data!
+              .cameraModel!
+              .adjustImageRotation
+              .toString();
           roleTxt = getRole(adminResponse.data!.role ?? 0);
           enableTxt = adminResponse.data!.enable.toString();
-          printToSerialMonitorTxt =
-              adminResponse.data!.printToSerialMonitor.toString();
+          printToSerialMonitorTxt = adminResponse.data!.printToSerialMonitor
+              .toString();
           setState(() {});
         } else {
-          Snackbar.show(ScreenSnackbar.adminsettings, adminResponse.message,
-              success: false);
+          Snackbar.show(
+            ScreenSnackbar.adminsettings,
+            adminResponse.message,
+            success: false,
+          );
         }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.adminsettings, "Error get raw admin : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.adminsettings,
+        "Error get raw admin : $e",
+        success: false,
+      );
     }
   }
 
@@ -383,54 +396,51 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   /// ya atau tidak untuk reset konfiguasi, format berkas
   /// dan kembali ke pengaturan pabrik
-  Future<bool?> _showResetDialog(BuildContext context, String msg,
-      {String? description}) async {
+  Future<bool?> _showResetDialog(
+    BuildContext context,
+    String msg, {
+    String? description,
+  }) async {
     bool? selectedValue = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  msg,
-                  style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w500),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                msg,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(
-                  height: 5,
-                ),
-                description == null
-                    ? const SizedBox()
-                    : Text(
-                        description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
-              ],
-            ),
-            content: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, true); // Return true
-                  },
-                  child: const Text('Ya'),
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, false); // Return false
-                  },
-                  child: const Text('Tidak'),
-                ),
-              ],
-            ));
+              ),
+              const SizedBox(height: 5),
+              description == null
+                  ? const SizedBox()
+                  : Text(description, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, true); // Return true
+                },
+                child: const Text('Ya'),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, false); // Return false
+                },
+                child: const Text('Tidak'),
+              ),
+            ],
+          ),
+        );
       },
     );
 
@@ -500,8 +510,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   void sendRequest(String hardwareID, String toppiID) async {
     try {
-      final response = await Hidden()
-          .sendRequest(hardwareID, toppiID, configProvider.config);
+      final response = await Hidden().sendRequest(
+        hardwareID,
+        toppiID,
+        configProvider.config,
+      );
       if (response.statusCode == 200) {
         setState(() {
           licenseTxtController.text = jsonDecode(response.body)["message"];
@@ -538,9 +551,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     licenseTxtController.text = "12345678";
                   });
                 },
-                child: const Text(
-                  "Lisensi",
-                ),
+                child: const Text("Lisensi"),
               ),
             ],
           ),
@@ -555,18 +566,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(
-                height: 3,
-              ),
+              const SizedBox(height: 3),
               Text(
                 "Lisensi : ${adminModels.identityModel!.isLicense ? "Valid" : "Invalid"}",
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
+                style: const TextStyle(fontSize: 14),
               ),
-              const SizedBox(
-                height: 15,
-              ),
+              const SizedBox(height: 15),
               Form(
                 child: TextFormField(
                   controller: idTxtController,
@@ -584,9 +589,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   inputFormatters: inputFormatters,
                 ),
               ),
-              const SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
               Form(
                 child: TextFormField(
                   controller: licenseTxtController,
@@ -624,7 +627,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     licenseTxtController.text.isNotEmpty) {
                   Navigator.pop(context, {
                     "id": idTxtController.text,
-                    "license": licenseTxtController.text
+                    "license": licenseTxtController.text,
                   });
                   idTxtController.clear();
                   licenseTxtController.clear();
@@ -663,7 +666,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Future<String?> _showInputDialogVoltage(
-      TextEditingController controller) async {
+    TextEditingController controller,
+  ) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -672,8 +676,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
@@ -709,7 +714,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Future<Map?> _showSelectionPopup(
-      BuildContext context, List<Map<String, dynamic>> dataMap) async {
+    BuildContext context,
+    List<Map<String, dynamic>> dataMap,
+  ) async {
     Map? result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
@@ -737,10 +744,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyAdminSettings,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Pengaturan Admin'),
-          elevation: 0,
-        ),
+        appBar: AppBar(title: const Text('Pengaturan Admin'), elevation: 0),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
@@ -750,9 +754,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     SettingsContainer(
                       icon: const Icon(Icons.person_outline),
@@ -763,13 +765,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           idTxtController.text = idTxt;
                           Map<String, dynamic>? input =
                               await _showInputDialogForID(
-                            keyboardType: TextInputType.text,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(14),
-                              // FilteringTextInputFormatter
-                            ],
-                            lengthTextNeed: 12,
-                          );
+                                keyboardType: TextInputType.text,
+                                inputFormatters: [
+                                  LengthLimitingTextInputFormatter(14),
+                                  // FilteringTextInputFormatter
+                                ],
+                                lengthTextNeed: 12,
+                              );
                           if (input != null) {
                             List<int> dataSetID = ConvertV2()
                                 .stringHexAddressToArrayUint8(input['id'], 5);
@@ -799,12 +801,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         title: "Role",
                         data: roleTxt,
                         onTap: () async {
-                          Map? input =
-                              await _showSelectionPopup(context, dataMapRole);
+                          Map? input = await _showSelectionPopup(
+                            context,
+                            dataMapRole,
+                          );
                           if (input != null) {
                             int dataUpdate = input['value'];
                             BLEResponse resBLE = await _commandSet.setRole(
-                                bleProvider, dataUpdate);
+                              bleProvider,
+                              dataUpdate,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -822,10 +828,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         data: enableTxt == "true" ? "Ya" : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Aktifkan Toppi");
+                            context,
+                            "Aktifkan Toppi",
+                          );
                           if (input != null) {
-                            BLEResponse resBLE =
-                                await _commandSet.setEnable(bleProvider, input);
+                            BLEResponse resBLE = await _commandSet.setEnable(
+                              bleProvider,
+                              input,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -833,9 +843,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             );
                           }
                         },
-                        icon: const Icon(
-                          Icons.check_circle_outline_outlined,
-                        ),
+                        icon: const Icon(Icons.check_circle_outline_outlined),
                       ),
                     ),
                     Visibility(
@@ -847,17 +855,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         onTap: () async {
                           voltageCoefTxtController.text = voltCoef1Txt;
                           String? input = await _showInputDialogVoltage(
-                              voltageCoefTxtController);
+                            voltageCoefTxtController,
+                          );
                           if (input != null) {
                             BatteryCoefficientModel batteryCoef =
                                 adminModels.batteryCoefficientModel!;
                             log("inputan coef 1 : $input");
                             batteryCoef.coefficient1 = double.parse(input);
-                            BLEResponse resBLE =
-                                await _commandSet.setBatteryVoltageCoef(
-                              bleProvider,
-                              batteryCoef,
-                            );
+                            BLEResponse resBLE = await _commandSet
+                                .setBatteryVoltageCoef(
+                                  bleProvider,
+                                  batteryCoef,
+                                );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -876,17 +885,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         onTap: () async {
                           voltageCoefTxtController.text = voltCoef2Txt;
                           String? input = await _showInputDialogVoltage(
-                              voltageCoefTxtController);
+                            voltageCoefTxtController,
+                          );
                           if (input != null) {
                             BatteryCoefficientModel batteryCoef =
                                 adminModels.batteryCoefficientModel!;
                             log("inputan coef 2 : $input");
                             batteryCoef.coefficient2 = double.parse(input);
-                            BLEResponse resBLE =
-                                await _commandSet.setBatteryVoltageCoef(
-                              bleProvider,
-                              batteryCoef,
-                            );
+                            BLEResponse resBLE = await _commandSet
+                                .setBatteryVoltageCoef(
+                                  bleProvider,
+                                  batteryCoef,
+                                );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -904,13 +914,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         data: brightnessText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
-                              context, dataMapBrightnessContrastSaturation);
+                            context,
+                            dataMapBrightnessContrastSaturation,
+                          );
                           if (input != null) {
                             int dataUpdate = input['value'];
                             CameraModel camera = adminModels.cameraModel!;
                             camera.brightness = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -928,13 +942,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         data: contrastText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
-                              context, dataMapBrightnessContrastSaturation);
+                            context,
+                            dataMapBrightnessContrastSaturation,
+                          );
                           if (input != null) {
                             int dataUpdate = input['value'];
                             CameraModel camera = adminModels.cameraModel!;
                             camera.contrast = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -952,13 +970,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         data: saturationText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
-                              context, dataMapBrightnessContrastSaturation);
+                            context,
+                            dataMapBrightnessContrastSaturation,
+                          );
                           if (input != null) {
                             int dataUpdate = input['value'];
                             CameraModel camera = adminModels.cameraModel!;
                             camera.saturation = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -976,13 +998,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         data: specialEffectText,
                         onTap: () async {
                           Map? input = await _showSelectionPopup(
-                              context, dataMapSpecialEffect);
+                            context,
+                            dataMapSpecialEffect,
+                          );
                           if (input != null) {
                             int dataUpdate = input['value'];
                             CameraModel camera = adminModels.cameraModel!;
                             camera.specialEffect = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -1000,13 +1026,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         data: hMirrorText == "true" ? "Ya" : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Cermin Horizontal Kamera");
+                            context,
+                            "Cermin Horizontal Kamera",
+                          );
                           if (input != null) {
                             bool dataUpdate = input;
                             CameraModel camera = adminModels.cameraModel!;
                             camera.hMirror = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -1021,21 +1051,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       child: SettingsContainer(
                         icon: Transform.rotate(
                           angle: 3.14 / 2,
-                          child: const Icon(
-                            Icons.flip,
-                          ),
+                          child: const Icon(Icons.flip),
                         ),
                         title: "Pembalikan Vertikal Kamera",
                         data: vFlipText == "true" ? "Ya" : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Pembalikan Vertikal Kamera");
+                            context,
+                            "Pembalikan Vertikal Kamera",
+                          );
                           if (input != null) {
                             bool dataUpdate = input;
                             CameraModel camera = adminModels.cameraModel!;
                             camera.vFlip = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -1048,9 +1080,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
-                        icon: const Icon(
-                          Icons.high_quality_outlined,
-                        ),
+                        icon: const Icon(Icons.high_quality_outlined),
                         title: "Kualitas JPEG Kamera",
                         data: cameraJpgQualityTxt,
                         onTap: () async {
@@ -1063,7 +1093,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.digitsOnly
+                              FilteringTextInputFormatter.digitsOnly,
                             ],
                           );
                           log("input : $input");
@@ -1072,7 +1102,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             CameraModel camera = adminModels.cameraModel!;
                             camera.jpegQuality = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -1085,9 +1117,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     Visibility(
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
-                        icon: const Icon(
-                          Icons.high_quality_outlined,
-                        ),
+                        icon: const Icon(Icons.high_quality_outlined),
                         title: "Penyesuaian Rotasi Gambar",
                         data: "$adjustmentImageRotationTxt°",
                         onTap: () async {
@@ -1100,7 +1130,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.digitsOnly
+                              FilteringTextInputFormatter.digitsOnly,
                             ],
                           );
                           log("input : $input");
@@ -1109,7 +1139,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             CameraModel camera = adminModels.cameraModel!;
                             camera.adjustImageRotation = dataUpdate;
                             BLEResponse resBLE = await _commandSet.setCamera(
-                                bleProvider, camera);
+                              bleProvider,
+                              camera,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.adminsettings,
                               resBLE,
@@ -1125,11 +1157,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: SettingsContainer(
                         title: "Tampilkan ke Layar Serial",
-                        data:
-                            printToSerialMonitorTxt == "true" ? "Ya" : "Tidak",
+                        data: printToSerialMonitorTxt == "true"
+                            ? "Ya"
+                            : "Tidak",
                         onTap: () async {
                           bool? input = await _showTrueFalseDialog(
-                              context, "Tampilkan ke Layar Serial");
+                            context,
+                            "Tampilkan ke Layar Serial",
+                          );
                           if (input != null) {
                             BLEResponse resBLE = await _commandSet
                                 .setPrintSerialMonitor(bleProvider, input);
@@ -1140,9 +1175,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             );
                           }
                         },
-                        icon: const Icon(
-                          Icons.print_outlined,
-                        ),
+                        icon: const Icon(Icons.print_outlined),
                       ),
                     ),
                     Visibility(
@@ -1153,15 +1186,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => LogExplorerScreen(
-                                device: device,
-                              ),
+                              builder: (context) =>
+                                  LogExplorerScreen(device: device),
                             ),
                           );
                         },
-                        icon: const Icon(
-                          Icons.history_edu_rounded,
-                        ),
+                        icon: const Icon(Icons.history_edu_rounded),
                       ),
                     ),
 
@@ -1173,20 +1203,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DeviceConfigurationScreen(
-                                device: device,
-                              ),
+                              builder: (context) =>
+                                  DeviceConfigurationScreen(device: device),
                             ),
                           );
                         },
-                        icon: const Icon(
-                          CupertinoIcons.gear_solid,
-                        ),
+                        icon: const Icon(CupertinoIcons.gear_solid),
                       ),
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     /// RESET
                     Visibility(
@@ -1199,8 +1224,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           );
                           if (input != null) {
                             if (input) {
-                              BLEResponse resBLE =
-                                  await _command.resetConfig(bleProvider);
+                              BLEResponse resBLE = await _command.resetConfig(
+                                bleProvider,
+                              );
                               if (!resBLE.status) {
                                 Snackbar.showHelperV2(
                                   ScreenSnackbar.adminsettings,
@@ -1220,7 +1246,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
+                            horizontal: 10,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFB200),
                             borderRadius: BorderRadius.circular(10),
@@ -1234,9 +1262,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 Icons.settings_backup_restore_rounded,
                                 color: Colors.white,
                               ),
-                              const SizedBox(
-                                width: 5,
-                              ),
+                              const SizedBox(width: 5),
                               Text(
                                 "Reset Konfigurasi",
                                 style: GoogleFonts.readexPro(
@@ -1256,14 +1282,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       visible: featureA.contains(roleUser),
                       child: GestureDetector(
                         onTap: () async {
-                          bool? input = await _showResetDialog(context,
-                              "Apakah anda yakin untuk format berkas ? ",
-                              description:
-                                  "Jika iya, anda akan keluar dari perangkat TOPPI");
+                          bool? input = await _showResetDialog(
+                            context,
+                            "Apakah anda yakin untuk format berkas ? ",
+                            description:
+                                "Jika iya, anda akan keluar dari perangkat TOPPI",
+                          );
                           if (input != null) {
                             if (input) {
-                              BLEResponse resBLE =
-                                  await _command.formatFAT(device, bleProvider);
+                              BLEResponse resBLE = await _command.formatFAT(
+                                device,
+                                bleProvider,
+                              );
 
                               Snackbar.showHelperV2(
                                 ScreenSnackbar.adminsettings,
@@ -1274,9 +1304,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                         child: Container(
                           margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEB5B00),
                             borderRadius: BorderRadius.circular(10),
@@ -1290,9 +1325,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 Icons.drive_file_move_rtl_outlined,
                                 color: Colors.white,
                               ),
-                              const SizedBox(
-                                width: 5,
-                              ),
+                              const SizedBox(width: 5),
                               Text(
                                 "Format Berkas",
                                 style: GoogleFonts.readexPro(
@@ -1320,8 +1353,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           );
                           if (input != null) {
                             if (input) {
-                              BLEResponse resBLE =
-                                  await _command.resetConfig(bleProvider);
+                              BLEResponse resBLE = await _command.resetConfig(
+                                bleProvider,
+                              );
                               if (!resBLE.status) {
                                 Snackbar.showHelperV2(
                                   ScreenSnackbar.adminsettings,
@@ -1329,8 +1363,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 );
                                 return;
                               }
-                              resBLE =
-                                  await _command.formatFAT(device, bleProvider);
+                              resBLE = await _command.formatFAT(
+                                device,
+                                bleProvider,
+                              );
                               if (!resBLE.status) {
                                 Snackbar.showHelperV2(
                                   ScreenSnackbar.adminsettings,
@@ -1349,9 +1385,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         },
                         child: Container(
                           margin: const EdgeInsets.only(
-                              left: 10, right: 10, top: 5),
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE52020),
                             borderRadius: BorderRadius.circular(10),
@@ -1365,9 +1406,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                 Icons.factory_outlined,
                                 color: Colors.white,
                               ),
-                              const SizedBox(
-                                width: 5,
-                              ),
+                              const SizedBox(width: 5),
                               Text(
                                 "Kembali ke Pengaturan Pabrik",
                                 style: GoogleFonts.readexPro(
@@ -1382,12 +1421,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -1423,10 +1460,7 @@ class SettingsContainer extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: borderColor,
-            width: 1,
-          ),
+          border: Border.all(color: borderColor, width: 1),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -1445,9 +1479,7 @@ class SettingsContainer extends StatelessWidget {
                         child: icon,
                       ),
                     ),
-                    const SizedBox(
-                      width: 10,
-                    ),
+                    const SizedBox(width: 10),
                     Expanded(
                       flex: 8,
                       child: Column(
@@ -1476,22 +1508,18 @@ class SettingsContainer extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(
-                width: 10,
-              ),
+              const SizedBox(width: 10),
               Expanded(
                 flex: 3,
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     data,
-                    style: GoogleFonts.readexPro(
-                      fontSize: 14,
-                    ),
+                    style: GoogleFonts.readexPro(fontSize: 14),
                     textAlign: TextAlign.right,
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),

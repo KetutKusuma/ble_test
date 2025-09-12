@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import device_info_plus
-import flutter_blue_plus
+import flutter_blue_plus_darwin
 import flutter_secure_storage_macos
 import package_info_plus
 import path_provider_foundation

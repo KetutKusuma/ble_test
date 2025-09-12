@@ -1,6 +1,8 @@
-import 'dart:developer';
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:developer';
+
+import 'dart:typed_data';
+
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/crypto.dart';
 import 'package:ble_test/utils/crc32.dart';
@@ -50,12 +52,19 @@ class MessageV2 {
   }
 
   void createBegin(
-      int uniqueID, int requestResponse, int command, List<int> buffer) {
+    int uniqueID,
+    int requestResponse,
+    int command,
+    List<int> buffer,
+  ) {
     buffer.clear();
     buffer.addAll(List.filled(9, 0));
 
     buffer.setRange(
-        0, 4, intToUint8List(DateTime.now().millisecondsSinceEpoch ~/ 1000));
+      0,
+      4,
+      intToUint8List(DateTime.now().millisecondsSinceEpoch ~/ 1000),
+    );
     buffer.setRange(4, 6, intToUint8List(uniqueID));
     buffer[6] = requestResponse;
     buffer[7] = command;
@@ -122,7 +131,11 @@ class MessageV2 {
   }
 
   List<int> createEnd(
-      int status, List<int> buffer, List<int> key, List<int> iv) {
+    int status,
+    List<int> buffer,
+    List<int> key,
+    List<int> iv,
+  ) {
     int startIndex = buffer.length;
     int l = 1 + 4;
     buffer.addAll(List.filled(l, 0));
@@ -140,10 +153,12 @@ class MessageV2 {
   }
 
   List<int> aesEncrypt(List<int> data, List<int> key, List<int> iv) {
-    final encrypter =
-        Encrypter(AES(Key(Uint8List.fromList(key)), mode: AESMode.cbc));
-    List<int> result =
-        encrypter.encryptBytes(data, iv: IV(Uint8List.fromList(iv))).bytes;
+    final encrypter = Encrypter(
+      AES(Key(Uint8List.fromList(key)), mode: AESMode.cbc),
+    );
+    List<int> result = encrypter
+        .encryptBytes(data, iv: IV(Uint8List.fromList(iv)))
+        .bytes;
     print("encrypt result : $result");
     return result;
   }
@@ -151,12 +166,13 @@ class MessageV2 {
   Header getHeader(List<int> buffer) {
     if (buffer.length < 9) {
       return Header(
-          dateTime: 0,
-          uniqueID: 0,
-          requestResponse: 0,
-          command: 0,
-          parameterCount: 0,
-          status: false);
+        dateTime: 0,
+        uniqueID: 0,
+        requestResponse: 0,
+        command: 0,
+        parameterCount: 0,
+        status: false,
+      );
     }
 
     return Header(
@@ -187,7 +203,11 @@ class MessageV2 {
   }
 
   Future<bool> parse(
-      List<int> data, List<int> key, List<int> iv, List<int> buffer) async {
+    List<int> data,
+    List<int> key,
+    List<int> iv,
+    List<int> buffer,
+  ) async {
     try {
       // log("datanya yg mau di parse : $data");
       buffer.clear();

@@ -21,7 +21,8 @@ class FunctionDeviceConfiguration {
   final Command _command = Command();
   final CommandSet _commandSet = CommandSet();
   Future<DeviceConfiguration?> getDeviceConfiguration(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       AdministratorModelYaml administrator = AdministratorModelYaml(
         setRole: "regular",
@@ -37,15 +38,17 @@ class FunctionDeviceConfiguration {
       BLEResponse<int> bufferRole = await _commandEachGet.getRole(bleProvider);
       administrator.setRoleFromUint8(bufferRole.data ?? 0);
 
-      BLEResponse<bool> bufferEnable =
-          await _commandEachGet.getEnable(bleProvider);
+      BLEResponse<bool> bufferEnable = await _commandEachGet.getEnable(
+        bleProvider,
+      );
       administrator.setEnable = bufferEnable.data ?? false;
 
       administrator.setDateTime = true;
 
       /// FOR GATEWAY
-      BLEResponse<GatewayModel> gatewayModel =
-          await _command.getGateway(bleProvider);
+      BLEResponse<GatewayModel> gatewayModel = await _command.getGateway(
+        bleProvider,
+      );
       if (gatewayModel.data == null) {
         log("Error gatewayModel is null : $gatewayModel");
         throw "Error gatewayModel is null";
@@ -55,8 +58,9 @@ class FunctionDeviceConfiguration {
       gatewayModel.data?.toDeviceConfiguration(administrator.gateway!);
 
       /// FOR METADATA
-      BLEResponse<MetaDataModel> metaDataModel =
-          await _command.getMetaData(bleProvider);
+      BLEResponse<MetaDataModel> metaDataModel = await _command.getMetaData(
+        bleProvider,
+      );
 
       if (metaDataModel.data == null) {
         log("Error metaDataModel is null : $metaDataModel");
@@ -67,8 +71,9 @@ class FunctionDeviceConfiguration {
 
       // get time utc
       BLEResponse<int> timeUTC = await _commandEachGet.getTimeUTC(bleProvider);
-      administrator.metaData!.timeUTC = MetaDataModelYaml()
-          .setTimeUTCFromUint8(timeUTC.data ?? 0); // set time utc();
+      administrator.metaData!.timeUTC = MetaDataModelYaml().setTimeUTCFromUint8(
+        timeUTC.data ?? 0,
+      ); // set time utc();
       // FOR BATTERY
       BLEResponse<BatteryCoefficientModel> batteryCoefficientModel =
           await _commandEachGet.getBatteryVoltageCoefficient(bleProvider);
@@ -78,12 +83,13 @@ class FunctionDeviceConfiguration {
         throw "Error batteryCoefficientModel is null";
       }
       // memasukan battery data ke administrator
-      batteryCoefficientModel.data
-          ?.toDeviceConfiguration(administrator.batteryVoltageCoefficient!);
+      batteryCoefficientModel.data?.toDeviceConfiguration(
+        administrator.batteryVoltageCoefficient!,
+      );
 
       // FOR CAMERA
-      BLEResponse<CameraModel> cameraModel =
-          await _commandEachGet.getCameraSetting(bleProvider);
+      BLEResponse<CameraModel> cameraModel = await _commandEachGet
+          .getCameraSetting(bleProvider);
 
       if (cameraModel.data == null) {
         log("Error cameraModel is null : $cameraModel");
@@ -93,8 +99,8 @@ class FunctionDeviceConfiguration {
       cameraModel.data?.toDeviceConfiguration(administrator.cameraSetting!);
 
       // FOR PRINT TO SERIAL MONITOR
-      BLEResponse<bool> printToSerialMonitor =
-          await _commandEachGet.getPrintToSerial(bleProvider);
+      BLEResponse<bool> printToSerialMonitor = await _commandEachGet
+          .getPrintToSerial(bleProvider);
 
       if (printToSerialMonitor.data == null) {
         log("Error printToSerialMonitor is null : $printToSerialMonitor");
@@ -103,8 +109,8 @@ class FunctionDeviceConfiguration {
       administrator.printToSerialMonitor = printToSerialMonitor.data ?? false;
 
       // !! CAPTURE MODEL
-      BLEResponse<CaptureModel> captureModel =
-          await _command.getCaptureSchedule(bleProvider);
+      BLEResponse<CaptureModel> captureModel = await _command
+          .getCaptureSchedule(bleProvider);
 
       if (captureModel.data == null) {
         log("Error captureModel is null : $captureModel");
@@ -116,8 +122,8 @@ class FunctionDeviceConfiguration {
       captureModel.data?.toDeviceConfiguration(captureScheduleModelYaml);
 
       // !! TRANSMIT MODEL
-      BLEResponse<List<TransmitModel>> transmitModel =
-          await _command.getTransmitSchedule(bleProvider);
+      BLEResponse<List<TransmitModel>> transmitModel = await _command
+          .getTransmitSchedule(bleProvider);
 
       if (transmitModel.data == null) {
         log("Error transmitModel is null : $transmitModel");
@@ -127,11 +133,13 @@ class FunctionDeviceConfiguration {
       TransmitScheduleModelYaml transmitScheduleModelYaml =
           TransmitScheduleModelYaml();
       transmitModel.data?[0].toDeviceConfiguration(
-          transmitScheduleModelYaml, transmitModel.data ?? []);
+        transmitScheduleModelYaml,
+        transmitModel.data ?? [],
+      );
 
       // !! RECEIVE MODEL
-      BLEResponse<List<ReceiveModel>> receiveModel =
-          await _command.getReceiveSchedule(bleProvider);
+      BLEResponse<List<ReceiveModel>> receiveModel = await _command
+          .getReceiveSchedule(bleProvider);
 
       if (receiveModel.data == null) {
         log("Error receiveModel is null : $receiveModel");
@@ -146,8 +154,8 @@ class FunctionDeviceConfiguration {
       );
 
       // !! UPLOAD MODEL
-      BLEResponse<List<UploadModel>> uploadModel =
-          await _command.getUploadSchedule(bleProvider);
+      BLEResponse<List<UploadModel>> uploadModel = await _command
+          .getUploadSchedule(bleProvider);
 
       if (uploadModel.data == null) {
         log("Error uploadModel is null : $uploadModel");
@@ -177,12 +185,15 @@ class FunctionDeviceConfiguration {
   }
 
   Future<String> setDeviceConfiguration(
-      BLEProvider bleProvider, DeviceConfiguration dc) async {
+    BLEProvider bleProvider,
+    DeviceConfiguration dc,
+  ) async {
     try {
       try {
         BLEResponse bleResSetCapture = await _commandSet.setCaptureSchedule(
-            bleProvider,
-            CaptureModel.fromDeviceConfiguration(dc.captureSchedule!));
+          bleProvider,
+          CaptureModel.fromDeviceConfiguration(dc.captureSchedule!),
+        );
         if (!bleResSetCapture.status) {
           return "Error setDeviceConfiguration > capture : ${bleResSetCapture.message}";
         }
@@ -192,7 +203,9 @@ class FunctionDeviceConfiguration {
 
       try {
         BLEResponse bleResSetRole = await _commandSet.setRole(
-            bleProvider, dc.administrator!.getRoleToUint8());
+          bleProvider,
+          dc.administrator!.getRoleToUint8(),
+        );
         if (!bleResSetRole.status) {
           return "Error setDeviceConfiguration > role : ${bleResSetRole.message}";
         }
@@ -202,7 +215,9 @@ class FunctionDeviceConfiguration {
 
       try {
         BLEResponse bleResSetEnable = await _commandSet.setEnable(
-            bleProvider, dc.administrator!.setEnable);
+          bleProvider,
+          dc.administrator!.setEnable,
+        );
         if (!bleResSetEnable.status) {
           return "Error setDeviceConfiguration > enable : ${bleResSetEnable.message}";
         }
@@ -212,8 +227,10 @@ class FunctionDeviceConfiguration {
 
       try {
         if (dc.administrator!.setDateTime) {
-          BLEResponse bleResponseSetDateTime =
-              await _commandSet.setDateTime(bleProvider, RTC.getSeconds() + 1);
+          BLEResponse bleResponseSetDateTime = await _commandSet.setDateTime(
+            bleProvider,
+            RTC.getSeconds() + 1,
+          );
 
           if (!bleResponseSetDateTime.status) {
             return "Error setDeviceConfiguration > dateTime : ${bleResponseSetDateTime.message}";
@@ -248,12 +265,13 @@ class FunctionDeviceConfiguration {
       }
 
       try {
-        BLEResponse bleResponseBatteryVoltageCoefficient =
-            await _commandSet.setBatteryVoltageCoef(
-          bleProvider,
-          BatteryCoefficientModel.fromDeviceConfiguration(
-              dc.administrator!.batteryVoltageCoefficient!),
-        );
+        BLEResponse bleResponseBatteryVoltageCoefficient = await _commandSet
+            .setBatteryVoltageCoef(
+              bleProvider,
+              BatteryCoefficientModel.fromDeviceConfiguration(
+                dc.administrator!.batteryVoltageCoefficient!,
+              ),
+            );
         if (!bleResponseBatteryVoltageCoefficient.status) {
           return "Error setDeviceConfiguration > batteryVoltageCoefficient : ${bleResponseBatteryVoltageCoefficient.message}";
         }
@@ -263,9 +281,12 @@ class FunctionDeviceConfiguration {
 
       try {
         CameraModel cameraModel = CameraModel.fromDeviceConfiguration(
-            dc.administrator!.cameraSetting!);
-        BLEResponse bleResponseSetCamera =
-            await _commandSet.setCamera(bleProvider, cameraModel);
+          dc.administrator!.cameraSetting!,
+        );
+        BLEResponse bleResponseSetCamera = await _commandSet.setCamera(
+          bleProvider,
+          cameraModel,
+        );
         if (!bleResponseSetCamera.status) {
           return "Error setDeviceConfiguration > camera : ${bleResponseSetCamera.message}";
         }
@@ -274,9 +295,11 @@ class FunctionDeviceConfiguration {
       }
 
       try {
-        BLEResponse bleResponseSetPrintToSerialMonitor =
-            await _commandSet.setPrintSerialMonitor(
-                bleProvider, dc.administrator!.printToSerialMonitor);
+        BLEResponse bleResponseSetPrintToSerialMonitor = await _commandSet
+            .setPrintSerialMonitor(
+              bleProvider,
+              dc.administrator!.printToSerialMonitor,
+            );
         if (!bleResponseSetPrintToSerialMonitor.status) {
           return "Error setDeviceConfiguration > printToSerialMonitor : ${bleResponseSetPrintToSerialMonitor.message}";
         }
@@ -286,8 +309,9 @@ class FunctionDeviceConfiguration {
 
       try {
         BLEResponse bleTransmitSchedule = await _commandSet.setTransmitSchedule(
-            bleProvider,
-            TransmitModel.fromDeviceConfiguration(dc.transmitSchedule!));
+          bleProvider,
+          TransmitModel.fromDeviceConfiguration(dc.transmitSchedule!),
+        );
         if (!bleTransmitSchedule.status) {
           return "Error setDeviceConfiguration > transmitSchedule : ${bleTransmitSchedule.message}";
         }
@@ -297,8 +321,9 @@ class FunctionDeviceConfiguration {
 
       try {
         BLEResponse bleReceiveSchedule = await _commandSet.setReceiveSchedule(
-            bleProvider,
-            ReceiveModel.fromDeviceConfiguration(dc.receiveSchedule!));
+          bleProvider,
+          ReceiveModel.fromDeviceConfiguration(dc.receiveSchedule!),
+        );
         if (!bleReceiveSchedule.status) {
           return "Error setDeviceConfiguration > receiveSchedule : ${bleReceiveSchedule.message}";
         }
@@ -308,8 +333,9 @@ class FunctionDeviceConfiguration {
 
       try {
         BLEResponse bleUploadSchedule = await _commandSet.setUploadSchedule(
-            bleProvider,
-            UploadModel.fromDeviceConfiguration(dc.uploadSchedule!));
+          bleProvider,
+          UploadModel.fromDeviceConfiguration(dc.uploadSchedule!),
+        );
         if (!bleUploadSchedule.status) {
           return "Error setDeviceConfiguration > uploadSchedule : ${bleUploadSchedule.message}";
         }

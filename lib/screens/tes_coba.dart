@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:ble_test/ble-v2/command/command.dart';
@@ -38,11 +37,12 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-              widget.device.disconnect();
-            }),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+            widget.device.disconnect();
+          },
+        ),
         title: const Text("Listen to BLE"),
       ),
       body: Center(
@@ -50,15 +50,22 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
           children: [
             ElevatedButton(
               onPressed: () async {
-                BLEResponse resHandshake =
-                    await Command().handshake(widget.device, bleProvider);
+                BLEResponse resHandshake = await Command().handshake(
+                  widget.device,
+                  bleProvider,
+                );
                 log("resHandshake : $resHandshake");
                 if (resHandshake.status == false) {
                   return;
                 }
                 List<int> challenge = resHandshake.data!;
                 BLEResponse resLogin = await Command().login(
-                    widget.device, bleProvider, "admin", "admin", challenge);
+                  widget.device,
+                  bleProvider,
+                  "admin",
+                  "admin",
+                  challenge,
+                );
                 log("resLogin : $resLogin");
               },
               child: Text("Handshake"),
@@ -96,10 +103,15 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
                   197,
                   159,
                   186,
-                  50
+                  50,
                 ];
                 BLEResponse resLogin = await Command().login(
-                    widget.device, bleProvider, "admin", "admin", challenge);
+                  widget.device,
+                  bleProvider,
+                  "admin",
+                  "admin",
+                  challenge,
+                );
                 log("resLogin : $resLogin");
               },
               child: Text("Login"),
@@ -113,8 +125,9 @@ class _TesCaraBaruState extends State<TesCaraBaru> {
                 if (snapshot.hasData) {
                   String result = String.fromCharCodes(snapshot.data!);
                   return Text(
-                      "Received: $result, Length: ${snapshot.data!.length}, ",
-                      style: const TextStyle(fontSize: 20));
+                    "Received: $result, Length: ${snapshot.data!.length}, ",
+                    style: const TextStyle(fontSize: 20),
+                  );
                 }
                 return const Text("No Data", style: TextStyle(fontSize: 20));
               },

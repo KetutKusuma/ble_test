@@ -10,13 +10,19 @@ class ReceiveSettingsConvert {
 
     bool statusBool = bytes[0] == 1;
     bool receiveEnableBool = bytes[1] == 1;
-    int receiveScheduleInt =
-        BytesConvert.bytesToInt16(bytes.sublist(2, 4), isBigEndian: false);
-    int receiveIntervalInt =
-        BytesConvert.bytesToInt16(bytes.sublist(4, 6), isBigEndian: false);
+    int receiveScheduleInt = BytesConvert.bytesToInt16(
+      bytes.sublist(2, 4),
+      isBigEndian: false,
+    );
+    int receiveIntervalInt = BytesConvert.bytesToInt16(
+      bytes.sublist(4, 6),
+      isBigEndian: false,
+    );
     int receiveCountInt = BytesConvert.bytesToInt8([bytes[6]]);
-    int receiveTimeAdjust =
-        BytesConvert.bytesToInt16(bytes.sublist(7, 9), isBigEndian: false);
+    int receiveTimeAdjust = BytesConvert.bytesToInt16(
+      bytes.sublist(7, 9),
+      isBigEndian: false,
+    );
 
     log("status : $statusBool");
     log("receive enable : $receiveEnableBool");
@@ -31,7 +37,7 @@ class ReceiveSettingsConvert {
       receiveScheduleInt,
       receiveIntervalInt,
       receiveCountInt,
-      receiveTimeAdjust
+      receiveTimeAdjust,
     ];
   }
 }

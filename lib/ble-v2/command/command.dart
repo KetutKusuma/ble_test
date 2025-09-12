@@ -140,29 +140,26 @@ class Command {
   static final keyGlobal = InitConfig.data().KEY;
 
   Future<BLEResponse<List<int>>> handshake(
-      BluetoothDevice device, BLEProvider bleProvider) async {
+    BluetoothDevice device,
+    BLEProvider bleProvider,
+  ) async {
     try {
       // create message
       int command = CommandCode.handshake;
       int uniqueID = UniqueIDManager().getUniqueID();
       List<int> buffer = [];
       MessageV2().createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> idata = MessageV2().createEnd(
-        0,
-        buffer,
-        keyGlobal,
-        ivGlobal,
-      );
+      List<int> idata = MessageV2().createEnd(0, buffer, keyGlobal, ivGlobal);
 
       // init for request response struct
       // ini harusnya ada buat response struktur kyk apa
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
-      // send massage
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
       );
+      // send massage
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
 
       List<List<int>> params = [];
       for (int i = 0; i < (responseWrite.header.parameterCount ?? 0); i++) {
@@ -170,7 +167,8 @@ class Command {
         if (param == null) {
           log("Gagal mengambil parameter - error dari BLE");
           return BLEResponse.error(
-              "Gagal mengambil parameter - error dari BLE");
+            "Gagal mengambil parameter - error dari BLE",
+          );
         }
         params.add(param);
       }
@@ -186,8 +184,13 @@ class Command {
     }
   }
 
-  Future<BLEResponse> login(BluetoothDevice device, BLEProvider bleProvider,
-      String username, String password, List<int> challange) async {
+  Future<BLEResponse> login(
+    BluetoothDevice device,
+    BLEProvider bleProvider,
+    String username,
+    String password,
+    List<int> challange,
+  ) async {
     try {
       int command = CommandCode.login;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -217,22 +220,17 @@ class Command {
         return BLEResponse.error("Error when add array uint8");
       }
 
-      List<int> idata = MessageV2().createEnd(
-        0,
-        buffer,
-        keyGlobal,
-        ivGlobal,
-      );
+      List<int> idata = MessageV2().createEnd(0, buffer, keyGlobal, ivGlobal);
 
       // create struktur header for matching
-      Header headerBLE =
-          Header(uniqueID: uniqueID, command: command, status: false);
+      Header headerBLE = Header(
+        uniqueID: uniqueID,
+        command: command,
+        status: false,
+      );
 
       // response write
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
 
       if (responseWrite.header.status == false) {
         List<List<int>> params = [];
@@ -292,7 +290,9 @@ class Command {
   }
 
   Future<BLEResponse> formatFAT(
-      BluetoothDevice device, BLEProvider bleProvider) async {
+    BluetoothDevice device,
+    BLEProvider bleProvider,
+  ) async {
     try {
       // create message
       int command = CommandCode.formatFat;
@@ -311,10 +311,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses format FAT", data: null);
       } else {
@@ -332,8 +329,12 @@ class Command {
 
       List<int> buffer = [];
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> idata =
-          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> idata = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -341,10 +342,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
 
       if (responseWrite.header.status) {
         return BLEResponse.success("Sukses reset konfigurasi", data: null);
@@ -357,7 +355,9 @@ class Command {
   }
 
   Future<BLEResponse<AdminModels>> getAdminData(
-      BluetoothDevice device, BLEProvider bleProvider) async {
+    BluetoothDevice device,
+    BLEProvider bleProvider,
+  ) async {
     try {
       AdminModels adminModels = AdminModels();
       // create message
@@ -365,17 +365,14 @@ class Command {
       int uniqueID = UniqueIDManager().getUniqueID();
       List<int> buffer = [];
       MessageV2().createBegin(uniqueID, MessageV2.request, command, buffer);
-      messageV2.addArrayOfUint8(
-        [
-          CommandCode.identity,
-          CommandCode.batteryVoltageCoefficient,
-          CommandCode.cameraSetting,
-          CommandCode.role,
-          CommandCode.enable,
-          CommandCode.printToSerialMonitor
-        ],
-        buffer,
-      );
+      messageV2.addArrayOfUint8([
+        CommandCode.identity,
+        CommandCode.batteryVoltageCoefficient,
+        CommandCode.cameraSetting,
+        CommandCode.role,
+        CommandCode.enable,
+        CommandCode.printToSerialMonitor,
+      ], buffer);
       List<int> idata = MessageV2().createEnd(
         sessionID,
         buffer,
@@ -388,10 +385,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       log("response write get admin data : ${responseWrite}");
 
       // turn to a model
@@ -415,10 +409,14 @@ class Command {
 
       startIndex = 3;
       // battery voltage coefficient
-      double batteryVoltageCoefficient1 =
-          ConvertV2().bufferToFloat32(params[startIndex], 0);
-      double batteryVoltageCoefficient2 =
-          ConvertV2().bufferToFloat32(params[startIndex + 1], 0);
+      double batteryVoltageCoefficient1 = ConvertV2().bufferToFloat32(
+        params[startIndex],
+        0,
+      );
+      double batteryVoltageCoefficient2 = ConvertV2().bufferToFloat32(
+        params[startIndex + 1],
+        0,
+      );
 
       // camera setting
       startIndex = 5;
@@ -429,8 +427,10 @@ class Command {
       bool hMirror = ConvertV2().bufferToBool(params[startIndex + 4], 0);
       bool vFlip = ConvertV2().bufferToBool(params[startIndex + 5], 0);
       int jpegQuality = ConvertV2().bufferToUint8(params[startIndex + 6], 0);
-      int adjustImageRotation =
-          ConvertV2().bufferToUint8(params[startIndex + 7], 0);
+      int adjustImageRotation = ConvertV2().bufferToUint8(
+        params[startIndex + 7],
+        0,
+      );
 
       // role
       startIndex = 13;
@@ -442,8 +442,10 @@ class Command {
 
       // print to serial monitor
       startIndex = 15;
-      bool printToSerialMonitor =
-          ConvertV2().bufferToBool(params[startIndex], 0);
+      bool printToSerialMonitor = ConvertV2().bufferToBool(
+        params[startIndex],
+        0,
+      );
 
       adminModels = AdminModels(
         identityModel: IdentityModel(
@@ -486,7 +488,9 @@ class Command {
   }
 
   Future<BLEResponse<DeviceStatusModels>> getDeviceStatus(
-      BluetoothDevice device, BLEProvider bleProvider) async {
+    BluetoothDevice device,
+    BLEProvider bleProvider,
+  ) async {
     try {
       // create message
       int command = CommandCode.get;
@@ -515,10 +519,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -539,18 +540,23 @@ class Command {
       /// firmware
       int startIndex = 0;
       String nameFirmware = ConvertV2().bufferToString(params[startIndex]);
-      String versionFirmware =
-          ConvertV2().bufferToString(params[startIndex + 1]);
+      String versionFirmware = ConvertV2().bufferToString(
+        params[startIndex + 1],
+      );
 
       /// temperature
       startIndex = 2;
       double temperature = ConvertV2().bufferToFloat32(params[startIndex], 0);
 
       /// battery voltage
-      double batteryVoltage1 =
-          ConvertV2().bufferToFloat32(params[startIndex + 1], 0);
-      double batteryVoltage2 =
-          ConvertV2().bufferToFloat32(params[startIndex + 2], 0);
+      double batteryVoltage1 = ConvertV2().bufferToFloat32(
+        params[startIndex + 1],
+        0,
+      );
+      double batteryVoltage2 = ConvertV2().bufferToFloat32(
+        params[startIndex + 2],
+        0,
+      );
 
       /// storage
       startIndex = 5;
@@ -571,9 +577,9 @@ class Command {
       int dateTimeMiliSeconds =
           ConvertV2().bufferToUint32(params[startIndex], 0) + (946684800);
       // log("datetime before : ${}")
-      DateTime dateTimeFromBle =
-          DateTime.fromMillisecondsSinceEpoch(dateTimeMiliSeconds * 1000)
-              .toUtc();
+      DateTime dateTimeFromBle = DateTime.fromMillisecondsSinceEpoch(
+        dateTimeMiliSeconds * 1000,
+      ).toUtc();
 
       // time utc
       startIndex = 15;
@@ -584,12 +590,18 @@ class Command {
       bool format = ConvertV2().bufferToBool(params[startIndex], 0);
       bool capture = ConvertV2().bufferToBool(params[startIndex + 1], 0);
       bool upload = ConvertV2().bufferToBool(params[startIndex + 2], 0);
-      int neodymiumNotRemoveCounter =
-          ConvertV2().bufferToUint8(params[startIndex + 3], 0);
-      int criticalBattery1Counter =
-          ConvertV2().bufferToUint8(params[startIndex + 4], 0);
-      int criticalBattery2Counter =
-          ConvertV2().bufferToUint8(params[startIndex + 5], 0);
+      int neodymiumNotRemoveCounter = ConvertV2().bufferToUint8(
+        params[startIndex + 3],
+        0,
+      );
+      int criticalBattery1Counter = ConvertV2().bufferToUint8(
+        params[startIndex + 4],
+        0,
+      );
+      int criticalBattery2Counter = ConvertV2().bufferToUint8(
+        params[startIndex + 5],
+        0,
+      );
 
       DeviceStatusModels deviceStatusModels = DeviceStatusModels(
         firmwareModel: FirmwareModel(
@@ -638,7 +650,8 @@ class Command {
   }
 
   Future<BLEResponse<CaptureModel>> getCaptureSchedule(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -657,10 +670,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       log("response wriste get capture schedule : ${responseWrite}");
 
       if (!responseWrite.header.status) {
@@ -689,8 +699,10 @@ class Command {
       int spSchedule = ConvertV2().bufferToUint16(params[startIndex + 4], 0);
       int spCount = ConvertV2().bufferToUint8(params[startIndex + 5], 0);
       int spInterval = ConvertV2().bufferToUint16(params[startIndex + 6], 0);
-      int recentCaptureLimit =
-          ConvertV2().bufferToUint16(params[startIndex + 7], 0);
+      int recentCaptureLimit = ConvertV2().bufferToUint16(
+        params[startIndex + 7],
+        0,
+      );
 
       CaptureModel captureModel = CaptureModel(
         schedule: schedule,
@@ -713,7 +725,8 @@ class Command {
   }
 
   Future<BLEResponse<List<ReceiveModel>>> getReceiveSchedule(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -733,10 +746,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       log("response write get receive schedule : $responseWrite");
 
       if (!responseWrite.header.status) {
@@ -757,7 +767,8 @@ class Command {
       // expected params
       if (params.length != 16 * 3) {
         return BLEResponse.error(
-            "Error ambil data jadwal terima, param tidak sesuai");
+          "Error ambil data jadwal terima, param tidak sesuai",
+        );
       }
 
       List<ReceiveModel> listReceive = [];
@@ -765,12 +776,18 @@ class Command {
       int startIndex = 0;
 
       for (var i = 0; i < 16; i++) {
-        bool enable =
-            ConvertV2().bufferToBool(params[(i * 3) + startIndex + 0], 0);
-        int schedule =
-            ConvertV2().bufferToUint16(params[(i * 3) + startIndex + 1], 0);
-        int timeAdjust =
-            ConvertV2().bufferToUint8(params[(i * 3) + startIndex + 2], 0);
+        bool enable = ConvertV2().bufferToBool(
+          params[(i * 3) + startIndex + 0],
+          0,
+        );
+        int schedule = ConvertV2().bufferToUint16(
+          params[(i * 3) + startIndex + 1],
+          0,
+        );
+        int timeAdjust = ConvertV2().bufferToUint8(
+          params[(i * 3) + startIndex + 2],
+          0,
+        );
         ReceiveModel receiveModel = ReceiveModel(
           enable: enable,
           schedule: schedule,
@@ -790,7 +807,8 @@ class Command {
   }
 
   Future<BLEResponse<List<TransmitModel>>> getTransmitSchedule(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -810,10 +828,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -834,17 +849,22 @@ class Command {
       List<TransmitModel> listTransmitModel = [];
       int startIndex = 0;
       for (var i = 0; i < 8; i++) {
-        listTransmitModel.add(TransmitModel(
-          enable: ConvertV2().bufferToBool(params[(i * 3) + startIndex], 0),
-          schedule:
-              ConvertV2().bufferToUint16(params[(i * 3) + startIndex + 1], 0),
-          destinationID: params[(i * 3) + startIndex + 2],
-        ));
+        listTransmitModel.add(
+          TransmitModel(
+            enable: ConvertV2().bufferToBool(params[(i * 3) + startIndex], 0),
+            schedule: ConvertV2().bufferToUint16(
+              params[(i * 3) + startIndex + 1],
+              0,
+            ),
+            destinationID: params[(i * 3) + startIndex + 2],
+          ),
+        );
       }
 
       if (listTransmitModel.length != 8) {
         return BLEResponse.error(
-            "Gagal panjang jadwal pengiriman tidak sesuai");
+          "Gagal panjang jadwal pengiriman tidak sesuai",
+        );
       }
 
       return BLEResponse.success(
@@ -857,7 +877,8 @@ class Command {
   }
 
   Future<BLEResponse<List<UploadModel>>> getUploadSchedule(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -877,10 +898,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -905,11 +923,15 @@ class Command {
       List<UploadModel> listUploadModel = [];
       int startIndex = 0;
       for (var i = 0; i < 8; i++) {
-        listUploadModel.add(UploadModel(
-          enable: ConvertV2().bufferToBool(params[(i * 2) + startIndex], 0),
-          schedule:
-              ConvertV2().bufferToUint16(params[(i * 2) + startIndex + 1], 0),
-        ));
+        listUploadModel.add(
+          UploadModel(
+            enable: ConvertV2().bufferToBool(params[(i * 2) + startIndex], 0),
+            schedule: ConvertV2().bufferToUint16(
+              params[(i * 2) + startIndex + 1],
+              0,
+            ),
+          ),
+        );
       }
 
       return BLEResponse.success(
@@ -941,10 +963,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -986,34 +1005,51 @@ class Command {
       if (paramLen == 7) {
         gModel.server = ConvertV2().bufferToString(params[startIndex]);
         gModel.port = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
-        gModel.uploadUsing =
-            ConvertV2().bufferToUint8(params[startIndex + 2], 0);
-        gModel.uploadInitialDelay =
-            ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+        gModel.uploadUsing = ConvertV2().bufferToUint8(
+          params[startIndex + 2],
+          0,
+        );
+        gModel.uploadInitialDelay = ConvertV2().bufferToUint8(
+          params[startIndex + 3],
+          0,
+        );
         gModel.wifi.ssid = ConvertV2().bufferToString(params[startIndex + 4]);
-        gModel.wifi.password =
-            ConvertV2().bufferToString(params[startIndex + 5]);
+        gModel.wifi.password = ConvertV2().bufferToString(
+          params[startIndex + 5],
+        );
         gModel.modemAPN = ConvertV2().bufferToString(params[startIndex + 6]);
       } else if (paramLen == 12) {
         gModel.server = ConvertV2().bufferToString(params[startIndex]);
         gModel.port = ConvertV2().bufferToUint16(params[startIndex + 1], 0);
-        gModel.uploadUsing =
-            ConvertV2().bufferToUint8(params[startIndex + 2], 0);
-        gModel.uploadInitialDelay =
-            ConvertV2().bufferToUint8(params[startIndex + 3], 0);
+        gModel.uploadUsing = ConvertV2().bufferToUint8(
+          params[startIndex + 2],
+          0,
+        );
+        gModel.uploadInitialDelay = ConvertV2().bufferToUint8(
+          params[startIndex + 3],
+          0,
+        );
         gModel.wifi.ssid = ConvertV2().bufferToString(params[startIndex + 4]);
-        gModel.wifi.password =
-            ConvertV2().bufferToString(params[startIndex + 5]);
-        gModel.wifi.secure =
-            ConvertV2().bufferToBool(params[startIndex + 6], 0);
-        gModel.wifi.mikrotikIP =
-            ConvertV2().bufferToString(params[startIndex + 7]);
-        gModel.wifi.mikrotikLoginSecure =
-            ConvertV2().bufferToBool(params[startIndex + 8], 0);
-        gModel.wifi.mikrotikUsername =
-            ConvertV2().bufferToString(params[startIndex + 9]);
-        gModel.wifi.mikrotikPassword =
-            ConvertV2().bufferToString(params[startIndex + 10]);
+        gModel.wifi.password = ConvertV2().bufferToString(
+          params[startIndex + 5],
+        );
+        gModel.wifi.secure = ConvertV2().bufferToBool(
+          params[startIndex + 6],
+          0,
+        );
+        gModel.wifi.mikrotikIP = ConvertV2().bufferToString(
+          params[startIndex + 7],
+        );
+        gModel.wifi.mikrotikLoginSecure = ConvertV2().bufferToBool(
+          params[startIndex + 8],
+          0,
+        );
+        gModel.wifi.mikrotikUsername = ConvertV2().bufferToString(
+          params[startIndex + 9],
+        );
+        gModel.wifi.mikrotikPassword = ConvertV2().bufferToString(
+          params[startIndex + 10],
+        );
         gModel.modemAPN = ConvertV2().bufferToString(params[startIndex + 11]);
       } else {
         return BLEResponse.error(
@@ -1023,17 +1059,15 @@ class Command {
       }
       gModel.paramCount = paramLen;
 
-      return BLEResponse.success(
-        "Sukses dapat gateway",
-        data: gModel,
-      );
+      return BLEResponse.success("Sukses dapat gateway", data: gModel);
     } catch (e) {
       return BLEResponse.error("Error dapat gateway : $e");
     }
   }
 
   Future<BLEResponse<MetaDataModel>> getMetaData(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.get;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -1053,10 +1087,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -1108,10 +1139,7 @@ class Command {
         );
       }
 
-      return BLEResponse.success(
-        "Sukses dapat meta data",
-        data: m,
-      );
+      return BLEResponse.success("Sukses dapat meta data", data: m);
     } catch (e) {
       return BLEResponse.error("Error dapat meta data : $e");
     }
@@ -1137,10 +1165,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
       }
@@ -1202,10 +1227,7 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        idata,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(idata, headerBLE);
       log("response write get storage : $responseWrite");
       if (!responseWrite.header.status) {
         return BLEResponse.errorFromBLE(responseWrite);
@@ -1250,8 +1272,12 @@ class Command {
       List<int> buffer = [];
 
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> data =
-          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -1259,19 +1285,12 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
       log("response write force task capture : $responseWrite");
       if (!responseWrite.header.status) {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
-      return BLEResponse.success(
-        "Sukses force task capture",
-      );
+      return BLEResponse.success("Sukses force task capture");
     } catch (e) {
       return BLEResponse.error("Error dapat force task capture : $e");
     }
@@ -1285,8 +1304,12 @@ class Command {
       List<int> buffer = [];
 
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> data =
-          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -1294,26 +1317,20 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
       log("response write force task upload : $responseWrite");
       if (!responseWrite.header.status) {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       }
-      return BLEResponse.success(
-        "Sukses force task upload",
-      );
+      return BLEResponse.success("Sukses force task upload");
     } catch (e) {
       return BLEResponse.error("Error dapat force task upload : $e");
     }
   }
 
   Future<BLEResponse> clearNeodumiumNotRemovedCounter(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.clearCriticalBatteryCounter;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -1321,8 +1338,12 @@ class Command {
       List<int> buffer = [];
 
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> data =
-          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -1330,28 +1351,25 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
+      log(
+        "response write clear neodumium not removed counter : $responseWrite",
       );
-      log("response write clear neodumium not removed counter : $responseWrite");
       if (!responseWrite.header.status) {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       } else {
-        return BLEResponse.success(
-          "Sukses membersihkan hitungan neodium",
-        );
+        return BLEResponse.success("Sukses membersihkan hitungan neodium");
       }
     } catch (e) {
       return BLEResponse.error(
-          "Error dapat membersihkan hitungan neodium tidak diangkat");
+        "Error dapat membersihkan hitungan neodium tidak diangkat",
+      );
     }
   }
 
   Future<BLEResponse> clearCriticalBatteryCounter(
-      BLEProvider bleProvider) async {
+    BLEProvider bleProvider,
+  ) async {
     try {
       int command = CommandCode.clearCriticalBatteryCounter;
       int uniqueID = UniqueIDManager().getUniqueID();
@@ -1359,8 +1377,12 @@ class Command {
       List<int> buffer = [];
 
       messageV2.createBegin(uniqueID, MessageV2.request, command, buffer);
-      List<int> data =
-          messageV2.createEnd(sessionID, buffer, keyGlobal, ivGlobal);
+      List<int> data = messageV2.createEnd(
+        sessionID,
+        buffer,
+        keyGlobal,
+        ivGlobal,
+      );
 
       Header headerBLE = Header(
         uniqueID: uniqueID,
@@ -1368,15 +1390,10 @@ class Command {
         status: false,
       );
 
-      Response responseWrite = await bleProvider.writeData(
-        data,
-        headerBLE,
-      );
+      Response responseWrite = await bleProvider.writeData(data, headerBLE);
       log("response write clear critical battery counter : $responseWrite");
       if (!responseWrite.header.status) {
-        return BLEResponse.errorFromBLE(
-          responseWrite,
-        );
+        return BLEResponse.errorFromBLE(responseWrite);
       } else {
         return BLEResponse.success(
           "Sukses membersihkan hitungan baterai kritis",
@@ -1384,7 +1401,8 @@ class Command {
       }
     } catch (e) {
       return BLEResponse.error(
-          "Error dapat membersihkan hitungan baterai kritis : $e");
+        "Error dapat membersihkan hitungan baterai kritis : $e",
+      );
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'dart:typed_data';
 import 'package:ble_test/ble-v2/utils/convert.dart';
 import 'package:ble_test/ble-v2/utils/crypto.dart';
@@ -54,9 +55,9 @@ class ImageMetaDataModel {
   }
 
   String getDateTimeTakenString() {
-    DateTime dateTime =
-        DateTime.fromMillisecondsSinceEpoch((dateTimeTaken! + 946684800) * 1000)
-            .toUtc();
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+      (dateTimeTaken! + 946684800) * 1000,
+    ).toUtc();
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 
@@ -108,9 +109,7 @@ class ImageMetaDataModel {
 }
 
 class ImageMetaDataModelParse {
-  static Map<String, dynamic> parse(
-    List<int> data,
-  ) {
+  static Map<String, dynamic> parse(List<int> data) {
     List<int> keyA = [
       149,
       166,
@@ -143,7 +142,7 @@ class ImageMetaDataModelParse {
       100,
       94,
       41,
-      21
+      21,
     ];
     List<int> ivA = [
       248,
@@ -161,15 +160,13 @@ class ImageMetaDataModelParse {
       238,
       178,
       4,
-      14
+      14,
     ];
     try {
       List<int> temp2 = CryptoUtilsV2.aesDecrypt(
         Uint8List.fromList(data),
         Uint8List.fromList(keyA),
-        Uint8List.fromList(
-          ivA,
-        ),
+        Uint8List.fromList(ivA),
       );
       Uint8List temp = Uint8List.fromList(temp2);
       log("##long temp : ${temp.length}");
@@ -182,8 +179,10 @@ class ImageMetaDataModelParse {
       int startIndex = data.length;
       if (temp[tempLen - 1] == MARKER) {
         version = temp[tempLen - 2];
-        int metaDataLen =
-            temp.buffer.asByteData().getUint16(tempLen - 4, Endian.little);
+        int metaDataLen = temp.buffer.asByteData().getUint16(
+          tempLen - 4,
+          Endian.little,
+        );
 
         if (tempLen < metaDataLen + 4) {
           throw Exception("Invalid data length");
@@ -198,10 +197,7 @@ class ImageMetaDataModelParse {
       log("##version : $version");
 
       if (version == 1) {
-        return {
-          'img': temp,
-          'metaData': null,
-        };
+        return {'img': temp, 'metaData': null};
       } else if (version == 2) {
         // [0:1]   marker begin
         // [1:5]   id
@@ -223,26 +219,37 @@ class ImageMetaDataModelParse {
 
         List<int> id = metaData.sublist(0, 5);
         index += 5;
-        int dateTimeTaken =
-            metaData.buffer.asByteData().getUint32(index, Endian.little);
+        int dateTimeTaken = metaData.buffer.asByteData().getUint32(
+          index,
+          Endian.little,
+        );
         index += 4;
-        double temperature =
-            metaData.buffer.asByteData().getFloat32(index, Endian.little);
+        double temperature = metaData.buffer.asByteData().getFloat32(
+          index,
+          Endian.little,
+        );
         index += 4;
-        double voltageBattery1 =
-            metaData.buffer.asByteData().getFloat32(index, Endian.little);
+        double voltageBattery1 = metaData.buffer.asByteData().getFloat32(
+          index,
+          Endian.little,
+        );
         index += 4;
-        double voltageBattery2 =
-            metaData.buffer.asByteData().getFloat32(index, Endian.little);
+        double voltageBattery2 = metaData.buffer.asByteData().getFloat32(
+          index,
+          Endian.little,
+        );
         index += 4;
-        String meterModel =
-            utf8.decode(metaData.sublist(index, index + 16)).trim();
+        String meterModel = utf8
+            .decode(metaData.sublist(index, index + 16))
+            .trim();
         index += 16;
-        String meterSN =
-            utf8.decode(metaData.sublist(index, index + 16)).trim();
+        String meterSN = utf8
+            .decode(metaData.sublist(index, index + 16))
+            .trim();
         index += 16;
-        String meterSeal =
-            utf8.decode(metaData.sublist(index, index + 16)).trim();
+        String meterSeal = utf8
+            .decode(metaData.sublist(index, index + 16))
+            .trim();
         index += 16;
         Uint8List lala = metaData.sublist(index, index + 32);
 
@@ -262,10 +269,7 @@ class ImageMetaDataModelParse {
           custom: custom,
           timeUTC: timeUTC,
         );
-        return {
-          'img': img,
-          'metaData': meta,
-        };
+        return {'img': img, 'metaData': meta};
       } else if (version == 3) {
         // tambahkan meta data:
         // [0:1]   marker begin
@@ -331,10 +335,7 @@ class ImageMetaDataModelParse {
           meterSeal: meterSeal,
           custom: custom,
         );
-        return {
-          'img': img,
-          'metaData': meta,
-        };
+        return {'img': img, 'metaData': meta};
       } else if (version == 4) {
         // tambahkan meta data:
         // [0:1]    marker begin
@@ -416,22 +417,12 @@ class ImageMetaDataModelParse {
           numberDecimal: numberDecimal,
           custom: custom,
         );
-        return {
-          'img': img,
-          'metaData': meta,
-        };
+        return {'img': img, 'metaData': meta};
       }
-      return {
-        'img': temp,
-        'metaData': null,
-      };
+      return {'img': temp, 'metaData': null};
     } catch (e) {
       log("Error dapat : $e");
-      return {
-        'error': e,
-        'img': null,
-        'metaData': null,
-      };
+      return {'error': e, 'img': null, 'metaData': null};
     }
   }
 }

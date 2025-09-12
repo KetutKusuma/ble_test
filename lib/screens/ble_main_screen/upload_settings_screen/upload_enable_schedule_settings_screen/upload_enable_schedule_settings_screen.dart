@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -32,10 +33,11 @@ class _UploadEnableScheduleSettingScreenState
       BluetoothConnectionState.connected;
 
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
 
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
 
   TextEditingController controller = TextEditingController();
   TextEditingController portController = TextEditingController();
@@ -61,23 +63,20 @@ class _UploadEnableScheduleSettingScreenState
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     portController.addListener(() {
       final text = portController.text;
       if (text.isNotEmpty) {
@@ -86,16 +85,14 @@ class _UploadEnableScheduleSettingScreenState
           if (value < 0 && text.length > 65535) {
             // Otomatis set menjadi 0.5 jika kurang dari 0.5
             portController.text = '0';
-            portController.selection = TextSelection.fromPosition(TextPosition(
-                offset:
-                    portController.text.length)); // Memastikan cursor di akhir
+            portController.selection = TextSelection.fromPosition(
+              TextPosition(offset: portController.text.length),
+            ); // Memastikan cursor di akhir
           } else if (value > 65535) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
             portController.text = '65535';
             portController.selection = TextSelection.fromPosition(
-              TextPosition(
-                offset: portController.text.length,
-              ),
+              TextPosition(offset: portController.text.length),
             ); // Memastikan cursor di akhir
           }
         }
@@ -112,9 +109,7 @@ class _UploadEnableScheduleSettingScreenState
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -129,20 +124,26 @@ class _UploadEnableScheduleSettingScreenState
 
   initGetDataUpload() async {
     try {
-      BLEResponse<List<UploadModel>> response =
-          await Command().getUploadSchedule(bleProvider);
+      BLEResponse<List<UploadModel>> response = await Command()
+          .getUploadSchedule(bleProvider);
       _progressDialog.hide();
       if (response.status) {
         setState(() {
           uploadScheduleList = response.data ?? [];
         });
       } else {
-        Snackbar.show(ScreenSnackbar.uploadsettings, response.message,
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.uploadsettings,
+          response.message,
+          success: false,
+        );
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Error get raw admin : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.uploadsettings,
+        "Error get raw admin : $e",
+        success: false,
+      );
     }
   }
 
@@ -155,16 +156,16 @@ class _UploadEnableScheduleSettingScreenState
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          titlePadding: const EdgeInsets.only(
+            left: 10,
+            right: 10,
+            bottom: 15,
+            top: 10,
           ),
-          titlePadding:
-              const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
             "Atur Unggah ${number + 1}",
-            style: GoogleFonts.readexPro(
-              fontWeight: FontWeight.w500,
-            ),
+            style: GoogleFonts.readexPro(fontWeight: FontWeight.w500),
           ),
           content: SizedBox(
             height: 200,
@@ -176,8 +177,10 @@ class _UploadEnableScheduleSettingScreenState
                     TextFormField(
                       readOnly: true,
                       onTap: () async {
-                        TimeOfDay? result =
-                            await TimePickerHelper.pickTime(context, null);
+                        TimeOfDay? result = await TimePickerHelper.pickTime(
+                          context,
+                          null,
+                        );
                         if (result != null) {
                           uploadScheduleTxtController.text =
                               TimePickerHelper.formatTimeOfDay(result);
@@ -195,9 +198,7 @@ class _UploadEnableScheduleSettingScreenState
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     // for destination enable
                     Align(
@@ -210,9 +211,7 @@ class _UploadEnableScheduleSettingScreenState
                             "Aktifkan Unggah ?",
                             style: GoogleFonts.readexPro(),
                           ),
-                          const SizedBox(
-                            height: 5,
-                          ),
+                          const SizedBox(height: 5),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -228,10 +227,7 @@ class _UploadEnableScheduleSettingScreenState
                                       radius: 12,
                                     ),
                                     const SizedBox(width: 10),
-                                    Text(
-                                      'Ya',
-                                      style: GoogleFonts.readexPro(),
-                                    ),
+                                    Text('Ya', style: GoogleFonts.readexPro()),
                                   ],
                                 ),
                               ),
@@ -272,8 +268,10 @@ class _UploadEnableScheduleSettingScreenState
                 if (selectedChoice != null &&
                     uploadScheduleTxtController.text.isNotEmpty) {
                   int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
-                      TimePickerHelper.stringToTimeOfDay(
-                          uploadScheduleTxtController.text));
+                    TimePickerHelper.stringToTimeOfDay(
+                      uploadScheduleTxtController.text,
+                    ),
+                  );
                   UploadModel uploadNew = UploadModel(
                     enable: selectedChoice ?? false,
                     schedule: transmitSchedule,
@@ -281,20 +279,14 @@ class _UploadEnableScheduleSettingScreenState
                   Navigator.pop(context, uploadNew);
                 }
               },
-              child: Text(
-                'Simpan',
-                style: GoogleFonts.readexPro(),
-              ),
+              child: Text('Simpan', style: GoogleFonts.readexPro()),
             ),
             TextButton(
               onPressed: () {
                 uploadScheduleTxtController.clear();
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'Batalkan',
-                style: GoogleFonts.readexPro(),
-              ),
+              child: Text('Batalkan', style: GoogleFonts.readexPro()),
             ),
           ],
         );
@@ -320,23 +312,24 @@ class _UploadEnableScheduleSettingScreenState
           child: CustomScrollView(
             slivers: [
               SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                (context, index) {
+                delegate: SliverChildBuilderDelegate((context, index) {
                   return Column(
                     children: [
                       Container(
-                        margin:
-                            const EdgeInsets.only(top: 15, left: 10, right: 10),
+                        margin: const EdgeInsets.only(
+                          top: 15,
+                          left: 10,
+                          right: 10,
+                        ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 10),
+                          horizontal: 15,
+                          vertical: 10,
+                        ),
                         width: MediaQuery.of(context).size.width,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: borderColor,
-                            width: 1,
-                          ),
+                          border: Border.all(color: borderColor, width: 1),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,11 +337,11 @@ class _UploadEnableScheduleSettingScreenState
                             Text(
                               "Pengaturan Jadwal dan Aktivasi Unggah ${index + 1}",
                               style: GoogleFonts.readexPro(
-                                  fontSize: 18, fontWeight: FontWeight.w500),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                            const SizedBox(
-                              height: 8,
-                            ),
+                            const SizedBox(height: 8),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -356,8 +349,9 @@ class _UploadEnableScheduleSettingScreenState
                                   child: Text(
                                     "Aktifkan Unggah : ",
                                     style: GoogleFonts.readexPro(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                                 Expanded(
@@ -370,8 +364,9 @@ class _UploadEnableScheduleSettingScreenState
                                             ? "Ya"
                                             : "Tidak",
                                         style: GoogleFonts.readexPro(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -384,16 +379,20 @@ class _UploadEnableScheduleSettingScreenState
                                 Text(
                                   "Jadwal Unggah : ",
                                   style: GoogleFonts.readexPro(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 Text(
                                   TimePickerHelper.formatTimeOfDay(
-                                      TimePickerHelper.minutesToTimeOfDay(
-                                          uploadScheduleList[index].schedule)),
+                                    TimePickerHelper.minutesToTimeOfDay(
+                                      uploadScheduleList[index].schedule,
+                                    ),
+                                  ),
                                   style: GoogleFonts.readexPro(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
                               ],
                             ),
@@ -403,9 +402,10 @@ class _UploadEnableScheduleSettingScreenState
                                     uploadScheduleList[index].enable;
                                 uploadScheduleTxtController.text =
                                     TimePickerHelper.formatTimeOfDay(
-                                        TimePickerHelper.minutesToTimeOfDay(
-                                            uploadScheduleList[index]
-                                                .schedule));
+                                      TimePickerHelper.minutesToTimeOfDay(
+                                        uploadScheduleList[index].schedule,
+                                      ),
+                                    );
                                 UploadModel? result =
                                     await showSetupUploadDialog(context, index);
                                 if (result != null) {
@@ -413,7 +413,9 @@ class _UploadEnableScheduleSettingScreenState
                                   uploadScheduleList[index] = result;
                                   BLEResponse resBLE = await CommandSet()
                                       .setUploadSchedule(
-                                          bleProvider, uploadScheduleList);
+                                        bleProvider,
+                                        uploadScheduleList,
+                                      );
                                   Snackbar.showHelperV2(
                                     ScreenSnackbar.uploadsettings,
                                     resBLE,
@@ -423,9 +425,14 @@ class _UploadEnableScheduleSettingScreenState
                               },
                               child: Container(
                                 margin: const EdgeInsets.only(
-                                    left: 0, right: 0, top: 8),
+                                  left: 0,
+                                  right: 0,
+                                  top: 8,
+                                ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 8),
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.blue.shade600,
                                   borderRadius: BorderRadius.circular(10),
@@ -461,12 +468,9 @@ class _UploadEnableScheduleSettingScreenState
                       ),
                     ],
                   );
-                },
-                childCount: uploadScheduleList.length,
-              )),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 15),
-              )
+                }, childCount: uploadScheduleList.length),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 15)),
             ],
           ),
         ),

@@ -5,9 +5,6 @@ import 'dart:typed_data';
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_radio_checker.dart';
-import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
-import 'package:ble_test/ble-v2/device_configuration/func_device_configuration.dart';
-import 'package:ble_test/ble-v2/download_utils/download_utils.dart';
 import 'package:ble_test/constant/constant_color.dart';
 import 'package:ble_test/screens/ble_main_screen/admin_settings_screen/admin_settings_screen.dart';
 import 'package:ble_test/screens/ble_main_screen/capture_settings_screen/capture_settings_screen.dart';
@@ -46,14 +43,14 @@ class _BleMainScreenState extends State<BleMainScreen> {
   // for connection
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  bool _isConnecting = false;
-  bool _isDisconnecting = false;
+  bool isConnecting = false;
+  bool isDisconnecting = false;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
   StreamSubscription<List<int>>? _lastValueSubscription;
 
   List<BluetoothService> _services = [];
-  List<int> _value = [];
+  List<int> value = [];
   bool isLogout = false;
 
   final storage = const FlutterSecureStorage();
@@ -97,8 +94,10 @@ class _BleMainScreenState extends State<BleMainScreen> {
       // initLastValueSubscription(_device);
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.login, prettyException("Discover Services Error:", e),
-          success: false);
+        ScreenSnackbar.login,
+        prettyException("Discover Services Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
     if (mounted) {
@@ -126,12 +125,17 @@ class _BleMainScreenState extends State<BleMainScreen> {
   Future initMtuRequest() async {
     try {
       await device.requestMtu(512, predelay: 0);
-      Snackbar.show(ScreenSnackbar.login, "Request Mtu: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.login,
+        "Request Mtu: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.login, prettyException("Change Mtu Error:", e),
-          success: false);
+        ScreenSnackbar.login,
+        prettyException("Change Mtu Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -154,8 +158,10 @@ class _BleMainScreenState extends State<BleMainScreen> {
       }
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.login, prettyException("Subscribe Error:", e),
-          success: false);
+        ScreenSnackbar.login,
+        prettyException("Subscribe Error:", e),
+        success: false,
+      );
       log("notify set error : $e");
     }
   }
@@ -170,8 +176,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
   }
 
   onLogout() {
-    List<int> list = utf8.encode("logout!");
-    Uint8List bytes = Uint8List.fromList(list);
+    // List<int> list = utf8.encode("logout!");
+    // Uint8List bytes = Uint8List.fromList(list);
     device.disconnect();
     // funcWrite(bytes, "Success Logout");
     isLogout = true;
@@ -218,8 +224,10 @@ class _BleMainScreenState extends State<BleMainScreen> {
         // ignore connections canceled by the user
       } else {
         Snackbar.show(
-            ScreenSnackbar.login, prettyException("Connect Error:", e),
-            success: false);
+          ScreenSnackbar.login,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -230,8 +238,11 @@ class _BleMainScreenState extends State<BleMainScreen> {
       await device.disconnectAndUpdateStream(queue: false);
       Snackbar.show(ScreenSnackbar.login, "Cancel: Success", success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.login, prettyException("Cancel Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.login,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -242,14 +253,18 @@ class _BleMainScreenState extends State<BleMainScreen> {
       Snackbar.show(ScreenSnackbar.login, "Disconnect: Success", success: true);
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.login, prettyException("Disconnect Error:", e),
-          success: false);
+        ScreenSnackbar.login,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
 
   Future<bool?> _showAdmitRadioReceiveDialog(
-      BuildContext context, String msg) async {
+    BuildContext context,
+    String msg,
+  ) async {
     bool? selectedValue = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -281,27 +296,28 @@ class _BleMainScreenState extends State<BleMainScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-            title: Text(msg),
-            actionsAlignment: MainAxisAlignment.start,
-            alignment: Alignment.center,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, 1); // Return true
-                  },
-                  child: const Text('Tugas Pengambilan Gambar'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, 2); // Return false
-                  },
-                  child: const Text('Tugas Unggah'),
-                ),
-              ],
-            ));
+          title: Text(msg),
+          actionsAlignment: MainAxisAlignment.start,
+          alignment: Alignment.center,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, 1); // Return true
+                },
+                child: const Text('Tugas Pengambilan Gambar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, 2); // Return false
+                },
+                child: const Text('Tugas Unggah'),
+              ),
+            ],
+          ),
+        );
       },
     );
 
@@ -316,18 +332,14 @@ class _BleMainScreenState extends State<BleMainScreen> {
         return SimpleDialog(
           title: const Text(
             "Sekarang radio sedang mendengarkan, tekan tombol stop untuk menghentikan radio",
-            style: TextStyle(
-              fontSize: 14,
-            ),
+            style: TextStyle(fontSize: 14),
           ),
           children: [
             SimpleDialogOption(
               onPressed: () {
                 Navigator.pop(context, true); // Return true
               },
-              child: const Text(
-                'Stop',
-              ),
+              child: const Text('Stop'),
             ),
           ],
         );
@@ -361,12 +373,12 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       icon: const Icon(Icons.admin_panel_settings_outlined),
                       onTap: () {
                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AdminSettingsScreen(
-                                device: device,
-                              ),
-                            ));
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AdminSettingsScreen(device: device),
+                          ),
+                        );
                       },
                     ),
                     FeatureWidget(
@@ -378,14 +390,14 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CaptureSettingsScreen(
-                                device: device,
-                              ),
+                              builder: (context) =>
+                                  CaptureSettingsScreen(device: device),
                             ),
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
                     ),
@@ -404,7 +416,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
                     ),
@@ -423,7 +436,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
                     ),
@@ -443,7 +457,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
                             );
                           } else {
                             Snackbar.showNotConnectedFalse(
-                                ScreenSnackbar.blemain);
+                              ScreenSnackbar.blemain,
+                            );
                           }
                         },
                       ),
@@ -463,7 +478,8 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
                     ),
@@ -483,12 +499,11 @@ class _BleMainScreenState extends State<BleMainScreen> {
                             );
                           } else {
                             Snackbar.showNotConnectedFalse(
-                                ScreenSnackbar.blemain);
+                              ScreenSnackbar.blemain,
+                            );
                           }
                         },
-                        icon: const Icon(
-                          CupertinoIcons.device_phone_portrait,
-                        ),
+                        icon: const Icon(CupertinoIcons.device_phone_portrait),
                       ),
                     ),
                     Visibility(
@@ -497,7 +512,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
                         title: "Tes Radio sebagai Penerima",
                         onTap: () async {
                           bool? input = await _showAdmitRadioReceiveDialog(
-                              context, "Mulai tes radio sebagai penerima?");
+                            context,
+                            "Mulai tes radio sebagai penerima?",
+                          );
                           if (input != null) {
                             if (input == true) {
                               // lakukan start test radio sebagai penerima
@@ -509,20 +526,25 @@ class _BleMainScreenState extends State<BleMainScreen> {
 
                               if (!resBLE.status) {
                                 Snackbar.show(
-                                    ScreenSnackbar.blemain, resBLE.message,
-                                    success: false);
+                                  ScreenSnackbar.blemain,
+                                  resBLE.message,
+                                  success: false,
+                                );
                                 return;
                               }
 
                               // ignore: use_build_context_synchronously
-                              bool input =
-                                  await _showStopRadioReceiveDialog(context);
+                              bool input = await _showStopRadioReceiveDialog(
+                                context,
+                              );
                               if (input == true) {
                                 BLEResponse resBLE = await CommandRadioChecker()
                                     .radioTestAsReceiverStop(bleProvider);
                                 Snackbar.show(
-                                    ScreenSnackbar.blemain, resBLE.message,
-                                    success: resBLE.status);
+                                  ScreenSnackbar.blemain,
+                                  resBLE.message,
+                                  success: resBLE.status,
+                                );
                               }
                             }
                           }
@@ -542,9 +564,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                             ),
                           );
                         },
-                        icon: const Icon(
-                          Icons.arrow_outward_rounded,
-                        ),
+                        icon: const Icon(Icons.arrow_outward_rounded),
                       ),
                     ),
                     FeatureWidget(
@@ -552,28 +572,32 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       title: "Tugaskan Langsung",
                       onTap: () async {
                         /// tugas langsung
-                        int? input = await _showForceTaskDialog(context,
-                            "Pilih tugas yang akan dijalankan langsung");
+                        int? input = await _showForceTaskDialog(
+                          context,
+                          "Pilih tugas yang akan dijalankan langsung",
+                        );
                         if (input != null) {
                           if (input == 1) {
                             // force task capture
-                            BLEResponse resBLE =
-                                await Command().forceTaskCapture(bleProvider);
+                            BLEResponse resBLE = await Command()
+                                .forceTaskCapture(bleProvider);
                             Snackbar.showHelperV2(
-                                ScreenSnackbar.blemain, resBLE);
+                              ScreenSnackbar.blemain,
+                              resBLE,
+                            );
                           }
                           if (input == 2) {
                             /// force task upload
-                            BLEResponse resBLE =
-                                await Command().forceTaskUpload(bleProvider);
+                            BLEResponse resBLE = await Command()
+                                .forceTaskUpload(bleProvider);
                             Snackbar.showHelperV2(
-                                ScreenSnackbar.blemain, resBLE);
+                              ScreenSnackbar.blemain,
+                              resBLE,
+                            );
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.task_outlined,
-                      ),
+                      icon: const Icon(Icons.task_outlined),
                     ),
                     FeatureWidget(
                       visible: featureA.contains(roleUser),
@@ -589,12 +613,11 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
-                      icon: const Icon(
-                        Icons.image_outlined,
-                      ),
+                      icon: const Icon(Icons.image_outlined),
                     ),
                     FeatureWidget(
                       visible: featureC.contains(roleUser),
@@ -610,16 +633,13 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           );
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                         }
                       },
-                      icon: const Icon(
-                        Icons.lock_outlined,
-                      ),
+                      icon: const Icon(Icons.lock_outlined),
                     ),
-                    const SizedBox(
-                      height: 8,
-                    ),
+                    const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
                         Navigator.push(
@@ -632,7 +652,9 @@ class _BleMainScreenState extends State<BleMainScreen> {
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blueAccent.shade200,
                           borderRadius: BorderRadius.circular(10),
@@ -646,9 +668,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                               CupertinoIcons.camera,
                               color: Colors.white,
                             ),
-                            const SizedBox(
-                              width: 5,
-                            ),
+                            const SizedBox(width: 5),
                             Text(
                               "Pengambilan Gambar",
                               style: GoogleFonts.readexPro(
@@ -661,9 +681,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      height: 8,
-                    ),
+                    const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
                         await storage.deleteAll();
@@ -676,22 +694,29 @@ class _BleMainScreenState extends State<BleMainScreen> {
                           onDisconnectPressed();
                           if (mounted) {
                             Navigator.popUntil(
-                                context, (route) => route.isFirst);
+                              context,
+                              (route) => route.isFirst,
+                            );
                           }
                         } else {
                           Snackbar.showNotConnectedFalse(
-                              ScreenSnackbar.blemain);
+                            ScreenSnackbar.blemain,
+                          );
                           await Future.delayed(const Duration(seconds: 2));
                           if (mounted) {
                             Navigator.popUntil(
-                                context, (route) => route.isFirst);
+                              context,
+                              (route) => route.isFirst,
+                            );
                           }
                         }
                       },
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.shade800,
                           borderRadius: BorderRadius.circular(10),
@@ -705,9 +730,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                               Icons.logout_outlined,
                               color: Colors.white,
                             ),
-                            const SizedBox(
-                              width: 5,
-                            ),
+                            const SizedBox(width: 5),
                             Text(
                               "Keluar",
                               style: GoogleFonts.readexPro(
@@ -720,9 +743,7 @@ class _BleMainScreenState extends State<BleMainScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      height: 30,
-                    )
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -761,10 +782,7 @@ class FeatureWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: borderColor,
-              width: 1,
-            ),
+            border: Border.all(color: borderColor, width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -783,9 +801,7 @@ class FeatureWidget extends StatelessWidget {
                           child: icon,
                         ),
                       ),
-                      const SizedBox(
-                        width: 8,
-                      ),
+                      const SizedBox(width: 8),
                       Expanded(
                         flex: 8,
                         child: Text(
@@ -804,12 +820,9 @@ class FeatureWidget extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerRight,
-                    child: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 20,
-                    ),
+                    child: Icon(Icons.arrow_forward_ios_rounded, size: 20),
                   ),
-                )
+                ),
               ],
             ),
           ),

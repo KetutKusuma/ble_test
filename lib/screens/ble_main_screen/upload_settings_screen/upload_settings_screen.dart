@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -36,9 +37,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  _connectionStateSubscription;
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
 
   String serverTxt = '-',
       portTxt = '-',
@@ -79,23 +81,20 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     portController.addListener(() {
       final text = portController.text;
       if (text.isNotEmpty) {
@@ -104,16 +103,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
           if (value < 0 && text.length > 65535) {
             // Otomatis set menjadi 0.5 jika kurang dari 0.5
             portController.text = '0';
-            portController.selection = TextSelection.fromPosition(TextPosition(
-                offset:
-                    portController.text.length)); // Memastikan cursor di akhir
+            portController.selection = TextSelection.fromPosition(
+              TextPosition(offset: portController.text.length),
+            ); // Memastikan cursor di akhir
           } else if (value > 65535) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
             portController.text = '65535';
             portController.selection = TextSelection.fromPosition(
-              TextPosition(
-                offset: portController.text.length,
-              ),
+              TextPosition(offset: portController.text.length),
             ); // Memastikan cursor di akhir
           }
         }
@@ -130,9 +127,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -172,8 +167,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
         setState(() {
           serverTxt = res.data!.server;
           portTxt = res.data!.port.toString();
-          uploadUsingTxt =
-              GatewayModel.getUploadUsingString(res.data!.uploadUsing);
+          uploadUsingTxt = GatewayModel.getUploadUsingString(
+            res.data!.uploadUsing,
+          );
           uploadInitialDelayTxt = res.data!.uploadInitialDelay.toString();
           wifiSsidTxt = res.data!.wifi.ssid;
           wifiPasswordTxt = res.data!.wifi.password;
@@ -182,28 +178,36 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
           } else {
             secureTxt = res.data!.wifi.secure.changeBoolToStringIndo();
             mikrotikIPTxt = res.data!.wifi.mikrotikIP;
-            mikrotikLoginSecureTxt =
-                res.data!.wifi.mikrotikLoginSecure.changeBoolToStringIndo();
+            mikrotikLoginSecureTxt = res.data!.wifi.mikrotikLoginSecure
+                .changeBoolToStringIndo();
             mikrotikUsernameTxt = res.data!.wifi.mikrotikUsername;
             mikrotikPasswordTxt = res.data!.wifi.mikrotikPassword;
             modemApnTxt = res.data!.modemAPN;
           }
         });
       } else {
-        Snackbar.show(ScreenSnackbar.uploadsettings, res.message,
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.uploadsettings,
+          res.message,
+          success: false,
+        );
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Error dapat gateway : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.uploadsettings,
+        "Error dapat gateway : $e",
+        success: false,
+      );
     }
   }
 
   Future<String?> _showInputDialog(
-      TextEditingController controller, String title,
-      {List<TextInputFormatter>? inputFormatters,
-      TextInputType? keyboardType = TextInputType.text,
-      bool canSaveEmpty = true}) async {
+    TextEditingController controller,
+    String title, {
+    List<TextInputFormatter>? inputFormatters,
+    TextInputType? keyboardType = TextInputType.text,
+    bool canSaveEmpty = true,
+  }) async {
     String? input = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -278,7 +282,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   }
 
   Future<Map?> _showSelectionPopup(
-      BuildContext context, List<Map<String, dynamic>> dataMap) async {
+    BuildContext context,
+    List<Map<String, dynamic>> dataMap,
+  ) async {
     Map? result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
@@ -302,7 +308,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   }
 
   Future<List<String>?> showSetupUploadDialog(
-      BuildContext context, int number) async {
+    BuildContext context,
+    int number,
+  ) async {
     bool? selectedChoice; // Tracks the selected choice
 
     return await showDialog(
@@ -310,16 +318,16 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          titlePadding: const EdgeInsets.only(
+            left: 10,
+            right: 10,
+            bottom: 15,
+            top: 10,
           ),
-          titlePadding:
-              const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
             "Setup Destination ${number + 1}",
-            style: GoogleFonts.readexPro(
-              fontWeight: FontWeight.w500,
-            ),
+            style: GoogleFonts.readexPro(fontWeight: FontWeight.w500),
           ),
           content: SizedBox(
             height: 200,
@@ -331,8 +339,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                     TextFormField(
                       readOnly: true,
                       onTap: () async {
-                        TimeOfDay? result =
-                            await TimePickerHelper.pickTime(context, null);
+                        TimeOfDay? result = await TimePickerHelper.pickTime(
+                          context,
+                          null,
+                        );
                         if (result != null) {
                           uploadScheduleTxtController.text =
                               TimePickerHelper.formatTimeOfDay(result);
@@ -350,9 +360,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     // for destination enable
                     Align(
@@ -361,13 +369,8 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Text(
-                            "Upload Enable",
-                            style: GoogleFonts.readexPro(),
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
+                          Text("Upload Enable", style: GoogleFonts.readexPro()),
+                          const SizedBox(height: 5),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -427,8 +430,10 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                 if (selectedChoice != null &&
                     uploadScheduleTxtController.text.isNotEmpty) {
                   int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
-                      TimePickerHelper.stringToTimeOfDay(
-                          uploadScheduleTxtController.text));
+                    TimePickerHelper.stringToTimeOfDay(
+                      uploadScheduleTxtController.text,
+                    ),
+                  );
 
                   Navigator.of(context).pop([
                     "upload_schedule=$number;$transmitSchedule",
@@ -436,20 +441,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                   ]);
                 }
               },
-              child: Text(
-                'Perbarui',
-                style: GoogleFonts.readexPro(),
-              ),
+              child: Text('Perbarui', style: GoogleFonts.readexPro()),
             ),
             TextButton(
               onPressed: () {
                 uploadScheduleTxtController.clear();
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'Batalkan',
-                style: GoogleFonts.readexPro(),
-              ),
+              child: Text('Batalkan', style: GoogleFonts.readexPro()),
             ),
           ],
         );
@@ -462,10 +461,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyUploadSettings,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Pengaturan Unggah'),
-          elevation: 0,
-        ),
+        appBar: AppBar(title: const Text('Pengaturan Unggah'), elevation: 0),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
@@ -481,14 +477,18 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       onTap: () async {
                         try {
                           controller.text = serverTxt;
-                          String? input =
-                              await _showInputDialog(controller, "Server");
+                          String? input = await _showInputDialog(
+                            controller,
+                            "Server",
+                          );
                           log("input : $input");
                           if (input != null) {
                             controller.clear();
                             gatewayModel.server = input;
                             BLEResponse resBLE = await _commandSet.setGateway(
-                                bleProvider, gatewayModel);
+                              bleProvider,
+                              gatewayModel,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.uploadsettings,
                               resBLE,
@@ -503,9 +503,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.compass_calibration_rounded,
-                      ),
+                      icon: const Icon(Icons.compass_calibration_rounded),
                     ),
                     SettingsContainer(
                       title: "Port",
@@ -524,7 +522,9 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           if (input != null) {
                             gatewayModel.port = int.parse(input);
                             BLEResponse resBLE = await _commandSet.setGateway(
-                                bleProvider, gatewayModel);
+                              bleProvider,
+                              gatewayModel,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.uploadsettings,
                               resBLE,
@@ -539,9 +539,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.podcasts_rounded,
-                      ),
+                      icon: const Icon(Icons.podcasts_rounded),
                     ),
 
                     // CustomScrollView(
@@ -562,23 +560,26 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 UploadEnableScheduleSettingScreen(
-                                    device: device),
+                                  device: device,
+                                ),
                           ),
                         );
                       },
                       child: Container(
-                        margin:
-                            const EdgeInsets.only(top: 7, left: 10, right: 10),
+                        margin: const EdgeInsets.only(
+                          top: 7,
+                          left: 10,
+                          right: 10,
+                        ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 10),
+                          horizontal: 15,
+                          vertical: 10,
+                        ),
                         width: MediaQuery.of(context).size.width,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: borderColor,
-                            width: 1,
-                          ),
+                          border: Border.all(color: borderColor, width: 1),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -586,9 +587,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Icon(CupertinoIcons.gear),
-                              const SizedBox(
-                                width: 10,
-                              ),
+                              const SizedBox(width: 10),
                               Expanded(
                                 flex: 4,
                                 child: Column(
@@ -615,7 +614,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     size: 20,
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -627,11 +626,15 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                       onTap: () async {
                         try {
                           Map? input = await _showSelectionPopup(
-                              context, GatewayModel.listMapUploadUsing);
+                            context,
+                            GatewayModel.listMapUploadUsing,
+                          );
                           if (input != null) {
                             gatewayModel.uploadUsing = input["value"];
                             BLEResponse resBLE = await _commandSet.setGateway(
-                                bleProvider, gatewayModel);
+                              bleProvider,
+                              gatewayModel,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.uploadsettings,
                               resBLE,
@@ -639,14 +642,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             );
                           }
                         } catch (e) {
-                          Snackbar.show(ScreenSnackbar.uploadsettings,
-                              "Error click on upload using : $e",
-                              success: false);
+                          Snackbar.show(
+                            ScreenSnackbar.uploadsettings,
+                            "Error click on upload using : $e",
+                            success: false,
+                          );
                         }
                       },
-                      icon: const Icon(
-                        Icons.upload_rounded,
-                      ),
+                      icon: const Icon(Icons.upload_rounded),
                     ),
                     SettingsContainer(
                       title: "Penundaan Awal Unggah",
@@ -656,18 +659,23 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         try {
                           controller.text = uploadInitialDelayTxt;
                           String? input = await _showInputDialog(
-                              controller, "Upload Initial Delay",
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                      signed: false, decimal: true));
+                            controller,
+                            "Upload Initial Delay",
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            keyboardType: const TextInputType.numberWithOptions(
+                              signed: false,
+                              decimal: true,
+                            ),
+                          );
                           if (input != null) {
                             controller.clear();
                             gatewayModel.uploadInitialDelay = int.parse(input);
                             BLEResponse resBLE = await _commandSet.setGateway(
-                                bleProvider, gatewayModel);
+                              bleProvider,
+                              gatewayModel,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.uploadsettings,
                               resBLE,
@@ -682,9 +690,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.vertical_align_top_rounded,
-                      ),
+                      icon: const Icon(Icons.vertical_align_top_rounded),
                     ),
                     SettingsContainer(
                       title: "Nama Wifi",
@@ -696,14 +702,16 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                             controller,
                             "Nama Wifi",
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(16)
+                              LengthLimitingTextInputFormatter(16),
                             ],
                             canSaveEmpty: false,
                           );
                           if (input != null) {
                             gatewayModel.wifi.ssid = input;
                             BLEResponse resBLE = await _commandSet.setGateway(
-                                bleProvider, gatewayModel);
+                              bleProvider,
+                              gatewayModel,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.uploadsettings,
                               resBLE,
@@ -718,9 +726,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.wifi_rounded,
-                      ),
+                      icon: const Icon(Icons.wifi_rounded),
                     ),
                     SettingsContainer(
                       title: "Kata Sandi Wifi",
@@ -729,13 +735,18 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                         try {
                           controller.text = wifiPasswordTxt;
                           String? input = await _showInputDialog(
-                              controller, "Kata Sandi Wifi", inputFormatters: [
-                            LengthLimitingTextInputFormatter(32)
-                          ]);
+                            controller,
+                            "Kata Sandi Wifi",
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(32),
+                            ],
+                          );
                           if (input != null) {
                             gatewayModel.wifi.password = input;
                             BLEResponse resBLE = await _commandSet.setGateway(
-                                bleProvider, gatewayModel);
+                              bleProvider,
+                              gatewayModel,
+                            );
                             Snackbar.showHelperV2(
                               ScreenSnackbar.uploadsettings,
                               resBLE,
@@ -750,34 +761,42 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.wifi_password_rounded,
-                      ),
+                      icon: const Icon(Icons.wifi_password_rounded),
                     ),
                     (uploadUsingTxt != "Wifia")
                         ? const SizedBox()
                         : Padding(
                             padding: const EdgeInsets.only(
-                                left: 10.0, right: 10, top: 10),
+                              left: 10.0,
+                              right: 10,
+                              top: 10,
+                            ),
                             child: Row(
                               children: [
                                 Expanded(
                                   child: InkWell(
                                     onTap: () {
-                                      List<int> list =
-                                          utf8.encode("wifi_connect!");
-                                      Uint8List bytes =
-                                          Uint8List.fromList(list);
-                                      BLEUtils.funcWrite(bytes,
-                                          "Success Connect Wifi", device);
+                                      List<int> list = utf8.encode(
+                                        "wifi_connect!",
+                                      );
+                                      Uint8List bytes = Uint8List.fromList(
+                                        list,
+                                      );
+                                      BLEUtils.funcWrite(
+                                        bytes,
+                                        "Success Connect Wifi",
+                                        device,
+                                      );
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 10, horizontal: 10),
+                                        vertical: 10,
+                                        horizontal: 10,
+                                      ),
                                       decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          color: Colors.green.shade600),
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.green.shade600,
+                                      ),
                                       child: Text(
                                         "Connect Wifi",
                                         style: GoogleFonts.readexPro(
@@ -789,29 +808,36 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(
-                                  width: 15,
-                                ),
+                                const SizedBox(width: 15),
                                 Expanded(
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
                                       splashColor: Colors.black,
                                       onTap: () {
-                                        List<int> list =
-                                            utf8.encode("wifi_disconnect!");
-                                        Uint8List bytes =
-                                            Uint8List.fromList(list);
-                                        BLEUtils.funcWrite(bytes,
-                                            "Success Disonnect Wifi", device);
+                                        List<int> list = utf8.encode(
+                                          "wifi_disconnect!",
+                                        );
+                                        Uint8List bytes = Uint8List.fromList(
+                                          list,
+                                        );
+                                        BLEUtils.funcWrite(
+                                          bytes,
+                                          "Success Disonnect Wifi",
+                                          device,
+                                        );
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
-                                            vertical: 10, horizontal: 10),
+                                          vertical: 10,
+                                          horizontal: 10,
+                                        ),
                                         decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Colors.grey.shade600),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          color: Colors.grey.shade600,
+                                        ),
                                         child: Text(
                                           "Disconnect Wifi",
                                           style: GoogleFonts.readexPro(
@@ -838,7 +864,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                   controller,
                                   "Modem APN",
                                   inputFormatters: [
-                                    LengthLimitingTextInputFormatter(24)
+                                    LengthLimitingTextInputFormatter(24),
                                   ],
                                 );
                                 if (input != null) {
@@ -860,13 +886,11 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                 );
                               }
                             },
-                            icon: const Icon(
-                              Icons.wifi_tethering_error,
-                            ),
+                            icon: const Icon(Icons.wifi_tethering_error),
                           )
                         :
-                        // handle >= v2.21
-                        Column(
+                          // handle >= v2.21
+                          Column(
                             children: [
                               SettingsContainer(
                                 title: "Wifi Aman",
@@ -874,15 +898,17 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                 onTap: () async {
                                   try {
                                     bool? input = await _showTrueFalseDialog(
-                                        context, "Wifi Aman");
+                                      context,
+                                      "Wifi Aman",
+                                    );
                                     if (input != null) {
                                       controller.clear();
                                       gatewayModel.wifi.secure = input;
-                                      BLEResponse resBLE =
-                                          await _commandSet.setGateway(
-                                        bleProvider,
-                                        gatewayModel,
-                                      );
+                                      BLEResponse resBLE = await _commandSet
+                                          .setGateway(
+                                            bleProvider,
+                                            gatewayModel,
+                                          );
                                       Snackbar.showHelperV2(
                                         ScreenSnackbar.uploadsettings,
                                         resBLE,
@@ -911,15 +937,17 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                       controller,
                                       "Alamat IP Mikrotik",
                                       inputFormatters: [
-                                        LengthLimitingTextInputFormatter(16)
+                                        LengthLimitingTextInputFormatter(16),
                                       ],
                                     );
                                     if (input != null) {
                                       controller.clear();
                                       gatewayModel.wifi.mikrotikIP = input;
-                                      BLEResponse resBLE =
-                                          await _commandSet.setGateway(
-                                              bleProvider, gatewayModel);
+                                      BLEResponse resBLE = await _commandSet
+                                          .setGateway(
+                                            bleProvider,
+                                            gatewayModel,
+                                          );
                                       Snackbar.showHelperV2(
                                         ScreenSnackbar.uploadsettings,
                                         resBLE,
@@ -934,9 +962,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.network_cell,
-                                ),
+                                icon: const Icon(Icons.network_cell),
                               ),
                               SettingsContainer(
                                 title: "Login Mikrotik Aman",
@@ -944,16 +970,18 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                 onTap: () async {
                                   try {
                                     bool? input = await _showTrueFalseDialog(
-                                        context, "Login Mikrotik Aman");
+                                      context,
+                                      "Login Mikrotik Aman",
+                                    );
                                     if (input != null) {
                                       controller.clear();
                                       gatewayModel.wifi.mikrotikLoginSecure =
                                           input;
-                                      BLEResponse resBLE =
-                                          await _commandSet.setGateway(
-                                        bleProvider,
-                                        gatewayModel,
-                                      );
+                                      BLEResponse resBLE = await _commandSet
+                                          .setGateway(
+                                            bleProvider,
+                                            gatewayModel,
+                                          );
                                       Snackbar.showHelperV2(
                                         ScreenSnackbar.uploadsettings,
                                         resBLE,
@@ -968,9 +996,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.network_locked_outlined,
-                                ),
+                                icon: const Icon(Icons.network_locked_outlined),
                               ),
                               SettingsContainer(
                                 title: "Nama Pengguna Mikrotik",
@@ -982,16 +1008,18 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                       controller,
                                       "Nama Pengguna Mikrotik",
                                       inputFormatters: [
-                                        LengthLimitingTextInputFormatter(24)
+                                        LengthLimitingTextInputFormatter(24),
                                       ],
                                     );
                                     if (input != null) {
                                       controller.clear();
                                       gatewayModel.wifi.mikrotikUsername =
                                           input;
-                                      BLEResponse resBLE =
-                                          await _commandSet.setGateway(
-                                              bleProvider, gatewayModel);
+                                      BLEResponse resBLE = await _commandSet
+                                          .setGateway(
+                                            bleProvider,
+                                            gatewayModel,
+                                          );
                                       Snackbar.showHelperV2(
                                         ScreenSnackbar.uploadsettings,
                                         resBLE,
@@ -1006,9 +1034,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.person_outline,
-                                ),
+                                icon: const Icon(Icons.person_outline),
                               ),
                               SettingsContainer(
                                 title: "Password Mikrotik",
@@ -1020,16 +1046,18 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                       controller,
                                       "Password Mikrotik",
                                       inputFormatters: [
-                                        LengthLimitingTextInputFormatter(24)
+                                        LengthLimitingTextInputFormatter(24),
                                       ],
                                     );
                                     if (input != null) {
                                       controller.clear();
                                       gatewayModel.wifi.mikrotikPassword =
                                           input;
-                                      BLEResponse resBLE =
-                                          await _commandSet.setGateway(
-                                              bleProvider, gatewayModel);
+                                      BLEResponse resBLE = await _commandSet
+                                          .setGateway(
+                                            bleProvider,
+                                            gatewayModel,
+                                          );
                                       Snackbar.showHelperV2(
                                         ScreenSnackbar.uploadsettings,
                                         resBLE,
@@ -1044,9 +1072,7 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.shield_outlined,
-                                ),
+                                icon: const Icon(Icons.shield_outlined),
                               ),
                               SettingsContainer(
                                 title: "Modem APN",
@@ -1058,15 +1084,17 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                       controller,
                                       "Modem APN",
                                       inputFormatters: [
-                                        LengthLimitingTextInputFormatter(24)
+                                        LengthLimitingTextInputFormatter(24),
                                       ],
                                     );
                                     if (input != null) {
                                       controller.clear();
                                       gatewayModel.modemAPN = input;
-                                      BLEResponse resBLE =
-                                          await _commandSet.setGateway(
-                                              bleProvider, gatewayModel);
+                                      BLEResponse resBLE = await _commandSet
+                                          .setGateway(
+                                            bleProvider,
+                                            gatewayModel,
+                                          );
                                       Snackbar.showHelperV2(
                                         ScreenSnackbar.uploadsettings,
                                         resBLE,
@@ -1081,18 +1109,14 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.wifi_tethering_error,
-                                ),
+                                icon: const Icon(Icons.wifi_tethering_error),
                               ),
                             ],
                           ),
-                    const SizedBox(
-                      height: 15,
-                    ),
+                    const SizedBox(height: 15),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -1119,16 +1143,21 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Connect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.uploadsettings,
+        "Connect: Success",
+        success: true,
+      );
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
         Snackbar.show(
-            ScreenSnackbar.uploadsettings, prettyException("Connect Error:", e),
-            success: false);
+          ScreenSnackbar.uploadsettings,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -1137,12 +1166,17 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Cancel: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.uploadsettings,
+        "Cancel: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.uploadsettings, prettyException("Cancel Error:", e),
-          success: false);
+        ScreenSnackbar.uploadsettings,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -1150,12 +1184,17 @@ class _UploadSettingsScreenState extends State<UploadSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.uploadsettings, "Disconnect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.uploadsettings,
+        "Disconnect: Success",
+        success: true,
+      );
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.uploadsettings,
-          prettyException("Disconnect Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.uploadsettings,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }

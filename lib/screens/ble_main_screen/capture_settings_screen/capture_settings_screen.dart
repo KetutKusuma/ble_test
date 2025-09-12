@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -34,13 +35,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
   final RefreshController _refreshController = RefreshController();
   String captureScheduleTxt = "-",
       captureIntervalTxt = "-",
       captureCountTxt = '-',
       captureRecentLimitTxt = '-',
-      spCaptureDateTxt = '-', // bit operation
+      spCaptureDateTxt =
+          '-', // bit operation
       spCaptureScheduleTxt = '-',
       spCaptrueIntervalTxt = '-',
       spCaptureCountTxt = '-';
@@ -60,23 +62,20 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
 
     initGetCapture();
   }
@@ -89,9 +88,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -104,8 +101,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     }
   }
 
-  Future<List<int>?> _showDateSelectionPopup(BuildContext context,
-      {List<int>? dateSelected}) async {
+  Future<List<int>?> _showDateSelectionPopup(
+    BuildContext context, {
+    List<int>? dateSelected,
+  }) async {
     List<int> selectedNumbers =
         dateSelected ?? []; // Menyimpan angka yang dipilih
 
@@ -129,11 +128,11 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       shrinkWrap: true,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5, // 5 kolom
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                        childAspectRatio: 1.2, // Rasio agar tidak gepeng
-                      ),
+                            crossAxisCount: 5, // 5 kolom
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            childAspectRatio: 1.2, // Rasio agar tidak gepeng
+                          ),
                       itemCount: 31,
                       itemBuilder: (context, index) {
                         int number = index + 1;
@@ -152,8 +151,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           child: Container(
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color:
-                                  isSelected ? Colors.blue : Colors.grey[300],
+                              color: isSelected
+                                  ? Colors.blue
+                                  : Colors.grey[300],
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -191,14 +191,16 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   initGetCapture() async {
     try {
       if (isConnected) {
-        BLEResponse<CaptureModel> response =
-            await Command().getCaptureSchedule(bleProvider);
+        BLEResponse<CaptureModel> response = await Command().getCaptureSchedule(
+          bleProvider,
+        );
         _progressDialog.hide();
         if (response.status) {
           captureModel = response.data!;
 
-          captureScheduleTxt =
-              ConvertTime.minuteToDateTimeString(response.data!.schedule);
+          captureScheduleTxt = ConvertTime.minuteToDateTimeString(
+            response.data!.schedule,
+          );
           captureIntervalTxt = response.data!.interval.toString();
           captureCountTxt = response.data!.count.toString();
           captureRecentLimitTxt = response.data!.recentCaptureLimit.toString();
@@ -206,7 +208,8 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
               ? "-"
               : response.data!.getSpecialDateString;
           spCaptureScheduleTxt = ConvertTime.minuteToDateTimeString(
-              response.data!.specialSchedule);
+            response.data!.specialSchedule,
+          );
           spCaptrueIntervalTxt = response.data!.specialInterval.toString();
           spCaptureCountTxt = response.data!.specialCount.toString();
 
@@ -220,8 +223,11 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
         }
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings, "Error get raw admin : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.capturesettings,
+        "Error get raw admin : $e",
+        success: false,
+      );
     }
   }
 
@@ -252,8 +258,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
           content: Form(
             child: TextFormField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 labelText: 'Enter $label',
@@ -284,9 +291,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     );
   }
 
-  Future<Map?> _showInputSpecialCaptureDateDialog(
-    String inputTitle,
-  ) async {
+  Future<Map?> showInputSpecialCaptureDateDialog(String inputTitle) async {
     return await showDialog<Map>(
       context: context,
       builder: (BuildContext context) {
@@ -300,19 +305,16 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
             children: [
               TextFormField(
                 controller: spCaptureDateTxtController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: false),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false,
+                ),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: 'Masukan Tanggal (1 - 31)',
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(
-                height: 15,
-              ),
+              const SizedBox(height: 15),
               const Text("Status Tanggal Pengambilan Khusus"),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -320,8 +322,9 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      int dataParse =
-                          int.parse(spCaptureDateTxtController.text.toString());
+                      int dataParse = int.parse(
+                        spCaptureDateTxtController.text.toString(),
+                      );
                       if (dataParse >= 1 && dataParse <= 31) {
                         if (spCaptureDateTxtController.text.isNotEmpty) {
                           Navigator.pop(context, {
@@ -333,13 +336,12 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     },
                     child: const Text("Aktif"),
                   ),
-                  const SizedBox(
-                    width: 10,
-                  ),
+                  const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
-                      int dataParse =
-                          int.parse(spCaptureDateTxtController.text.toString());
+                      int dataParse = int.parse(
+                        spCaptureDateTxtController.text.toString(),
+                      );
                       if (dataParse >= 1 && dataParse <= 31) {
                         if (spCaptureDateTxtController.text.isNotEmpty) {
                           Navigator.pop(context, {
@@ -352,7 +354,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                     child: const Text("Non Aktif"),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -378,19 +380,22 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 7,
-                    ),
+                    const SizedBox(height: 7),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 7.0, horizontal: 15),
+                        vertical: 7.0,
+                        horizontal: 15,
+                      ),
                       margin: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 15),
+                        vertical: 0.0,
+                        horizontal: 15,
+                      ),
                       decoration: const BoxDecoration(
                         color: Colors.blue,
                         borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            topRight: Radius.circular(10)),
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                        ),
                       ),
                       width: MediaQuery.of(context).size.width,
                       child: const Text(
@@ -408,11 +413,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                       description: "(Mulai Pengambilan Gambar Hari Ini)",
                       data: captureScheduleTxt,
                       onTap: () async {
-                        TimeOfDay? result =
-                            await TimePickerHelper.pickTime(context, null);
+                        TimeOfDay? result = await TimePickerHelper.pickTime(
+                          context,
+                          null,
+                        );
                         if (result != null) {
                           int dataUpdate = ConvertTime.dateTimeStringToMinute(
-                              TimePickerHelper.formatTimeOfDay(result));
+                            TimePickerHelper.formatTimeOfDay(result),
+                          );
                           captureModel.schedule = dataUpdate;
                           BLEResponse resBLE = await _commandSet
                               .setCaptureSchedule(bleProvider, captureModel);
@@ -423,9 +431,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.calendar_month_outlined,
-                      ),
+                      icon: const Icon(Icons.calendar_month_outlined),
                     ),
                     SettingsContainer(
                       title: "Jumlah Pengambilan Gambar",
@@ -435,8 +441,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         if (isConnected) {
                           controller.text = captureCountTxt;
                           String? input = await _showInputDialog(
-                              controller, "Jumlah Pengambilan Gambar",
-                              label: "Berapa banyak pengulangan perhari");
+                            controller,
+                            "Jumlah Pengambilan Gambar",
+                            label: "Berapa banyak pengulangan perhari",
+                          );
                           if (input != null) {
                             captureModel.count = int.parse(input);
                             BLEResponse resBLE = await _commandSet
@@ -449,9 +457,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.looks_3_outlined,
-                      ),
+                      icon: const Icon(Icons.looks_3_outlined),
                     ),
                     SettingsContainer(
                       title: "Interval Pengambilan Gambar",
@@ -462,8 +468,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         if (isConnected) {
                           controller.text = captureIntervalTxt;
                           String? input = await _showInputDialog(
-                              controller, "Interval Pengambilan Gambar",
-                              label: "repetition capture");
+                            controller,
+                            "Interval Pengambilan Gambar",
+                            label: "repetition capture",
+                          );
                           if (input != null) {
                             captureModel.interval = int.parse(input);
                             BLEResponse resBLE = await _commandSet
@@ -476,9 +484,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.trending_up_rounded,
-                      ),
+                      icon: const Icon(Icons.trending_up_rounded),
                     ),
                     SettingsContainer(
                       title: "Batas Pengambilan Terbaru",
@@ -504,23 +510,24 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.switch_camera_outlined,
-                      ),
+                      icon: const Icon(Icons.switch_camera_outlined),
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 7.0, horizontal: 15),
+                        vertical: 7.0,
+                        horizontal: 15,
+                      ),
                       margin: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 15),
+                        vertical: 0.0,
+                        horizontal: 15,
+                      ),
                       decoration: const BoxDecoration(
                         color: Colors.blue,
                         borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            topRight: Radius.circular(10)),
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                        ),
                       ),
                       width: MediaQuery.of(context).size.width,
                       child: const Text(
@@ -579,18 +586,20 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         // }
                       },
                       child: Container(
-                        margin:
-                            const EdgeInsets.only(top: 7, left: 10, right: 10),
+                        margin: const EdgeInsets.only(
+                          top: 7,
+                          left: 10,
+                          right: 10,
+                        ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 10),
+                          horizontal: 15,
+                          vertical: 10,
+                        ),
                         width: MediaQuery.of(context).size.width,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: borderColor,
-                            width: 1,
-                          ),
+                          border: Border.all(color: borderColor, width: 1),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -598,9 +607,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Icon(Icons.edit_calendar_outlined),
-                              const SizedBox(
-                                width: 10,
-                              ),
+                              const SizedBox(width: 10),
                               Expanded(
                                 flex: 4,
                                 child: Column(
@@ -631,12 +638,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                                   child: Text(
                                     spCaptureDateTxt,
                                     textAlign: TextAlign.right,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -648,11 +653,14 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           "(Mulai Pengambilan Gambar pada Tanggal Khusus)",
                       data: spCaptureScheduleTxt,
                       onTap: () async {
-                        TimeOfDay? result =
-                            await TimePickerHelper.pickTime(context, null);
+                        TimeOfDay? result = await TimePickerHelper.pickTime(
+                          context,
+                          null,
+                        );
                         if (result != null) {
                           int dataUpdate = ConvertTime.dateTimeStringToMinute(
-                              TimePickerHelper.formatTimeOfDay(result));
+                            TimePickerHelper.formatTimeOfDay(result),
+                          );
                           captureModel.specialSchedule = dataUpdate;
                           BLEResponse resBLE = await _commandSet
                               .setCaptureSchedule(bleProvider, captureModel);
@@ -663,9 +671,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.calendar_month_sharp,
-                      ),
+                      icon: const Icon(Icons.calendar_month_sharp),
                     ),
                     SettingsContainer(
                       title: "Jumlah Pengambilan Gambar Khusus",
@@ -692,9 +698,7 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.looks_4_outlined,
-                      ),
+                      icon: const Icon(Icons.looks_4_outlined),
                     ),
                     SettingsContainer(
                       title: "Interval Pengambilan Gambar Khusus",
@@ -705,8 +709,10 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                         if (isConnected) {
                           controller.text = spCaptrueIntervalTxt;
                           String? input = await _showInputDialog(
-                              controller, "Interval Pengambilan Gambar Khusus",
-                              label: "repetition capture");
+                            controller,
+                            "Interval Pengambilan Gambar Khusus",
+                            label: "repetition capture",
+                          );
                           if (input != null) {
                             captureModel.specialInterval = int.parse(input);
                             BLEResponse resBLE = await _commandSet
@@ -719,16 +725,12 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.trending_up_outlined,
-                      ),
+                      icon: const Icon(Icons.trending_up_outlined),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    )
+                    const SizedBox(height: 20),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -755,16 +757,21 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.capturesettings, "Connect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.capturesettings,
+        "Connect: Success",
+        success: true,
+      );
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(ScreenSnackbar.capturesettings,
-            prettyException("Connect Error:", e),
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.capturesettings,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -773,12 +780,17 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.capturesettings, "Cancel: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.capturesettings,
+        "Cancel: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.capturesettings, prettyException("Cancel Error:", e),
-          success: false);
+        ScreenSnackbar.capturesettings,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -786,12 +798,17 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.capturesettings, "Disconnect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.capturesettings,
+        "Disconnect: Success",
+        success: true,
+      );
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings,
-          prettyException("Disconnect Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.capturesettings,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }

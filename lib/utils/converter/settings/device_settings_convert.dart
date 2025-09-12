@@ -13,23 +13,25 @@ class DeviceStatusConverter {
     );
 
     // == for time ==
-    String dateTimeFormatted =
-        DateTime.fromMillisecondsSinceEpoch((timeInt + 946684800) * 1000)
-            .subtract(const Duration(hours: 8))
-            .toIso8601String()
-            .split('.')
-            .first;
+    String dateTimeFormatted = DateTime.fromMillisecondsSinceEpoch(
+      (timeInt + 946684800) * 1000,
+    ).subtract(const Duration(hours: 8)).toIso8601String().split('.').first;
 
     String timeString = dateTimeFormatted.replaceFirst('T', ' ');
 
     // == end for time ==
     double temperature = BytesConvert.bytesToFloatorDoubleV2(
-        bytes.sublist(29, 33),
-        isBigEndian: false);
-    double battery1 = BytesConvert.bytesToFloatorDouble(bytes.sublist(33, 37),
-        isBigEndian: false);
-    double battery2 = BytesConvert.bytesToFloatorDouble(bytes.sublist(37, 41),
-        isBigEndian: false);
+      bytes.sublist(29, 33),
+      isBigEndian: false,
+    );
+    double battery1 = BytesConvert.bytesToFloatorDouble(
+      bytes.sublist(33, 37),
+      isBigEndian: false,
+    );
+    double battery2 = BytesConvert.bytesToFloatorDouble(
+      bytes.sublist(37, 41),
+      isBigEndian: false,
+    );
     int critBattery1Counter = BytesConvert.bytesToInt8([bytes[41]]);
     int critBattery2Counter = BytesConvert.bytesToInt8([bytes[42]]);
 

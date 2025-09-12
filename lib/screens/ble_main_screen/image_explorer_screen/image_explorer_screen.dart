@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/image_model.dart';
@@ -11,7 +12,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-import '../admin_settings_screen/admin_settings_screen.dart';
 
 class ImageExplorerScreen extends StatefulWidget {
   final BluetoothDevice device;
@@ -27,7 +27,7 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
 
   final RefreshController _refreshController = RefreshController();
   String dirAllTxt = "-",
@@ -51,23 +51,20 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     initGetFiles();
   }
 
@@ -79,9 +76,7 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -109,12 +104,18 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
           // dirLogTxt = res.data!.dirLogTxt!;
         });
       } else {
-        Snackbar.show(ScreenSnackbar.capturesettings, res.message,
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.capturesettings,
+          res.message,
+          success: false,
+        );
       }
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.capturesettings, "Dapat Error berkas : $e",
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.capturesettings,
+        "Dapat Error berkas : $e",
+        success: false,
+      );
     }
   }
 
@@ -123,10 +124,7 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyFileScreen,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Berkas Gambar'),
-          elevation: 0,
-        ),
+        appBar: AppBar(title: const Text('Berkas Gambar'), elevation: 0),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
@@ -137,7 +135,9 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 5.0, horizontal: 0),
+                      vertical: 5.0,
+                      horizontal: 0,
+                    ),
                     child: Column(
                       children: [
                         FeatureWidget(
@@ -148,15 +148,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Semua Gambar",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Semua Gambar",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_open,
-                          ),
+                          icon: const Icon(Icons.folder_open),
                         ),
                         FeatureWidget(
                           title: "Semua Gambar Terkirim",
@@ -166,15 +165,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Semua Gambar Terkirim",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Semua Gambar Terkirim",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_open,
-                          ),
+                          icon: const Icon(Icons.folder_open),
                         ),
                         FeatureWidget(
                           title: "Semua Gambar Belum Terkirim",
@@ -184,15 +182,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Semua Gambar Belum Terkirim",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Semua Gambar Belum Terkirim",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_open,
-                          ),
+                          icon: const Icon(Icons.folder_open),
                         ),
                         FeatureWidget(
                           title: "Semua Gambar Toppi Ini",
@@ -202,15 +199,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Semua Gambar Toppi Ini",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Semua Gambar Toppi Ini",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_special_outlined,
-                          ),
+                          icon: const Icon(Icons.folder_special_outlined),
                         ),
                         FeatureWidget(
                           title: "Gambar Toppi Ini Terkirim",
@@ -220,15 +216,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Gambar Ini Terkirim",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Gambar Ini Terkirim",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_special_outlined,
-                          ),
+                          icon: const Icon(Icons.folder_special_outlined),
                         ),
                         FeatureWidget(
                           title: "Gambar Toppi Ini Belum Terkirim",
@@ -238,15 +233,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Gambar Toppi Ini Belum Terkirim",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Gambar Toppi Ini Belum Terkirim",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_special_outlined,
-                          ),
+                          icon: const Icon(Icons.folder_special_outlined),
                         ),
                         FeatureWidget(
                           title: "Semua Gambar Toppi Lain",
@@ -256,15 +250,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Semua Gambar Toppi Lain",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Semua Gambar Toppi Lain",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_outlined,
-                          ),
+                          icon: const Icon(Icons.folder_outlined),
                         ),
                         FeatureWidget(
                           title: "Gambar Toppi Lain Terkirim",
@@ -274,15 +267,14 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Gambar Toppi Lain Terkirim",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Gambar Toppi Lain Terkirim",
+                                  device: device,
+                                ),
                               ),
                             );
                           },
-                          icon: const Icon(
-                            Icons.folder_outlined,
-                          ),
+                          icon: const Icon(Icons.folder_outlined),
                         ),
                         FeatureWidget(
                           title: "Gambar Toppi Lain Belum Terkirim",
@@ -293,9 +285,10 @@ class _ImageExplorerScreenState extends State<ImageExplorerScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ListImageExplorerScreen(
-                                    filter: filter,
-                                    title: "Gambar Toppi Lain Belum Terkirim",
-                                    device: device),
+                                  filter: filter,
+                                  title: "Gambar Toppi Lain Belum Terkirim",
+                                  device: device,
+                                ),
                               ),
                             );
                           },

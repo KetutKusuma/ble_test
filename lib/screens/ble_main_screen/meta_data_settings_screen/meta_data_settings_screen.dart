@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/model/sub_model/meta_data_model.dart';
@@ -31,9 +32,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  _connectionStateSubscription;
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
 
   String meterModelTxt = '-',
       meterSnTxt = '-',
@@ -64,23 +66,20 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
 
     initGetMetaData();
   }
@@ -93,9 +92,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -118,8 +115,9 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
           custom: "-",
           paramCount: 4,
         );
-        BLEResponse<MetaDataModel> response =
-            await Command().getMetaData(bleProvider);
+        BLEResponse<MetaDataModel> response = await Command().getMetaData(
+          bleProvider,
+        );
         _progressDialog.hide();
         if (response.status) {
           metaData = response.data!;
@@ -130,8 +128,8 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
             if (metaData.paramCount == 4) {
               customTxt = response.data!.custom.changeEmptyString();
             } else {
-              idPelangganTxt =
-                  (response.data!.customerID ?? "-").changeEmptyString();
+              idPelangganTxt = (response.data!.customerID ?? "-")
+                  .changeEmptyString();
               numberDigitTxt = response.data!.numberDigit.toString();
               numberDecimalTxt = response.data!.numberDecimal.toString();
               customTxt = response.data!.custom.changeEmptyString();
@@ -147,8 +145,10 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
       }
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.metadatasettings, "Dapat error meta data : $e",
-          success: false);
+        ScreenSnackbar.metadatasettings,
+        "Dapat error meta data : $e",
+        success: false,
+      );
     }
   }
 
@@ -214,10 +214,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyMetadataSettings,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Pengaturan Meta Data'),
-          elevation: 0,
-        ),
+        appBar: AppBar(title: const Text('Pengaturan Meta Data'), elevation: 0),
         body: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,
@@ -239,13 +236,15 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           meterModelTxtController,
                           "Model Meter",
                           addInputFormatters: [
-                            LengthLimitingTextInputFormatter(16)
+                            LengthLimitingTextInputFormatter(16),
                           ],
                         );
                         if (input != null && input.isNotEmpty) {
                           metaData.meterModel = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(
-                              bleProvider, metaData);
+                            bleProvider,
+                            metaData,
+                          );
                           Snackbar.showHelperV2(
                             ScreenSnackbar.metadatasettings,
                             resBLE,
@@ -253,9 +252,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.model_training_rounded,
-                      ),
+                      icon: const Icon(Icons.model_training_rounded),
                     ),
                     SettingsContainer(
                       title: "Nomor Seri Meter",
@@ -266,14 +263,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         }
                         meterSnTxtController.text = meterSnTxt;
                         String? input = await _showInputDialog(
-                            meterSnTxtController, "Nomor Seri Meter",
-                            addInputFormatters: [
-                              LengthLimitingTextInputFormatter(16)
-                            ]);
+                          meterSnTxtController,
+                          "Nomor Seri Meter",
+                          addInputFormatters: [
+                            LengthLimitingTextInputFormatter(16),
+                          ],
+                        );
                         if (input != null && input.isNotEmpty) {
                           metaData.meterSN = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(
-                              bleProvider, metaData);
+                            bleProvider,
+                            metaData,
+                          );
                           Snackbar.showHelperV2(
                             ScreenSnackbar.metadatasettings,
                             resBLE,
@@ -281,9 +282,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.numbers_rounded,
-                      ),
+                      icon: const Icon(Icons.numbers_rounded),
                     ),
                     SettingsContainer(
                       title: "Segel Meter",
@@ -294,14 +293,18 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                         }
                         meterSealTxtController.text = meterSealTxt;
                         String? input = await _showInputDialog(
-                            meterSealTxtController, "Segel Meter",
-                            addInputFormatters: [
-                              LengthLimitingTextInputFormatter(16)
-                            ]);
+                          meterSealTxtController,
+                          "Segel Meter",
+                          addInputFormatters: [
+                            LengthLimitingTextInputFormatter(16),
+                          ],
+                        );
                         if (input != null && input.isNotEmpty) {
                           metaData.meterSeal = input;
                           BLEResponse resBLE = await _commandSet.setMetaData(
-                              bleProvider, metaData);
+                            bleProvider,
+                            metaData,
+                          );
                           Snackbar.showHelperV2(
                             ScreenSnackbar.metadatasettings,
                             resBLE,
@@ -309,9 +312,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                           );
                         }
                       },
-                      icon: const Icon(
-                        Icons.shield_outlined,
-                      ),
+                      icon: const Icon(Icons.shield_outlined),
                     ),
                     (metaData.paramCount == 4)
                         ? SettingsContainer(
@@ -323,17 +324,16 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                               }
                               idPelangganTxtController.text = customTxt;
                               String? input = await _showInputDialog(
-                                  idPelangganTxtController, "Id Pelanggan",
-                                  addInputFormatters: [
-                                    LengthLimitingTextInputFormatter(20)
-                                  ]);
+                                idPelangganTxtController,
+                                "Id Pelanggan",
+                                addInputFormatters: [
+                                  LengthLimitingTextInputFormatter(20),
+                                ],
+                              );
                               if (input != null && input.isNotEmpty) {
                                 metaData.custom = input;
-                                BLEResponse resBLE =
-                                    await _commandSet.setMetaData(
-                                  bleProvider,
-                                  metaData,
-                                );
+                                BLEResponse resBLE = await _commandSet
+                                    .setMetaData(bleProvider, metaData);
                                 Snackbar.showHelperV2(
                                   ScreenSnackbar.metadatasettings,
                                   resBLE,
@@ -341,9 +341,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                 );
                               }
                             },
-                            icon: const Icon(
-                              Icons.description_rounded,
-                            ),
+                            icon: const Icon(Icons.description_rounded),
                           )
                         : Column(
                             children: [
@@ -357,17 +355,16 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                   idPelangganTxtController.text =
                                       idPelangganTxt;
                                   String? input = await _showInputDialog(
-                                      idPelangganTxtController, "Id Pelanggan",
-                                      addInputFormatters: [
-                                        LengthLimitingTextInputFormatter(20)
-                                      ]);
+                                    idPelangganTxtController,
+                                    "Id Pelanggan",
+                                    addInputFormatters: [
+                                      LengthLimitingTextInputFormatter(20),
+                                    ],
+                                  );
                                   if (input != null && input.isNotEmpty) {
                                     metaData.customerID = input;
-                                    BLEResponse resBLE =
-                                        await _commandSet.setMetaData(
-                                      bleProvider,
-                                      metaData,
-                                    );
+                                    BLEResponse resBLE = await _commandSet
+                                        .setMetaData(bleProvider, metaData);
                                     Snackbar.showHelperV2(
                                       ScreenSnackbar.metadatasettings,
                                       resBLE,
@@ -375,9 +372,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.description_rounded,
-                                ),
+                                icon: const Icon(Icons.description_rounded),
                               ),
                               SettingsContainer(
                                 title: "Angka didepan koma",
@@ -389,19 +384,17 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                   numberDigitTxtController.text =
                                       numberDigitTxt;
                                   String? input = await _showInputDialog(
-                                      numberDigitTxtController,
-                                      "Angka didepan koma",
-                                      keyboardType: TextInputType.number,
-                                      addInputFormatters: [
-                                        LengthLimitingTextInputFormatter(4)
-                                      ]);
+                                    numberDigitTxtController,
+                                    "Angka didepan koma",
+                                    keyboardType: TextInputType.number,
+                                    addInputFormatters: [
+                                      LengthLimitingTextInputFormatter(4),
+                                    ],
+                                  );
                                   if (input != null && input.isNotEmpty) {
                                     metaData.numberDigit = int.parse(input);
-                                    BLEResponse resBLE =
-                                        await _commandSet.setMetaData(
-                                      bleProvider,
-                                      metaData,
-                                    );
+                                    BLEResponse resBLE = await _commandSet
+                                        .setMetaData(bleProvider, metaData);
                                     Snackbar.showHelperV2(
                                       ScreenSnackbar.metadatasettings,
                                       resBLE,
@@ -409,9 +402,7 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  CupertinoIcons.number_circle,
-                                ),
+                                icon: const Icon(CupertinoIcons.number_circle),
                               ),
                               SettingsContainer(
                                 title: "Angka dibelakang koma",
@@ -422,19 +413,17 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                   }
                                   numberDecimalTxtController.text = customTxt;
                                   String? input = await _showInputDialog(
-                                      numberDecimalTxtController,
-                                      "Angka dibelakang koma",
-                                      keyboardType: TextInputType.number,
-                                      addInputFormatters: [
-                                        LengthLimitingTextInputFormatter(4)
-                                      ]);
+                                    numberDecimalTxtController,
+                                    "Angka dibelakang koma",
+                                    keyboardType: TextInputType.number,
+                                    addInputFormatters: [
+                                      LengthLimitingTextInputFormatter(4),
+                                    ],
+                                  );
                                   if (input != null && input.isNotEmpty) {
                                     metaData.numberDecimal = int.parse(input);
-                                    BLEResponse resBLE =
-                                        await _commandSet.setMetaData(
-                                      bleProvider,
-                                      metaData,
-                                    );
+                                    BLEResponse resBLE = await _commandSet
+                                        .setMetaData(bleProvider, metaData);
                                     Snackbar.showHelperV2(
                                       ScreenSnackbar.metadatasettings,
                                       resBLE,
@@ -455,17 +444,16 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                   }
                                   customTxtController.text = customTxt;
                                   String? input = await _showInputDialog(
-                                      customTxtController, "Custom",
-                                      addInputFormatters: [
-                                        LengthLimitingTextInputFormatter(36)
-                                      ]);
+                                    customTxtController,
+                                    "Custom",
+                                    addInputFormatters: [
+                                      LengthLimitingTextInputFormatter(36),
+                                    ],
+                                  );
                                   if (input != null && input.isNotEmpty) {
                                     metaData.custom = input;
-                                    BLEResponse resBLE =
-                                        await _commandSet.setMetaData(
-                                      bleProvider,
-                                      metaData,
-                                    );
+                                    BLEResponse resBLE = await _commandSet
+                                        .setMetaData(bleProvider, metaData);
                                     Snackbar.showHelperV2(
                                       ScreenSnackbar.metadatasettings,
                                       resBLE,
@@ -473,15 +461,13 @@ class _MetaDataSettingsScreenState extends State<MetaDataSettingsScreen> {
                                     );
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.description_rounded,
-                                ),
+                                icon: const Icon(Icons.description_rounded),
                               ),
                             ],
-                          )
+                          ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),

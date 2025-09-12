@@ -8,7 +8,10 @@ import 'package:yaml/yaml.dart';
 
 class Hidden {
   Future<http.Response> sendRequest(
-      String hardwareID, String toppiID, ConfigModel config) async {
+    String hardwareID,
+    String toppiID,
+    ConfigModel config,
+  ) async {
     final yamlString = await rootBundle.loadString("assets/config/hidden.yaml");
     final yaml = loadYaml(yamlString);
 
@@ -16,17 +19,10 @@ class Hidden {
     String license = utf8.decode(licenseList);
     final url = Uri.parse(license);
     final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({
-      "HardwareID": hardwareID,
-      "ToppiID": toppiID,
-    });
+    final body = jsonEncode({"HardwareID": hardwareID, "ToppiID": toppiID});
 
     try {
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: body,
-      );
+      final response = await http.post(url, headers: headers, body: body);
       return response;
     } catch (e) {
       log('Error dapat send request: $e');
