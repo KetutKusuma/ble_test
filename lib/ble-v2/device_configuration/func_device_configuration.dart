@@ -180,6 +180,17 @@ class FunctionDeviceConfiguration {
       BLEProvider bleProvider, DeviceConfiguration dc) async {
     try {
       try {
+        BLEResponse bleResSetCapture = await _commandSet.setCaptureSchedule(
+            bleProvider,
+            CaptureModel.fromDeviceConfiguration(dc.captureSchedule!));
+        if (!bleResSetCapture.status) {
+          return "Error setDeviceConfiguration > capture : ${bleResSetCapture.message}";
+        }
+      } catch (e) {
+        throw "Error setDeviceConfiguration > capture : $e";
+      }
+
+      try {
         BLEResponse bleResSetRole = await _commandSet.setRole(
             bleProvider, dc.administrator!.getRoleToUint8());
         if (!bleResSetRole.status) {

@@ -84,6 +84,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
   }
 
   Future<void> _pickFile() async {
+    await FilePicker.platform.clearTemporaryFiles();
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
     );
@@ -385,6 +386,9 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                             DeviceConfiguration dc =
                                                 DeviceConfiguration.fromJson(
                                                     yamlMap);
+
+                                            // validate
+                                            dc.validate();
 
                                             // set
                                             String res =
