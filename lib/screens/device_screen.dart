@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../widgets/service_tile.dart';
@@ -28,12 +29,12 @@ class _DeviceScreenState extends State<DeviceScreen> {
   bool _isDisconnecting = false;
 
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  _connectionStateSubscription;
   late StreamSubscription<bool> _isConnectingSubscription;
   late StreamSubscription<bool> _isDisconnectingSubscription;
   late StreamSubscription<int> _mtuSubscription;
   late BluetoothDevice device;
-  final TextEditingController _textController = TextEditingController();
+  final TextEditingController textController = TextEditingController();
   StreamSubscription<List<int>>? stream_sub;
   String valueChar = "empty";
   late BluetoothCharacteristic lastCharacterist;
@@ -119,8 +120,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
         // ignore connections canceled by the user
       } else {
         Snackbar.show(
-            ScreenSnackbar.device, prettyException("Connect Error:", e),
-            success: false);
+          ScreenSnackbar.device,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -131,8 +134,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
       await device.disconnectAndUpdateStream(queue: false);
       Snackbar.show(ScreenSnackbar.device, "Cancel: Success", success: true);
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.device, prettyException("Cancel Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.device,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -140,12 +146,17 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.device, "Disconnect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.device,
+        "Disconnect: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.device, prettyException("Disconnect Error:", e),
-          success: false);
+        ScreenSnackbar.device,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -158,12 +169,17 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
     try {
       _services = await device.discoverServices();
-      Snackbar.show(ScreenSnackbar.device, "Discover Services: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.device,
+        "Discover Services: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.device, prettyException("Discover Services Error:", e),
-          success: false);
+        ScreenSnackbar.device,
+        prettyException("Discover Services Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
     if (mounted) {
@@ -176,17 +192,22 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future onRequestMtuPressed() async {
     try {
       await device.requestMtu(512, predelay: 0);
-      Snackbar.show(ScreenSnackbar.device, "Request Mtu: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.device,
+        "Request Mtu: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.device, prettyException("Change Mtu Error:", e),
-          success: false);
+        ScreenSnackbar.device,
+        prettyException("Change Mtu Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
 
-  List<Widget> _buildServiceTiles(BuildContext context, BluetoothDevice d) {
+  List<Widget> buildServiceTiles(BuildContext context, BluetoothDevice d) {
     return _services
         .map(
           (s) => ServiceTile(
@@ -202,8 +223,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
   CharacteristicTile _buildCharacteristicTile(BluetoothCharacteristic c) {
     return CharacteristicTile(
       characteristic: c,
-      descriptorTiles:
-          c.descriptors.map((d) => DescriptorTile(descriptor: d)).toList(),
+      descriptorTiles: c.descriptors
+          .map((d) => DescriptorTile(descriptor: d))
+          .toList(),
     );
   }
 
@@ -234,8 +256,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
         isConnected
             ? const Icon(Icons.bluetooth_connected)
             : const Icon(Icons.bluetooth_disabled),
-        Text(((isConnected && _rssi != null) ? '${_rssi!} dBm' : ''),
-            style: Theme.of(context).textTheme.bodySmall)
+        Text(
+          ((isConnected && _rssi != null) ? '${_rssi!} dBm' : ''),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
@@ -257,7 +281,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
             ),
           ),
           onPressed: null,
-        )
+        ),
       ],
     );
   }
@@ -274,8 +298,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
             const Expanded(
               flex: 2,
               child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: const Text("Edit MTU to 512 bytes")),
+                fit: BoxFit.scaleDown,
+                child: const Text("Edit MTU to 512 bytes"),
+              ),
             ),
             Expanded(
               flex: 1,
@@ -291,20 +316,22 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Widget buildConnectButton(BuildContext context) {
-    return Row(children: [
-      if (_isConnecting || _isDisconnecting) buildSpinner(context),
-      TextButton(
+    return Row(
+      children: [
+        if (_isConnecting || _isDisconnecting) buildSpinner(context),
+        TextButton(
           onPressed: _isConnecting
               ? onCancelPressed
               : (isConnected ? onDisconnectPressed : onConnectPressed),
           child: Text(
             _isConnecting ? "CANCEL" : (isConnected ? "DISCONNECT" : "CONNECT"),
-            style: Theme.of(context)
-                .primaryTextTheme
-                .labelLarge
-                ?.copyWith(color: Colors.white),
-          ))
-    ]);
+            style: Theme.of(
+              context,
+            ).primaryTextTheme.labelLarge?.copyWith(color: Colors.white),
+          ),
+        ),
+      ],
+    );
   }
 
   // void listenToDeviceTest(BluetoothDevice device) async {
@@ -360,7 +387,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   //         content: Form(
   //           key: _formKey,
   //           child: TextFormField(
-  //             controller: _textController,
+  //             controller: textController,
   //             decoration: const InputDecoration(
   //               labelText: "Enter text",
   //               border: OutlineInputBorder(),
@@ -383,7 +410,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   //           ElevatedButton(
   //             onPressed: () async {
   //               if (_formKey.currentState!.validate()) {
-  //                 String textToSend = _textController.text;
+  //                 String textToSend = textController.text;
 
   //                 // Write to BLE characteristic if available
   //                 try {
@@ -423,10 +450,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
   //                   log("Data sent successfully!");
   //                 } catch (e) {
   //                   log("Error sending data: $e");
-  //                   _textController.clear();
+  //                   textController.clear();
   //                 }
 
-  //                 _textController.clear();
+  //                 textController.clear();
 
   //                 // Close popup after sending
   //                 Navigator.of(context).pop();
@@ -448,9 +475,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
         appBar: AppBar(
           title: Text(device.platformName),
           actions: [
-            Row(children: [
-              if (_isConnecting || _isDisconnecting) buildSpinner(context),
-              TextButton(
+            Row(
+              children: [
+                if (_isConnecting || _isDisconnecting) buildSpinner(context),
+                TextButton(
                   onPressed: _isConnecting
                       ? onCancelPressed
                       : (isConnected ? onDisconnectPressed : onConnectPressed),
@@ -458,12 +486,12 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     _isConnecting
                         ? "CANCEL"
                         : (isConnected ? "DISCONNECT" : "CONNECT"),
-                    style: Theme.of(context)
-                        .primaryTextTheme
-                        .labelLarge
+                    style: Theme.of(context).primaryTextTheme.labelLarge
                         ?.copyWith(color: Colors.white),
-                  ))
-            ])
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
         body: SingleChildScrollView(
@@ -476,7 +504,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
               ListTile(
                 leading: buildRssiTile(context),
                 title: Text(
-                    'Device is ${_connectionState.toString().split('.')[1]}.'),
+                  'Device is ${_connectionState.toString().split('.')[1]}.',
+                ),
                 trailing: buildGetServices(context),
               ),
               buildMtuTile(context),
@@ -485,12 +514,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     (s) => ServiceTile(
                       service: s,
                       characteristicTiles: s.characteristics
-                          .map((c) => CharacteristicTile(
-                                characteristic: c,
-                                descriptorTiles: c.descriptors
-                                    .map((d) => DescriptorTile(descriptor: d))
-                                    .toList(),
-                              ))
+                          .map(
+                            (c) => CharacteristicTile(
+                              characteristic: c,
+                              descriptorTiles: c.descriptors
+                                  .map((d) => DescriptorTile(descriptor: d))
+                                  .toList(),
+                            ),
+                          )
                           .toList(),
                     ),
                   )

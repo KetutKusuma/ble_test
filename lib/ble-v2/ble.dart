@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:math' as math;
-import 'dart:typed_data';
 
+import 'dart:math' as math;
 import 'package:ble_test/ble-v2/utils/config.dart';
 import 'package:ble_test/ble-v2/utils/message.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -77,13 +76,17 @@ class BLEProvider with ChangeNotifier {
         for (BluetoothCharacteristic characteristic
             in service.characteristics) {
           if (characteristic.properties.notify) {
-            log("apakah dapet properties notify ? ${characteristic.properties.notify} ; ${characteristic.uuid}");
+            log(
+              "apakah dapet properties notify ? ${characteristic.properties.notify} ; ${characteristic.uuid}",
+            );
             _notifyCharacteristic = characteristic;
             _listenToNotifications();
           }
 
           if (characteristic.properties.write) {
-            log("apakah dapet properties write ? ${characteristic.properties.write} ; ${characteristic.uuid}");
+            log(
+              "apakah dapet properties write ? ${characteristic.properties.write} ; ${characteristic.uuid}",
+            );
             _writeCharacteristic = characteristic;
           }
         }
@@ -111,9 +114,7 @@ class BLEProvider with ChangeNotifier {
     if (_writeCharacteristic != null) {
       try {
         log("idata Data to write : $data");
-        await _writeCharacteristic!.write(
-          data,
-        );
+        await _writeCharacteristic!.write(data);
         // log("Data written: $data");
         // return [];
         return await _listenToNotificationss(_notifyCharacteristic!, headerBLE);
@@ -128,19 +129,19 @@ class BLEProvider with ChangeNotifier {
   }
 
   _listenToNotifications() async {
-    log("apakah notifiyCharacteristic is null ? ${_notifyCharacteristic == null}");
+    log(
+      "apakah notifiyCharacteristic is null ? ${_notifyCharacteristic == null}",
+    );
     await _notifyCharacteristic!.setNotifyValue(true);
     if (_notifyCharacteristic!.isNotifying) {
       log("ini notifying");
       log("is notifyig ga nih : ${_notifyCharacteristic!.isNotifying}");
-      StreamSubscription<List<int>>? lastValue =
-          _notifyCharacteristic!.lastValueStream.listen(
-        (value) {
-          log("value is : $value");
-          _dataController.add(value);
-        },
-        cancelOnError: true,
-      );
+      StreamSubscription<List<int>>? lastValue = _notifyCharacteristic!
+          .lastValueStream
+          .listen((value) {
+            log("value is : $value");
+            _dataController.add(value);
+          }, cancelOnError: true);
 
       lastValue.onData((value) {
         log("value is : $value");
@@ -152,8 +153,10 @@ class BLEProvider with ChangeNotifier {
   }
 
   Future<Response> _listenToNotificationss(
-      BluetoothCharacteristic characteristic, Header headerBLE,
-      {Duration timeout = const Duration(seconds: 3)}) async {
+    BluetoothCharacteristic characteristic,
+    Header headerBLE, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
     await characteristic.setNotifyValue(true);
 
     Completer<Response> completer = Completer<Response>();
@@ -165,7 +168,8 @@ class BLEProvider with ChangeNotifier {
 
       if (!completer.isCompleted) {
         completer.complete(
-            onReceive(value, headerBLE)); // Complete with first received value
+          onReceive(value, headerBLE),
+        ); // Complete with first received value
       }
 
       subscription?.cancel(); // Cancel after receiving first value
@@ -177,7 +181,8 @@ class BLEProvider with ChangeNotifier {
       Future.delayed(timeout, () {
         subscription?.cancel(); // Cancel the listener on timeout
         throw TimeoutException(
-            "Timeout: No response received in ${timeout.inSeconds} seconds.");
+          "Timeout: No response received in ${timeout.inSeconds} seconds.",
+        );
       }),
     ]);
   }

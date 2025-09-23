@@ -12,8 +12,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:yaml_writer/yaml_writer.dart' as yw;
 
 class DownloadUtils {
-  static Future saveToDownload(BuildContext context, ScreenSnackbar ss,
-      Uint8List data, String fileName) async {
+  static Future saveToDownload(
+    BuildContext context,
+    ScreenSnackbar ss,
+    Uint8List data,
+    String fileName,
+  ) async {
     try {
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -29,18 +33,15 @@ class DownloadUtils {
         }
         // Minta izin storage
         if (await Permission.storage.request().isDenied) {
-          Snackbar.show(
-            ss,
-            "Izin penyimpanan ditolak",
-            success: false,
-          );
+          Snackbar.show(ss, "Izin penyimpanan ditolak", success: false);
           return null;
         }
       }
 
       // Dapatkan path folder Download
       String path = await ExternalPath.getExternalStoragePublicDirectory(
-          ExternalPath.DIRECTORY_DOWNLOADS);
+        ExternalPath.DIRECTORY_DOWNLOAD,
+      );
 
       // buat folder
       Directory customDir = Directory("$path/Toppi");
@@ -57,11 +58,7 @@ class DownloadUtils {
       bool ex = await file.exists();
 
       if (ex) {
-        Snackbar.show(
-          ss,
-          "Berkas disimpan di: $filePath",
-          success: true,
-        );
+        Snackbar.show(ss, "Berkas disimpan di: $filePath", success: true);
       } else {
         Snackbar.show(
           ss,
@@ -72,17 +69,16 @@ class DownloadUtils {
       return;
     } catch (e) {
       log("Error catch : $e");
-      Snackbar.show(
-        ss,
-        "Gagal menyimpan gambar : $e",
-        success: false,
-      );
+      Snackbar.show(ss, "Gagal menyimpan gambar : $e", success: false);
       return;
     }
   }
 
   static Future backupYamlToDownload(
-      BuildContext context, ScreenSnackbar ss, DeviceConfiguration dc) async {
+    BuildContext context,
+    ScreenSnackbar ss,
+    DeviceConfiguration dc,
+  ) async {
     try {
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -98,18 +94,15 @@ class DownloadUtils {
         }
         // Minta izin storage
         if (await Permission.storage.request().isDenied) {
-          Snackbar.show(
-            ss,
-            "Izin penyimpanan ditolak",
-            success: false,
-          );
+          Snackbar.show(ss, "Izin penyimpanan ditolak", success: false);
           return null;
         }
       }
 
       // Dapatkan path folder Download
       String path = await ExternalPath.getExternalStoragePublicDirectory(
-          ExternalPath.DIRECTORY_DOWNLOADS);
+        ExternalPath.DIRECTORY_DOWNLOAD,
+      );
 
       // buat folder
       Directory customDir = Directory("$path/Toppi");
@@ -135,11 +128,7 @@ class DownloadUtils {
       bool ex = await yamlFile.exists();
 
       if (ex) {
-        Snackbar.show(
-          ss,
-          "Berkas disimpan di: $filePath",
-          success: true,
-        );
+        Snackbar.show(ss, "Berkas disimpan di: $filePath", success: true);
       } else {
         Snackbar.show(
           ss,
@@ -150,11 +139,7 @@ class DownloadUtils {
       return;
     } catch (e) {
       log("Error catch on backup yaml to download : $e");
-      Snackbar.show(
-        ss,
-        "Gagal menyimpan yaml",
-        success: false,
-      );
+      Snackbar.show(ss, "Gagal menyimpan yaml", success: false);
       return;
     }
   }

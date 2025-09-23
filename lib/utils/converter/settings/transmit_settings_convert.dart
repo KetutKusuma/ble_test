@@ -9,15 +9,16 @@ class TransmitSettingsConvert {
     }
 
     bool statusBool = bytes[0] == 1;
-    List<bool> destinationEnable = convertTransmitDestinationEnable(bytes[1])
-        .map((value) => value == 1)
-        .toList();
+    List<bool> destinationEnable = convertTransmitDestinationEnable(
+      bytes[1],
+    ).map((value) => value == 1).toList();
 
     List<String> destinationId = convertDestinationID(bytes.sublist(2, 42));
     // int transmitScheduleInt =
     //     BytesConvert.bytesToInt16(bytes.sublist(27, 37), isBigEndian: false);
-    List<int> transmitScheduleInt =
-        convertTransmitSchedule(bytes.sublist(42, 58));
+    List<int> transmitScheduleInt = convertTransmitSchedule(
+      bytes.sublist(42, 58),
+    );
 
     log("status : $statusBool");
     log("destination enable : $destinationEnable");
@@ -31,11 +32,13 @@ class TransmitSettingsConvert {
     List<String> formattedChunks = [];
     for (int i = 0; i < bytes.length; i += 5) {
       List<int> chunk = bytes.sublist(i, i + 5); // Get a chunk of 5
-      String formatted = chunk.map((value) {
-        return value
-            .toRadixString(16)
-            .padLeft(2, '0'); // Convert to hex and pad
-      }).join(':'); // Join with ':'
+      String formatted = chunk
+          .map((value) {
+            return value
+                .toRadixString(16)
+                .padLeft(2, '0'); // Convert to hex and pad
+          })
+          .join(':'); // Join with ':'
       formattedChunks.add(formatted);
     }
 

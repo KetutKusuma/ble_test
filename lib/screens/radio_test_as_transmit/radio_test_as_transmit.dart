@@ -44,8 +44,10 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
 
   void _onTextChanged(TextEditingController textEditingController) {
     // Step 1: Remove invalid characters (allow only a-f, A-F, and 0-9)
-    String text =
-        textEditingController.text.replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
+    String text = textEditingController.text.replaceAll(
+      RegExp(r'[^a-fA-F0-9]'),
+      '',
+    );
 
     // Step 2: Format the text with colons
     String formattedText = "";
@@ -63,19 +65,25 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
       textEditingController.value = textEditingController.value.copyWith(
         text: formattedText,
         selection: TextSelection.collapsed(
-            offset: cursorPosition +
-                (formattedText.length - textEditingController.text.length)),
+          offset:
+              cursorPosition +
+              (formattedText.length - textEditingController.text.length),
+        ),
       );
     }
   }
 
   Future<void> radioTransmitStop() async {
     isTransmitStart = false;
-    BLEResponse resBLE =
-        await CommandRadioChecker().radioTestAsTransmitterStop(bleProvider);
+    BLEResponse resBLE = await CommandRadioChecker().radioTestAsTransmitterStop(
+      bleProvider,
+    );
     if (!resBLE.status) {
-      Snackbar.show(ScreenSnackbar.testradiotransmitscreen, resBLE.message,
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.testradiotransmitscreen,
+        resBLE.message,
+        success: false,
+      );
       return;
     }
     setState(() {});
@@ -91,97 +99,97 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
           elevation: 0,
         ),
         body: Center(
-            child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.blue,
-                        width: 1,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
                       ),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue, width: 1),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            decoration: const BoxDecoration(
                               color: Colors.blue,
                               borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  topRight: Radius.circular(10))),
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.all(10),
-                          child: const Text(
-                            "Hasil Tes Radio sebagai Pengirim",
-                            style: TextStyle(fontSize: 15, color: Colors.white),
-                          ),
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.5,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                //hasilnya
-                                for (int i = 0; i < resultList.length; i++)
-                                  Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 5),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            resultList[i],
-                                            style: const TextStyle(),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                const SizedBox(
-                                  height: 20,
-                                )
-                              ],
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                              ),
+                            ),
+                            width: MediaQuery.of(context).size.width,
+                            padding: const EdgeInsets.all(10),
+                            child: const Text(
+                              "Hasil Tes Radio sebagai Pengirim",
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: idTxtController,
-                          decoration: const InputDecoration(
-                            labelText: "ID Toppi",
-                            border: OutlineInputBorder(),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  //hasilnya
+                                  for (int i = 0; i < resultList.length; i++)
+                                    Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              resultList[i],
+                                              style: const TextStyle(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            ),
                           ),
-                          keyboardType: TextInputType.text,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Tolong diisi sebuah data';
-                            }
-                            return null;
-                          },
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(14),
-                            // FilteringTextInputFormatter
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 8,
-                        ),
-                        TextFormField(
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: idTxtController,
+                            decoration: const InputDecoration(
+                              labelText: "ID Toppi",
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.text,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Tolong diisi sebuah data';
+                              }
+                              return null;
+                            },
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(14),
+                              // FilteringTextInputFormatter
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
                             controller: intervalTxtController,
                             decoration: const InputDecoration(
                               labelText: "Interval",
@@ -194,157 +202,165 @@ class _RadioTestAsTransmitState extends State<RadioTestAsTransmit> {
                               if (value == null || value.isEmpty) {
                                 return 'Tolong diisi sebuah data';
                               }
-                            }),
-                        const SizedBox(
-                          height: 8,
-                        ),
-                        TextFormField(
-                          controller: repeatTxtController,
-                          decoration: const InputDecoration(
-                            labelText: "Repeat",
-                            border: OutlineInputBorder(),
+                              return '';
+                            },
                           ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Tolong diisi sebuah data';
-                            }
-                            return null;
-                          },
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10),
-                          width: MediaQuery.of(context).size.width,
-                          height: 40,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              elevation: 0,
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: repeatTxtController,
+                            decoration: const InputDecoration(
+                              labelText: "Repeat",
+                              border: OutlineInputBorder(),
                             ),
-                            onPressed: () async {
-                              if (idTxtController.text.isEmpty) {
-                                Snackbar.show(
-                                    ScreenSnackbar.testradiotransmitscreen,
-                                    "ID Toppi kosong",
-                                    success: false);
-                                return;
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Tolong diisi sebuah data';
                               }
-                              if (idTxtController.text.length != 14) {
-                                Snackbar.show(
-                                    ScreenSnackbar.testradiotransmitscreen,
-                                    "ID Toppi salah",
-                                    success: false);
-                                return;
-                              }
-                              if (intervalTxtController.text.isEmpty) {
-                                Snackbar.show(
-                                    ScreenSnackbar.testradiotransmitscreen,
-                                    "Interval Kosong",
-                                    success: false);
-                                return;
-                              }
-                              if (repeatTxtController.text.isEmpty) {
-                                Snackbar.show(
-                                    ScreenSnackbar.testradiotransmitscreen,
-                                    "Repeat Kosong",
-                                    success: false);
-                                return;
-                              }
-                              if (!isTransmitStart) {
-                                resultList.clear();
-                                // ini untuk start radio transmit
-                                isTransmitStart = true;
-                                BLEResponse resBLE = await CommandRadioChecker()
-                                    .radioTestAsTransmitterStart(
-                                  bleProvider,
-                                  ConvertV2().stringHexAddressToArrayUint8(
-                                    idTxtController.text,
-                                    5,
-                                  ),
-                                );
-                                if (!resBLE.status) {
+                              return null;
+                            },
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 10),
+                            width: MediaQuery.of(context).size.width,
+                            height: 40,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(elevation: 0),
+                              onPressed: () async {
+                                if (idTxtController.text.isEmpty) {
                                   Snackbar.show(
                                     ScreenSnackbar.testradiotransmitscreen,
-                                    resBLE.message,
+                                    "ID Toppi kosong",
                                     success: false,
                                   );
                                   return;
                                 }
-
-                                /// init repeat as repeat txt controller
-                                repeat = int.parse(repeatTxtController.text);
-
-                                for (var i = 0; i < repeat; i++) {
-                                  log("i : $i == repeat : $repeat");
-
-                                  if (!isTransmitStart) {
-                                    isTransmitStart = false;
-                                    setState(() {});
-                                    break;
-                                  }
-                                  BLEResponse resBLESeq =
-                                      await CommandRadioChecker()
-                                          .radioTestAsTransmitterSequence(
-                                              bleProvider, i)
-                                          .timeout(
-                                            Duration(
-                                              milliseconds: intervalMs,
-                                            ),
-                                            onTimeout: () => BLEResponse(
-                                              status: false,
-                                              message: "Waktu habis",
-                                            ),
-                                          );
-                                  if (!resBLESeq.status) {
-                                    DateTime timeNow = DateTime.now();
-                                    String formattedDate =
-                                        DateFormat("yyyy-MM-dd HH:mm:ss")
-                                            .format(timeNow);
-                                    resultList.add(
-                                        "[$formattedDate] hasil tes radio ${i + 1} : timeout");
-                                    setState(() {});
-                                  } else {
-                                    DateTime timeNow = DateTime.now();
-                                    String formattedDate =
-                                        DateFormat("yyyy-MM-dd HH:mm:ss")
-                                            .format(timeNow);
-                                    resultList.add(
-                                        "[$formattedDate] hasil tes radio ${i + 1} : ${resBLESeq.message}");
-                                    setState(() {});
-                                  }
-
-                                  // break jika sudah sampai batas
-                                  if (i + 1 >= repeat) {
-                                    await radioTransmitStop();
-                                    break;
-                                  }
-                                  await Future.delayed(
-                                      Duration(milliseconds: intervalMs + 500));
+                                if (idTxtController.text.length != 14) {
+                                  Snackbar.show(
+                                    ScreenSnackbar.testradiotransmitscreen,
+                                    "ID Toppi salah",
+                                    success: false,
+                                  );
+                                  return;
                                 }
-                              } else {
-                                // ini untuk stop
-                                await radioTransmitStop();
-                              }
-                            },
-                            child: Text(
-                              isTransmitStart ? "Stop" : "Mulai",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                if (intervalTxtController.text.isEmpty) {
+                                  Snackbar.show(
+                                    ScreenSnackbar.testradiotransmitscreen,
+                                    "Interval Kosong",
+                                    success: false,
+                                  );
+                                  return;
+                                }
+                                if (repeatTxtController.text.isEmpty) {
+                                  Snackbar.show(
+                                    ScreenSnackbar.testradiotransmitscreen,
+                                    "Repeat Kosong",
+                                    success: false,
+                                  );
+                                  return;
+                                }
+                                if (!isTransmitStart) {
+                                  resultList.clear();
+                                  // ini untuk start radio transmit
+                                  isTransmitStart = true;
+                                  BLEResponse resBLE =
+                                      await CommandRadioChecker()
+                                          .radioTestAsTransmitterStart(
+                                            bleProvider,
+                                            ConvertV2()
+                                                .stringHexAddressToArrayUint8(
+                                                  idTxtController.text,
+                                                  5,
+                                                ),
+                                          );
+                                  if (!resBLE.status) {
+                                    Snackbar.show(
+                                      ScreenSnackbar.testradiotransmitscreen,
+                                      resBLE.message,
+                                      success: false,
+                                    );
+                                    return;
+                                  }
+
+                                  /// init repeat as repeat txt controller
+                                  repeat = int.parse(repeatTxtController.text);
+
+                                  for (var i = 0; i < repeat; i++) {
+                                    log("i : $i == repeat : $repeat");
+
+                                    if (!isTransmitStart) {
+                                      isTransmitStart = false;
+                                      setState(() {});
+                                      break;
+                                    }
+                                    BLEResponse resBLESeq =
+                                        await CommandRadioChecker()
+                                            .radioTestAsTransmitterSequence(
+                                              bleProvider,
+                                              i,
+                                            )
+                                            .timeout(
+                                              Duration(
+                                                milliseconds: intervalMs,
+                                              ),
+                                              onTimeout: () => BLEResponse(
+                                                status: false,
+                                                message: "Waktu habis",
+                                              ),
+                                            );
+                                    if (!resBLESeq.status) {
+                                      DateTime timeNow = DateTime.now();
+                                      String formattedDate = DateFormat(
+                                        "yyyy-MM-dd HH:mm:ss",
+                                      ).format(timeNow);
+                                      resultList.add(
+                                        "[$formattedDate] hasil tes radio ${i + 1} : timeout",
+                                      );
+                                      setState(() {});
+                                    } else {
+                                      DateTime timeNow = DateTime.now();
+                                      String formattedDate = DateFormat(
+                                        "yyyy-MM-dd HH:mm:ss",
+                                      ).format(timeNow);
+                                      resultList.add(
+                                        "[$formattedDate] hasil tes radio ${i + 1} : ${resBLESeq.message}",
+                                      );
+                                      setState(() {});
+                                    }
+
+                                    // break jika sudah sampai batas
+                                    if (i + 1 >= repeat) {
+                                      await radioTransmitStop();
+                                      break;
+                                    }
+                                    await Future.delayed(
+                                      Duration(milliseconds: intervalMs + 500),
+                                    );
+                                  }
+                                } else {
+                                  // ini untuk stop
+                                  await radioTransmitStop();
+                                }
+                              },
+                              child: Text(
+                                isTransmitStart ? "Stop" : "Mulai",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        )
-                      ],
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
-                  )
-                ],
+                  ],
+                ),
               ),
-            )
-          ],
-        )),
+            ],
+          ),
+        ),
       ),
     );
   }

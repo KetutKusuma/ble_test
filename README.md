@@ -1,17 +1,31 @@
 
 # ble_test
 
-A new Flutter project. Use flutter version 3.7.11
+# **How to add tag and remove :** 
 
-## Getting Started
+- git tag -a v1.0.0 -m "First stable release"
+- git push origin v1.0.0
+#### **Later if you want to remove :**
+- git tag -d v1.0.0
+- git push origin --delete v1.0.0
+***=== Local Tags ===***
+git tag
+***=== Tags with Commits ===***
+git show-ref --tags
+***=== Commit Log with Tags ===***
+git log --oneline --decorate --tags -n 10
+***=== Remote Tags ===***
+git ls-remote --tags origin
+#### ***🔹 List semua tag***
+git tag
+#### ***🔹 List tag tertentu (contoh: mulai dengan v1.)***
+git tag -l "v1.*"
+#### ***🔹 Lihat detail tag tertentu***
+git show v1.0.0
+#### ***🔹 Lihat commit beserta tag-nya***
+git log --oneline --decorate --tags
+#### ***🔹 Lihat semua tag dengan commit hash***
+git show-ref --tags
+#### ***🔹 Lihat semua tag yang ada di remote***
+git ls-remote --tags origin
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

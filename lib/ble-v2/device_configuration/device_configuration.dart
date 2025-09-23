@@ -65,7 +65,7 @@ class GatewayModelYaml {
         'MikrotikUsername': mikrotikUsername,
         'MikrotikPassword': mikrotikPassword,
         'ModemAPN': modemAPN,
-      }
+      },
     };
   }
 
@@ -153,7 +153,7 @@ class MetaDataModelYaml {
         'NumberDecimal': numberDecimal,
         'Custom': custom,
         'TimeUTC': timeUTC,
-      }
+      },
     };
   }
 
@@ -194,8 +194,8 @@ class BatteryVoltageCoefficientModelYaml {
     return {
       'BatteryVoltageCoefficient': {
         'VoltageCoefficient1': voltageCoefficient1,
-        'VoltageCoefficient2': voltageCoefficient2
-      }
+        'VoltageCoefficient2': voltageCoefficient2,
+      },
     };
   }
 
@@ -260,8 +260,8 @@ class CameraSettingModelYaml {
         'HMirror': hMirror,
         'VFlip': vFlip,
         'JpegQuality': jpegQuality,
-        'AdjustImageRotation': adjustImageRotation
-      }
+        'AdjustImageRotation': adjustImageRotation,
+      },
     };
   }
 
@@ -284,7 +284,8 @@ brightness : $brightness \ncontrast : $contrast \nsaturation : $saturation \nspe
         jpegQuality == null ||
         adjustImageRotation == null) {
       throw Exception(
-          "brightness or contrast or saturation or specialEffect or hMirror or vFlip or jpegQuality or adjustImageRotation is null");
+        "brightness or contrast or saturation or specialEffect or hMirror or vFlip or jpegQuality or adjustImageRotation is null",
+      );
     }
     final buffer = ByteData(14);
     buffer.setInt8(0, brightness!);
@@ -425,7 +426,8 @@ class AdministratorModelYaml {
           : null,
       batteryVoltageCoefficient: json['BatteryVoltageCoefficient'] != null
           ? BatteryVoltageCoefficientModelYaml.fromJson(
-              json['BatteryVoltageCoefficient'])
+              json['BatteryVoltageCoefficient'],
+            )
           : null,
       cameraSetting: json['CameraSetting'] != null
           ? CameraSettingModelYaml.fromJson(json['CameraSetting'])
@@ -439,16 +441,14 @@ class AdministratorModelYaml {
       "SetRole": setRoleFromUint8(getRoleToUint8()),
       "SetEnable": setEnable,
       "SetDateTime": true,
-      "PrintToSerialMonitor": printToSerialMonitor
+      "PrintToSerialMonitor": printToSerialMonitor,
     };
     m.addAll(gateway!.toMap());
     m.addAll(metaData!.toMap());
     m.addAll(batteryVoltageCoefficient!.toMap());
     m.addAll(cameraSetting!.toMap());
 
-    Map<String, dynamic> adm = {
-      "Administrator": m,
-    };
+    Map<String, dynamic> adm = {"Administrator": m};
 
     return adm;
   }
@@ -458,10 +458,7 @@ class DateTimeWithUTCModelModelYaml {
   DateTime dateTime;
   int utc;
 
-  DateTimeWithUTCModelModelYaml({
-    required this.dateTime,
-    required this.utc,
-  });
+  DateTimeWithUTCModelModelYaml({required this.dateTime, required this.utc});
 }
 
 class CaptureScheduleModelYaml {
@@ -508,15 +505,16 @@ class CaptureScheduleModelYaml {
         "SpecialSchedule": specialSchedule,
         "SpecialCount": specialCount,
         "SpecialInterval": specialInterval,
-        "RecentCaptureLimit": recentCaptureLimit
+        "RecentCaptureLimit": recentCaptureLimit,
       },
     };
   }
 
   // Fungsi untuk mendapatkan schedule sebagai uint16
   int getScheduleToUint16() {
-    final scheduleInMinutes =
-        ConvertV2().dateTimeStringToMinute(schedule ?? "");
+    final scheduleInMinutes = ConvertV2().dateTimeStringToMinute(
+      schedule ?? "",
+    );
     return scheduleInMinutes;
   }
 
@@ -549,8 +547,9 @@ class CaptureScheduleModelYaml {
 
   // Fungsi untuk mendapatkan specialSchedule sebagai uint16
   int getSpecialScheduleToUint16() {
-    final specialScheduleInMinutes =
-        ConvertV2().dateTimeStringToMinute(specialSchedule ?? "");
+    final specialScheduleInMinutes = ConvertV2().dateTimeStringToMinute(
+      specialSchedule ?? "",
+    );
     return specialScheduleInMinutes;
   }
 
@@ -589,8 +588,9 @@ class TransmitScheduleScheduleModelYaml {
 
   // Fungsi untuk mendapatkan Schedule sebagai uint16
   int getScheduleToUint16() {
-    final scheduleInMinutes =
-        ConvertV2().dateTimeStringToMinute(schedule ?? "");
+    final scheduleInMinutes = ConvertV2().dateTimeStringToMinute(
+      schedule ?? "",
+    );
     return scheduleInMinutes;
   }
 
@@ -624,22 +624,30 @@ class TransmitScheduleModelYaml {
   TransmitScheduleModelYaml();
 
   TransmitScheduleModelYaml.fromJson(Map<String, dynamic> json) {
-    schedules[0] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule1']);
-    schedules[1] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule2']);
-    schedules[2] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule3']);
-    schedules[3] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule4']);
-    schedules[4] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule5']);
-    schedules[5] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule6']);
-    schedules[6] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule7']);
-    schedules[7] =
-        TransmitScheduleScheduleModelYaml.fromJson(json['Schedule8']);
+    schedules[0] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule1'],
+    );
+    schedules[1] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule2'],
+    );
+    schedules[2] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule3'],
+    );
+    schedules[3] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule4'],
+    );
+    schedules[4] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule5'],
+    );
+    schedules[5] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule6'],
+    );
+    schedules[6] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule7'],
+    );
+    schedules[7] = TransmitScheduleScheduleModelYaml.fromJson(
+      json['Schedule8'],
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -689,17 +697,14 @@ TimeAdjust : $timeAdjust \n
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      "Enabled": enabled,
-      "Schedule": schedule,
-      "TimeAdjust": timeAdjust,
-    };
+    return {"Enabled": enabled, "Schedule": schedule, "TimeAdjust": timeAdjust};
   }
 
   // Fungsi untuk mendapatkan Schedule sebagai uint16
   int getScheduleToUint16() {
-    final scheduleInMinutes =
-        ConvertV2().dateTimeStringToMinute(schedule ?? "");
+    final scheduleInMinutes = ConvertV2().dateTimeStringToMinute(
+      schedule ?? "",
+    );
     return scheduleInMinutes;
   }
 
@@ -752,20 +757,27 @@ Schedule16 : ${schedules[15]} \n
     schedules[6] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule7']);
     schedules[7] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule8']);
     schedules[8] = ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule9']);
-    schedules[9] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule10']);
-    schedules[10] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule11']);
-    schedules[11] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule12']);
-    schedules[12] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule13']);
-    schedules[13] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule14']);
-    schedules[14] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule15']);
-    schedules[15] =
-        ReceiveScheduleScheduleModelYaml.fromJson(json['Schedule16']);
+    schedules[9] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule10'],
+    );
+    schedules[10] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule11'],
+    );
+    schedules[11] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule12'],
+    );
+    schedules[12] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule13'],
+    );
+    schedules[13] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule14'],
+    );
+    schedules[14] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule15'],
+    );
+    schedules[15] = ReceiveScheduleScheduleModelYaml.fromJson(
+      json['Schedule16'],
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -802,10 +814,7 @@ class UploadScheduleScheduleModelYaml {
   bool enabled = false;
   String schedule = "";
 
-  UploadScheduleScheduleModelYaml({
-    this.enabled = false,
-    this.schedule = "",
-  });
+  UploadScheduleScheduleModelYaml({this.enabled = false, this.schedule = ""});
 
   static UploadScheduleScheduleModelYaml fromJson(Map<String, dynamic> json) {
     return UploadScheduleScheduleModelYaml(
@@ -815,10 +824,7 @@ class UploadScheduleScheduleModelYaml {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      "Enabled": enabled,
-      "Schedule": schedule,
-    };
+    return {"Enabled": enabled, "Schedule": schedule};
   }
 
   // Fungsi untuk mendapatkan Schedule sebagai uint16
@@ -879,10 +885,7 @@ class ChangePasswordModelYaml {
   String oldPassword = "";
   String newPassword = "";
 
-  ChangePasswordModelYaml({
-    this.oldPassword = "",
-    this.newPassword = "",
-  });
+  ChangePasswordModelYaml({this.oldPassword = "", this.newPassword = ""});
 
   static ChangePasswordModelYaml fromJson(Map<String, dynamic> json) {
     return ChangePasswordModelYaml(
@@ -1073,7 +1076,8 @@ class DeviceConfiguration {
       }
 
       String? bat1 = checkBattery(
-          administrator!.batteryVoltageCoefficient!.voltageCoefficient1!);
+        administrator!.batteryVoltageCoefficient!.voltageCoefficient1!,
+      );
       if (bat1 != null) {
         throw "Value Administrator > BatteryVoltageCoefficient > VoltageCoefficient1 $bat1";
       }
@@ -1084,7 +1088,8 @@ class DeviceConfiguration {
       }
 
       String? bat2 = checkBattery(
-          administrator!.batteryVoltageCoefficient!.voltageCoefficient2!);
+        administrator!.batteryVoltageCoefficient!.voltageCoefficient2!,
+      );
       if (bat2 != null) {
         throw "Value Administrator > BatteryVoltageCoefficient > VoltageCoefficient2 $bat2";
       }

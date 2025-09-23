@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/screens/ble_main_screen/ble_main_screen.dart';
 import 'package:ble_test/widgets/scan_result_tile.dart';
@@ -15,11 +16,8 @@ import '../../utils/snackbar.dart';
 class SearchScreen extends StatefulWidget {
   final String userRole;
   final String password;
-  const SearchScreen({
-    Key? key,
-    required this.userRole,
-    required this.password,
-  }) : super(key: key);
+  const SearchScreen({Key? key, required this.userRole, required this.password})
+    : super(key: key);
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -36,7 +34,7 @@ class _SearchScreenState extends State<SearchScreen> {
   late SimpleFontelicoProgressDialog pd;
 
   // for connection ble
-  StreamSubscription<BluetoothConnectionState>? _connectionStateSubscription;
+  StreamSubscription<BluetoothConnectionState>? connectionStateSubscription;
 
   late BLEProvider bleProvider;
   BluetoothDevice? bluetoothDevice;
@@ -47,19 +45,26 @@ class _SearchScreenState extends State<SearchScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     userRole = widget.userRole;
     password = widget.password;
-    pd =
-        SimpleFontelicoProgressDialog(context: context, barrierDimisable: true);
+    pd = SimpleFontelicoProgressDialog(
+      context: context,
+      barrierDimisable: true,
+    );
 
-    _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
-      _scanResults = results;
-      if (mounted) {
-        setState(() {});
-      }
-    }, onError: (e) {
-      Snackbar.show(
-          ScreenSnackbar.searchscreen, prettyException("Scan Error:", e),
-          success: false);
-    });
+    _scanResultsSubscription = FlutterBluePlus.scanResults.listen(
+      (results) {
+        _scanResults = results;
+        if (mounted) {
+          setState(() {});
+        }
+      },
+      onError: (e) {
+        Snackbar.show(
+          ScreenSnackbar.searchscreen,
+          prettyException("Scan Error:", e),
+          success: false,
+        );
+      },
+    );
 
     _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
       _isScanning = state;
@@ -84,7 +89,9 @@ class _SearchScreenState extends State<SearchScreen> {
       // `withServices` is required on iOS for privacy purposes, ignored on android.
       var withServices = [Guid("180f")]; // Battery Level Service
       _systemDevices = await FlutterBluePlus.systemDevices(withServices);
-      log("system devices resultnya : $_systemDevices, ${_systemDevices.length}, ${_systemDevices[0].advName}");
+      log(
+        "system devices resultnya : $_systemDevices, ${_systemDevices.length}, ${_systemDevices[0].advName}",
+      );
     } catch (e) {
       // ini biasanya bisa diabaikans
       log("error scan system connect to this device : $e");
@@ -100,9 +107,11 @@ class _SearchScreenState extends State<SearchScreen> {
       if (e.toString() ==
           "RangeError (index): Invalid value: Valid value range is empty: 0") {
       } else {
-        Snackbar.show(ScreenSnackbar.searchscreen,
-            prettyException("Start Scan Error:", e),
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.searchscreen,
+          prettyException("Start Scan Error:", e),
+          success: false,
+        );
       }
     }
     if (mounted) {
@@ -115,31 +124,35 @@ class _SearchScreenState extends State<SearchScreen> {
       FlutterBluePlus.stopScan();
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.searchscreen, prettyException("Stop Scan Error:", e),
-          success: false);
+        ScreenSnackbar.searchscreen,
+        prettyException("Stop Scan Error:", e),
+        success: false,
+      );
     }
   }
 
   void onConnectPressed(BluetoothDevice device) async {
     try {
       pd.show(message: "Proses masuk ...");
-      await bleProvider.connect(device).timeout(
+      await bleProvider
+          .connect(device)
+          .timeout(
             const Duration(seconds: 5),
-            onTimeout: () => throw TimeoutException(
-              "Gagal tersambung, coba lagi",
-            ),
+            onTimeout: () =>
+                throw TimeoutException("Gagal tersambung, coba lagi"),
           );
 
       bluetoothDevice = device;
       Future.delayed(const Duration(seconds: 1, milliseconds: 500));
       // login new v2
-      BLEResponse resHandshake =
-          await Command().handshake(device, bleProvider).timeout(
-                const Duration(seconds: 5),
-                onTimeout: () => throw TimeoutException(
-                  "Proses login gagal karena waktu habis, coba lagi",
-                ),
-              );
+      BLEResponse resHandshake = await Command()
+          .handshake(device, bleProvider)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw TimeoutException(
+              "Proses login gagal karena waktu habis, coba lagi",
+            ),
+          );
 
       log("resHandshake : $resHandshake");
       if (resHandshake.status == false) {
@@ -153,13 +166,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
       List<int> challenge = resHandshake.data!;
       BLEResponse resLogin = await Command()
-          .login(
-            device,
-            bleProvider,
-            userRole,
-            password,
-            challenge,
-          )
+          .login(device, bleProvider, userRole, password, challenge)
           .fbpTimeout(5, "Login gagal karena waktu habis, coba lagi");
       log("resLogin : $resLogin");
 
@@ -182,11 +189,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     } catch (e) {
       pd.hide();
-      Snackbar.show(
-        ScreenSnackbar.searchscreen,
-        e.toString(),
-        success: false,
-      );
+      Snackbar.show(ScreenSnackbar.searchscreen, e.toString(), success: false);
     }
   }
 
@@ -245,23 +248,21 @@ class _SearchScreenState extends State<SearchScreen> {
     _scanResults.removeWhere((element) {
       return element.device.platformName.isEmpty;
     });
-    return _scanResults.map(
-      (r) {
-        return ScanResultTile(
-          result: r,
-          onTap: () => onConnectPressed(r.device),
-          // onTap: () {
-          //   Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => TesCaraBaru(
-          //           device: r.device,
-          //         ),
-          //       ));
-          // },
-        );
-      },
-    ).toList();
+    return _scanResults.map((r) {
+      return ScanResultTile(
+        result: r,
+        onTap: () => onConnectPressed(r.device),
+        // onTap: () {
+        //   Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //         builder: (context) => TesCaraBaru(
+        //           device: r.device,
+        //         ),
+        //       ));
+        // },
+      );
+    }).toList();
   }
 
   @override
@@ -279,10 +280,7 @@ class _SearchScreenState extends State<SearchScreen> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(
-              'Pindai Perangkat',
-              style: GoogleFonts.readexPro(),
-            ),
+            title: Text('Pindai Perangkat', style: GoogleFonts.readexPro()),
             elevation: 0,
           ),
           body: RefreshIndicator(

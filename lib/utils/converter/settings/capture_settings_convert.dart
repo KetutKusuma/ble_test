@@ -6,19 +6,29 @@ class CaptureSettingsConverter {
   static List<dynamic> convertCaptureSettings(List<int> bytes) {
     bool statusBool = bytes[0] == 1;
 
-    int captureScheduleInt =
-        BytesConvert.bytesToInt16(bytes.sublist(1, 3), isBigEndian: false);
-    int captureIntervalInt =
-        BytesConvert.bytesToInt16(bytes.sublist(3, 5), isBigEndian: false);
+    int captureScheduleInt = BytesConvert.bytesToInt16(
+      bytes.sublist(1, 3),
+      isBigEndian: false,
+    );
+    int captureIntervalInt = BytesConvert.bytesToInt16(
+      bytes.sublist(3, 5),
+      isBigEndian: false,
+    );
     int captureCountInt = BytesConvert.bytesToInt8([bytes[5]]);
-    int captureRecentLimitInt =
-        BytesConvert.bytesToInt16(bytes.sublist(6, 8), isBigEndian: false);
+    int captureRecentLimitInt = BytesConvert.bytesToInt16(
+      bytes.sublist(6, 8),
+      isBigEndian: false,
+    );
     List<int> spCaptureDateInt = bytesToBits(bytes.sublist(8, 12));
     log("sp capture date before : ${bytes.sublist(8, 12)}");
-    int spCaptureScheduleInt =
-        BytesConvert.bytesToInt16(bytes.sublist(12, 14), isBigEndian: false);
-    int spCaptureIntervalInt =
-        BytesConvert.bytesToInt16(bytes.sublist(14, 16), isBigEndian: false);
+    int spCaptureScheduleInt = BytesConvert.bytesToInt16(
+      bytes.sublist(12, 14),
+      isBigEndian: false,
+    );
+    int spCaptureIntervalInt = BytesConvert.bytesToInt16(
+      bytes.sublist(14, 16),
+      isBigEndian: false,
+    );
     int spCaptureCountInt = BytesConvert.bytesToInt8([bytes[16]]);
 
     log("capture schedule : $captureScheduleInt");
@@ -39,7 +49,7 @@ class CaptureSettingsConverter {
       spCaptureDateInt,
       spCaptureScheduleInt,
       spCaptureIntervalInt,
-      spCaptureCountInt
+      spCaptureCountInt,
     ];
   }
 

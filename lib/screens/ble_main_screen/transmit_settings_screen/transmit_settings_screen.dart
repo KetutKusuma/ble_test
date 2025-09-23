@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -31,9 +32,10 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  _connectionStateSubscription;
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
   late SimpleFontelicoProgressDialog _progressDialog;
 
   /// Tujuan id
@@ -52,23 +54,20 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     destinationIDTxtController.addListener(() {
       _onTextChanged(destinationIDTxtController);
     });
@@ -80,17 +79,17 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           if (value < 0) {
             // Otomatis set menjadi 0.5 jika kurang dari 0.5
             transmitScheduleTxtController.text = '0';
-            transmitScheduleTxtController.selection =
-                TextSelection.fromPosition(TextPosition(
-                    offset: transmitScheduleTxtController
-                        .text.length)); // Memastikan cursor di akhir
+            transmitScheduleTxtController
+                .selection = TextSelection.fromPosition(
+              TextPosition(offset: transmitScheduleTxtController.text.length),
+            ); // Memastikan cursor di akhir
           } else if (value > 24) {
             // Otomatis set menjadi 1.5 jika lebih dari 1.5
             transmitScheduleTxtController.text = '24';
-            transmitScheduleTxtController.selection =
-                TextSelection.fromPosition(TextPosition(
-                    offset: transmitScheduleTxtController
-                        .text.length)); // Memastikan cursor di akhir
+            transmitScheduleTxtController
+                .selection = TextSelection.fromPosition(
+              TextPosition(offset: transmitScheduleTxtController.text.length),
+            ); // Memastikan cursor di akhir
           }
         }
       }
@@ -106,14 +105,14 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   void _onTextChanged(TextEditingController textEditingController) {
-    String text = textEditingController.text
-        .replaceAll(":", ""); // Remove existing colons
+    String text = textEditingController.text.replaceAll(
+      ":",
+      "",
+    ); // Remove existing colons
     String formattedText = "";
 
     // Add colon after every 2 characters
@@ -130,8 +129,10 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
       textEditingController.value = textEditingController.value.copyWith(
         text: formattedText,
         selection: TextSelection.collapsed(
-            offset: cursorPosition +
-                (formattedText.length - textEditingController.text.length)),
+          offset:
+              cursorPosition +
+              (formattedText.length - textEditingController.text.length),
+        ),
       );
     }
   }
@@ -148,8 +149,8 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
 
   initGetDataTransmit() async {
     try {
-      BLEResponse<List<TransmitModel>> response =
-          await Command().getTransmitSchedule(bleProvider);
+      BLEResponse<List<TransmitModel>> response = await Command()
+          .getTransmitSchedule(bleProvider);
       _progressDialog.hide();
       if (response.status) {
         // ini harusnya ada set state
@@ -157,8 +158,11 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           transmitList = response.data ?? [];
         });
       } else {
-        Snackbar.show(ScreenSnackbar.transmitsettings, response.message,
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.transmitsettings,
+          response.message,
+          success: false,
+        );
       }
     } catch (e) {
       Snackbar.show(
@@ -170,7 +174,9 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   }
 
   Future<TransmitModel?> showSetupTransmitDialog(
-      BuildContext context, int number) async {
+    BuildContext context,
+    int number,
+  ) async {
     // Tracks the selected choice
 
     return await showDialog(
@@ -178,16 +184,16 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          titlePadding: const EdgeInsets.only(
+            left: 10,
+            right: 10,
+            bottom: 15,
+            top: 10,
           ),
-          titlePadding:
-              const EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 10),
           title: Text(
             "Atur Tujuan ${number + 1}",
-            style: GoogleFonts.readexPro(
-              fontWeight: FontWeight.w500,
-            ),
+            style: GoogleFonts.readexPro(fontWeight: FontWeight.w500),
           ),
           content: SizedBox(
             height: 200,
@@ -208,23 +214,24 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       keyboardType: TextInputType.text,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
-                            RegExp(r'^[a-zA-Z0-9:]*$')),
+                          RegExp(r'^[a-zA-Z0-9:]*$'),
+                        ),
                         LengthLimitingTextInputFormatter(14),
 
                         // FilteringTextInputFormatter
                         //     .digitsOnly
                       ],
                     ),
-                    const SizedBox(
-                      height: 7,
-                    ),
+                    const SizedBox(height: 7),
 
                     // for Jadwal Pengiriman
                     TextFormField(
                       readOnly: true,
                       onTap: () async {
-                        TimeOfDay? result =
-                            await TimePickerHelper.pickTime(context, null);
+                        TimeOfDay? result = await TimePickerHelper.pickTime(
+                          context,
+                          null,
+                        );
                         if (result != null) {
                           transmitScheduleTxtController.text =
                               TimePickerHelper.formatTimeOfDay(result);
@@ -242,9 +249,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     // for Tujuan enable
                     Align(
@@ -257,9 +262,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                             "Aktifkan Tujuan ?",
                             style: GoogleFonts.readexPro(),
                           ),
-                          const SizedBox(
-                            height: 5,
-                          ),
+                          const SizedBox(height: 5),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -275,10 +278,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                                       radius: 12,
                                     ),
                                     const SizedBox(width: 10),
-                                    Text(
-                                      'Ya',
-                                      style: GoogleFonts.readexPro(),
-                                    ),
+                                    Text('Ya', style: GoogleFonts.readexPro()),
                                   ],
                                 ),
                               ),
@@ -321,14 +321,18 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                     transmitScheduleTxtController.text.isNotEmpty) {
                   String destinationId = destinationIDTxtController.text;
                   int transmitSchedule = TimePickerHelper.timeOfDayToMinutes(
-                      TimePickerHelper.stringToTimeOfDay(
-                          transmitScheduleTxtController.text));
+                    TimePickerHelper.stringToTimeOfDay(
+                      transmitScheduleTxtController.text,
+                    ),
+                  );
 
                   TransmitModel transmitNew = TransmitModel(
                     enable: selectedChoice ?? false,
                     schedule: transmitSchedule,
-                    destinationID: ConvertV2()
-                        .stringHexAddressToArrayUint8(destinationId, 5),
+                    destinationID: ConvertV2().stringHexAddressToArrayUint8(
+                      destinationId,
+                      5,
+                    ),
                   );
                   Navigator.of(context).pop(transmitNew);
 
@@ -336,10 +340,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                   transmitScheduleTxtController.clear();
                 }
               },
-              child: Text(
-                'Perbarui',
-                style: GoogleFonts.readexPro(),
-              ),
+              child: Text('Perbarui', style: GoogleFonts.readexPro()),
             ),
             TextButton(
               onPressed: () {
@@ -347,10 +348,7 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
                 transmitScheduleTxtController.clear();
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'Batalkan',
-                style: GoogleFonts.readexPro(),
-              ),
+              child: Text('Batalkan', style: GoogleFonts.readexPro()),
             ),
           ],
         );
@@ -373,185 +371,197 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
           child: CustomScrollView(
             slivers: [
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(
-                              top: 15, left: 10, right: 10),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 10),
-                          width: MediaQuery.of(context).size.width,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: borderColor,
-                              width: 1,
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return Column(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(
+                          top: 15,
+                          left: 10,
+                          right: 10,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 10,
+                        ),
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: borderColor, width: 1),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Tujuan ${index + 1}",
+                              style: GoogleFonts.readexPro(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Tujuan ${index + 1}",
-                                style: GoogleFonts.readexPro(
-                                    fontSize: 16, fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Tujuan ID : ",
-                                      style: GoogleFonts.readexPro(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          ConvertV2()
-                                              .arrayUint8ToStringHexAddress(
-                                                  transmitList[index]
-                                                      .destinationID),
-                                          style: GoogleFonts.readexPro(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w400),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Aktifkan Tujuan : ",
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Tujuan ID : ",
                                     style: GoogleFonts.readexPro(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                  Text(
-                                    transmitList[index].enable == true
-                                        ? "Ya"
-                                        : "Tidak",
-                                    style: GoogleFonts.readexPro(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Jadwal Pengiriman : ",
-                                      style: GoogleFonts.readexPro(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      TimePickerHelper.formatTimeOfDay(
-                                          TimePickerHelper.minutesToTimeOfDay(
-                                              transmitList[index].schedule)),
-                                      textAlign: TextAlign.right,
-                                      style: GoogleFonts.readexPro(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: () async {
-                                  destinationIDTxtController.text =
-                                      transmitList[index].destinationIDString;
-                                  transmitScheduleTxtController.text =
-                                      TimePickerHelper.formatTimeOfDay(
-                                          TimePickerHelper.minutesToTimeOfDay(
-                                              transmitList[index].schedule));
-                                  selectedChoice = transmitList[index].enable;
-
-                                  TransmitModel? resultPop =
-                                      await showSetupTransmitDialog(
-                                          context, index);
-                                  if (resultPop != null) {
-                                    // do your magic
-                                    transmitList[index] = resultPop;
-                                    BLEResponse resBLE = await CommandSet()
-                                        .setTransmitSchedule(
-                                            bleProvider, transmitList);
-                                    Snackbar.showHelperV2(
-                                      ScreenSnackbar.transmitsettings,
-                                      resBLE,
-                                      onSuccess: onRefresh,
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(
-                                      left: 0, right: 0, top: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade600,
-                                    borderRadius: BorderRadius.circular(10),
-                                    // boxShadow: [
-                                    //   BoxShadow(
-                                    //     color: Colors.grey.withOpacity(0.5),
-                                    //     spreadRadius: 1,
-                                    //     blurRadius: 1,
-                                    //     offset: const Offset(
-                                    //         0, 1), // changes position of shadow
-                                    //   ),
-                                    // ],
-                                  ),
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        "Perbarui Tujuan ",
-                                        style: GoogleFonts.readexPro(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        ConvertV2()
+                                            .arrayUint8ToStringHexAddress(
+                                              transmitList[index].destinationID,
+                                            ),
+                                        style: GoogleFonts.readexPro(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Aktifkan Tujuan : ",
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  transmitList[index].enable == true
+                                      ? "Ya"
+                                      : "Tidak",
+                                  style: GoogleFonts.readexPro(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Jadwal Pengiriman : ",
+                                    style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    TimePickerHelper.formatTimeOfDay(
+                                      TimePickerHelper.minutesToTimeOfDay(
+                                        transmitList[index].schedule,
+                                      ),
+                                    ),
+                                    textAlign: TextAlign.right,
+                                    style: GoogleFonts.readexPro(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                destinationIDTxtController.text =
+                                    transmitList[index].destinationIDString;
+                                transmitScheduleTxtController.text =
+                                    TimePickerHelper.formatTimeOfDay(
+                                      TimePickerHelper.minutesToTimeOfDay(
+                                        transmitList[index].schedule,
+                                      ),
+                                    );
+                                selectedChoice = transmitList[index].enable;
+
+                                TransmitModel? resultPop =
+                                    await showSetupTransmitDialog(
+                                      context,
+                                      index,
+                                    );
+                                if (resultPop != null) {
+                                  // do your magic
+                                  transmitList[index] = resultPop;
+                                  BLEResponse resBLE = await CommandSet()
+                                      .setTransmitSchedule(
+                                        bleProvider,
+                                        transmitList,
+                                      );
+                                  Snackbar.showHelperV2(
+                                    ScreenSnackbar.transmitsettings,
+                                    resBLE,
+                                    onSuccess: onRefresh,
+                                  );
+                                }
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(
+                                  left: 0,
+                                  right: 0,
+                                  top: 8,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade600,
+                                  borderRadius: BorderRadius.circular(10),
+                                  // boxShadow: [
+                                  //   BoxShadow(
+                                  //     color: Colors.grey.withOpacity(0.5),
+                                  //     spreadRadius: 1,
+                                  //     blurRadius: 1,
+                                  //     offset: const Offset(
+                                  //         0, 1), // changes position of shadow
+                                  //   ),
+                                  // ],
+                                ),
+                                width: MediaQuery.of(context).size.width,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Perbarui Tujuan ",
+                                      style: GoogleFonts.readexPro(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    );
-                  },
-                  childCount: transmitList.isEmpty ? 0 : transmitList.length,
-                ),
+                      ),
+                    ],
+                  );
+                }, childCount: transmitList.isEmpty ? 0 : transmitList.length),
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 20),
-              )
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
             ],
           ),
         ),
@@ -578,16 +588,21 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Connect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.transmitsettings,
+        "Connect: Success",
+        success: true,
+      );
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(ScreenSnackbar.transmitsettings,
-            prettyException("Connect Error:", e),
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.transmitsettings,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -596,12 +611,17 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Cancel: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.transmitsettings,
+        "Cancel: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.transmitsettings, prettyException("Cancel Error:", e),
-          success: false);
+        ScreenSnackbar.transmitsettings,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -609,12 +629,17 @@ class _TransmitSettingsScreenState extends State<TransmitSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.transmitsettings, "Disconnect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.transmitsettings,
+        "Disconnect: Success",
+        success: true,
+      );
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.transmitsettings,
-          prettyException("Disconnect Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.transmitsettings,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }

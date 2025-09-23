@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'dart:typed_data';
 
 import 'package:ble_test/utils/crc32.dart';
@@ -10,7 +11,9 @@ import '../bytes_convert.dart';
 
 class CaptureConverter {
   static List<dynamic> convertSquenceCapture(
-      List<int> bytes, int lengthByteChunk) {
+    List<int> bytes,
+    int lengthByteChunk,
+  ) {
     if (bytes.isEmpty || bytes.length < 400) {
       throw Exception("Invalid bytes convert");
     }
@@ -18,8 +21,10 @@ class CaptureConverter {
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytes));
 
     // log("MASUK CONVERTER SEQUENCE CAPTURE");
-    int chuckSquenceNumber =
-        BytesConvert.bytesToInt16(bytes.sublist(0, 2), isBigEndian: true);
+    int chuckSquenceNumber = BytesConvert.bytesToInt16(
+      bytes.sublist(0, 2),
+      isBigEndian: true,
+    );
     log("chuck squence number : $chuckSquenceNumber");
     int lengthInt = byteData.getUint16(2, Endian.big);
     // -- FOR CHUNK DATA --
@@ -43,14 +48,8 @@ class CaptureConverter {
 
     if (calculatedCrc32 != crc32) {
       log("Crc32 is not match, chuck sequence number : $chuckSquenceNumber");
-      Map error = {
-        "status": false,
-        "message": "CRC32 not match",
-      };
-      return [
-        chuckSquenceNumber,
-        error,
-      ];
+      Map error = {"status": false, "message": "CRC32 not match"};
+      return [chuckSquenceNumber, error];
     } else {
       return [chuckSquenceNumber, lengthInt, chunkData, crc32];
     }
@@ -69,8 +68,10 @@ class CaptureConverter {
     String message = utf8
         .decode(bytes.sublist(1, 33))
         .replaceAll('\x00', ''); // Bytes 1 to 32, decoded to string and cleaned
-    int totalChunk =
-        byteData.getUint16(33, Endian.big); // Bytes 33-34 as uint16
+    int totalChunk = byteData.getUint16(
+      33,
+      Endian.big,
+    ); // Bytes 33-34 as uint16
     int crc32 = byteData.getUint32(35, Endian.little); // Bytes 35-38 as uint32
 
     // Print results

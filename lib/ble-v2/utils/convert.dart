@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'dart:typed_data';
 import 'package:intl/intl.dart' as intl;
 
@@ -131,7 +132,10 @@ class ConvertV2 {
   }
 
   String bufferToStringUsingIndex(
-      List<int> buffer, int startIndex, int length) {
+    List<int> buffer,
+    int startIndex,
+    int length,
+  ) {
     int endIndex = buffer.length;
     if (length > 0) {
       endIndex = startIndex + length;
@@ -140,12 +144,7 @@ class ConvertV2 {
   }
 
   String bufferToStringUTF8(List<int> listData, int index, int length) {
-    List<int> lala = listData
-        .sublist(
-          index,
-          index + length,
-        )
-        .toList();
+    List<int> lala = listData.sublist(index, index + length).toList();
 
     lala.removeWhere((element) => element == 0);
     if (lala.isEmpty) {
@@ -171,8 +170,8 @@ class ConvertV2 {
   int bufferToUint16(List<int> buffer, int startIndex) {
     int value2 =
         ((buffer[startIndex + 1] & 0xFF) << 8) | (buffer[startIndex] & 0xFF);
-    int value =
-        (buffer[startIndex + 1] & 0xFF << 8) | (buffer[startIndex] & 0xFF);
+    // int value =
+    //     (buffer[startIndex + 1] & 0xFF << 8) | (buffer[startIndex] & 0xFF);
     return value2;
   }
 
@@ -199,7 +198,10 @@ class ConvertV2 {
 
   double bufferToFloat32(List<int> buffer, int startIndex) {
     final byteData = ByteData.sublistView(
-        Uint8List.fromList(buffer), startIndex, startIndex + 4);
+      Uint8List.fromList(buffer),
+      startIndex,
+      startIndex + 4,
+    );
     return byteData.getFloat32(0, Endian.little);
   }
 
@@ -292,8 +294,9 @@ class ConvertTime {
   }
 
   static String dateFormatDateTime(DateTime dateTime) {
-    String formattedDate =
-        intl.DateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime);
+    String formattedDate = intl.DateFormat(
+      "yyyy-MM-dd HH:mm:ss",
+    ).format(dateTime);
     return formattedDate;
   }
 }

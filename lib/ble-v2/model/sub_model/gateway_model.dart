@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ble_test/ble-v2/device_configuration/device_configuration.dart';
 
 class GatewayModel {

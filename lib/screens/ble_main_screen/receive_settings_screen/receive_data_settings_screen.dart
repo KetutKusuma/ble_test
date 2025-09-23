@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:ble_test/ble-v2/ble.dart';
 import 'package:ble_test/ble-v2/command/command.dart';
 import 'package:ble_test/ble-v2/command/command_set.dart';
@@ -33,9 +34,10 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
   late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  _connectionStateSubscription;
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
 
   TextEditingController controller = TextEditingController();
   TextEditingController receiveEnableTxtController = TextEditingController();
@@ -55,23 +57,20 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _progressDialog = SimpleFontelicoProgressDialog(
-          context: context, barrierDimisable: true);
+        context: context,
+        barrierDimisable: true,
+      );
       _showLoading();
     });
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          Navigator.popUntil(
-            context,
-            (route) => route.isFirst,
-          );
-        }
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
+    _connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     initGetReceive();
   }
 
@@ -83,9 +82,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   }
 
   void _showLoading() {
-    _progressDialog.show(
-      message: "Harap Tunggu...",
-    );
+    _progressDialog.show(message: "Harap Tunggu...");
   }
 
   onRefresh() async {
@@ -101,8 +98,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   initGetReceive() async {
     try {
       if (isConnected) {
-        BLEResponse<List<ReceiveModel>> response =
-            await Command().getReceiveSchedule(bleProvider);
+        BLEResponse<List<ReceiveModel>> response = await Command()
+            .getReceiveSchedule(bleProvider);
         _progressDialog.hide();
         if (response.status) {
           listReceive = response.data!;
@@ -115,14 +112,19 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
             // receiveTimeAdjust = response.data!.timeAdjust.toString();
           });
         } else {
-          Snackbar.show(ScreenSnackbar.receivesettings, response.message,
-              success: false);
+          Snackbar.show(
+            ScreenSnackbar.receivesettings,
+            response.message,
+            success: false,
+          );
         }
       }
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.receivesettings, "Dapat error jadwal terima : $e",
-          success: false);
+        ScreenSnackbar.receivesettings,
+        "Dapat error jadwal terima : $e",
+        success: false,
+      );
     }
   }
 
@@ -136,112 +138,105 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
         return AlertDialog(
           title: Text("Atur Penerimaan ${number + 1}"),
           content: StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  readOnly: true,
-                  onTap: () async {
-                    TimeOfDay? result =
-                        await TimePickerHelper.pickTime(context, null);
-                    if (result != null) {
-                      setState(() {
-                        receiveScheduleTxtController.text =
-                            TimePickerHelper.formatTimeOfDay(result);
-                      });
-                    }
-                  },
-                  controller: receiveScheduleTxtController,
-                  decoration: const InputDecoration(
-                    labelText: "Masukan Jadwal Penerimaan",
-                    hintText: "00.00-23.59",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    readOnly: true,
+                    onTap: () async {
+                      TimeOfDay? result = await TimePickerHelper.pickTime(
+                        context,
+                        null,
+                      );
+                      if (result != null) {
+                        setState(() {
+                          receiveScheduleTxtController.text =
+                              TimePickerHelper.formatTimeOfDay(result);
+                        });
+                      }
+                    },
+                    controller: receiveScheduleTxtController,
+                    decoration: const InputDecoration(
+                      labelText: "Masukan Jadwal Penerimaan",
+                      hintText: "00.00-23.59",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: receiveTimeAdjustTxtController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      signed: false,
+                      decimal: false,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: "Masukan Penyesuaian Waktu Penerimaan (detik)",
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                TextFormField(
-                  controller: receiveTimeAdjustTxtController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                      signed: false, decimal: false),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}$')),
-                  ],
-                  decoration: const InputDecoration(
-                    labelText: "Masukan Penyesuaian Waktu Penerimaan (detik)",
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 5),
+                  // for destination enable
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const Text("Aktifkan Penerimaan ?"),
+                        const SizedBox(height: 5),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => selectedChoice = true),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: selectedChoice == true
+                                        ? Colors.green
+                                        : Colors.grey,
+                                    radius: 12,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text('Ya'),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => selectedChoice = false),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: selectedChoice == false
+                                        ? Colors.red
+                                        : Colors.grey,
+                                    radius: 12,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text('Tidak'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  height: 5,
-                ),
-                // for destination enable
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Aktifkan Penerimaan ?",
-                      ),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () => setState(
-                              () => selectedChoice = true,
-                            ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: selectedChoice == true
-                                      ? Colors.green
-                                      : Colors.grey,
-                                  radius: 12,
-                                ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'Ya',
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          GestureDetector(
-                            onTap: () => setState(() => selectedChoice = false),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: selectedChoice == false
-                                      ? Colors.red
-                                      : Colors.grey,
-                                  radius: 12,
-                                ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'Tidak',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }),
+                ],
+              );
+            },
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -259,7 +254,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                     receiveTimeAdjustTxtController.text.isNotEmpty) {
                   int receiveSchedule =
                       TimePickerHelper.timeOfDayStringToMinutes(
-                          receiveScheduleTxtController.text);
+                        receiveScheduleTxtController.text,
+                      );
                   ReceiveModel receiveModel = ReceiveModel(
                     enable: selectedChoice ?? false,
                     schedule: receiveSchedule,
@@ -304,15 +300,15 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                         right: 10,
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 10),
+                        horizontal: 15,
+                        vertical: 10,
+                      ),
                       width: MediaQuery.of(context).size.width,
                       decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: borderColor,
-                            width: 1,
-                          )),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: borderColor, width: 1),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -323,17 +319,16 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
+                          const SizedBox(height: 10),
                           Row(
                             children: [
                               Expanded(
                                 child: Text(
                                   "Aktifkan Penerimaan : ",
                                   style: GoogleFonts.readexPro(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                               Expanded(
@@ -357,8 +352,9 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                                 child: Text(
                                   "Jadwal Penerimaan : ",
                                   style: GoogleFonts.readexPro(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                               Expanded(
@@ -368,7 +364,8 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       ConvertTime.minuteToDateTimeString(
-                                          listReceive[index].schedule),
+                                        listReceive[index].schedule,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -399,9 +396,7 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            height: 5,
-                          ),
+                          const SizedBox(height: 5),
                           SizedBox(
                             width: MediaQuery.of(context).size.width,
                             child: ElevatedButton(
@@ -418,21 +413,25 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                                 selectedChoice = listReceive[index].enable;
                                 receiveScheduleTxtController.text =
                                     TimePickerHelper.formatTimeOfDay(
-                                        TimePickerHelper.minutesToTimeOfDay(
-                                            listReceive[index].schedule));
+                                      TimePickerHelper.minutesToTimeOfDay(
+                                        listReceive[index].schedule,
+                                      ),
+                                    );
                                 receiveTimeAdjustTxtController.text =
                                     listReceive[index].timeAdjust.toString();
                                 ReceiveModel? resilt =
                                     await _showSetupReceiveDialog(
-                                  context,
-                                  index,
-                                );
+                                      context,
+                                      index,
+                                    );
 
                                 if (resilt != null) {
                                   listReceive[index] = resilt;
-                                  BLEResponse resBLE =
-                                      await _commandSet.setReceiveSchedule(
-                                          bleProvider, listReceive);
+                                  BLEResponse resBLE = await _commandSet
+                                      .setReceiveSchedule(
+                                        bleProvider,
+                                        listReceive,
+                                      );
                                   Snackbar.showHelperV2(
                                     ScreenSnackbar.receivesettings,
                                     resBLE,
@@ -440,11 +439,9 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
                                   );
                                 }
                               },
-                              child: const Text(
-                                "Perbarui Penerimaan",
-                              ),
+                              child: const Text("Perbarui Penerimaan"),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     );
@@ -477,16 +474,21 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
     try {
       await device.connectAndUpdateStream();
       // initDiscoverServices();
-      Snackbar.show(ScreenSnackbar.receivesettings, "Connect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.receivesettings,
+        "Connect: Success",
+        success: true,
+      );
     } catch (e) {
       if (e is FlutterBluePlusException &&
           e.code == FbpErrorCode.connectionCanceled.index) {
         // ignore connections canceled by the user
       } else {
-        Snackbar.show(ScreenSnackbar.receivesettings,
-            prettyException("Connect Error:", e),
-            success: false);
+        Snackbar.show(
+          ScreenSnackbar.receivesettings,
+          prettyException("Connect Error:", e),
+          success: false,
+        );
         log(e.toString());
       }
     }
@@ -495,12 +497,17 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   Future onCancelPressed() async {
     try {
       await device.disconnectAndUpdateStream(queue: false);
-      Snackbar.show(ScreenSnackbar.receivesettings, "Cancel: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.receivesettings,
+        "Cancel: Success",
+        success: true,
+      );
     } catch (e) {
       Snackbar.show(
-          ScreenSnackbar.receivesettings, prettyException("Cancel Error:", e),
-          success: false);
+        ScreenSnackbar.receivesettings,
+        prettyException("Cancel Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }
@@ -508,12 +515,17 @@ class _ReceiveDataSettingsScreenState extends State<ReceiveDataSettingsScreen> {
   Future onDisconnectPressed() async {
     try {
       await device.disconnectAndUpdateStream();
-      Snackbar.show(ScreenSnackbar.receivesettings, "Disconnect: Success",
-          success: true);
+      Snackbar.show(
+        ScreenSnackbar.receivesettings,
+        "Disconnect: Success",
+        success: true,
+      );
     } catch (e) {
-      Snackbar.show(ScreenSnackbar.receivesettings,
-          prettyException("Disconnect Error:", e),
-          success: false);
+      Snackbar.show(
+        ScreenSnackbar.receivesettings,
+        prettyException("Disconnect Error:", e),
+        success: false,
+      );
       log(e.toString());
     }
   }

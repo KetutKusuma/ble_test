@@ -29,7 +29,9 @@ class RTC {
   }
 
   static DateTime getTimeFromSeconds(int seconds) {
-    return DateTime.fromMillisecondsSinceEpoch((seconds + 946684800) * 1000,
-        isUtc: true);
+    return DateTime.fromMillisecondsSinceEpoch(
+      (seconds + 946684800) * 1000,
+      isUtc: true,
+    );
   }
 }

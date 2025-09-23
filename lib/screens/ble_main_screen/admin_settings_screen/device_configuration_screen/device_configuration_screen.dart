@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -34,8 +35,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
   late BLEProvider bleProvider;
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.connected;
-  late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
+  late StreamSubscription<BluetoothConnectionState> connectionStateSubscription;
 
   late SimpleFontelicoProgressDialog _progressDialog;
   String? filePath;
@@ -53,27 +53,22 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
       barrierDimisable: true,
     );
     bleProvider = Provider.of<BLEProvider>(context, listen: false);
-    _connectionStateSubscription = device.connectionState.listen(
-      (state) async {
-        _connectionState = state;
-        if (_connectionState == BluetoothConnectionState.disconnected) {
-          if (mounted) {
-            Navigator.popUntil(
-              context,
-              (route) => route.isFirst,
-            );
-          }
-          Snackbar.show(
-            ScreenSnackbar.deviceconfigurationscreen,
-            "Perangkat Tidak Terhubung",
-            success: false,
-          );
-        }
+    connectionStateSubscription = device.connectionState.listen((state) async {
+      _connectionState = state;
+      if (_connectionState == BluetoothConnectionState.disconnected) {
         if (mounted) {
-          setState(() {});
+          Navigator.popUntil(context, (route) => route.isFirst);
         }
-      },
-    );
+        Snackbar.show(
+          ScreenSnackbar.deviceconfigurationscreen,
+          "Perangkat Tidak Terhubung",
+          success: false,
+        );
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    });
     checkScrollMax();
   }
 
@@ -85,9 +80,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
 
   Future<void> _pickFile() async {
     await FilePicker.platform.clearTemporaryFiles();
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-    );
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
     if (result != null) {
       final selectedFile = result.files.single;
       // Cek ekstensi secara manual
@@ -182,9 +175,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                   },
                   child: (isMax)
                       ? const Icon(Icons.keyboard_double_arrow_up)
-                      : const Icon(
-                          Icons.keyboard_double_arrow_down,
-                        ),
+                      : const Icon(Icons.keyboard_double_arrow_down),
                 ),
               ),
         body: SmartRefresher(
@@ -197,9 +188,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
                     FeatureWidget(
                       title: "Download Konfigurasi",
                       onTap: () async {
@@ -209,18 +198,18 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                             backgroundColor: Colors.transparent,
                             message:
                                 "Harap Tunggu Sedang Mendownload Konfigurasi...",
-                            textStyle: const TextStyle(
-                              color: Colors.white,
-                            ),
+                            textStyle: const TextStyle(color: Colors.white),
                           );
                           DeviceConfiguration? dc =
                               await FunctionDeviceConfiguration()
                                   .getDeviceConfiguration(bleProvider);
                           if (dc == null) {
                             log("Gagal mendapatkan konfigurasi");
-                            Snackbar.show(ScreenSnackbar.blemain,
-                                "Gagal mendapatkan konfigurasi",
-                                success: false);
+                            Snackbar.show(
+                              ScreenSnackbar.blemain,
+                              "Gagal mendapatkan konfigurasi",
+                              success: false,
+                            );
                             _progressDialog.hide();
                             return;
                           }
@@ -246,18 +235,20 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                       icon: const Icon(CupertinoIcons.arrow_down_doc),
                     ),
                     Container(
-                      margin:
-                          const EdgeInsets.only(top: 8, left: 10, right: 10),
+                      margin: const EdgeInsets.only(
+                        top: 8,
+                        left: 10,
+                        right: 10,
+                      ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 10),
+                        horizontal: 15,
+                        vertical: 10,
+                      ),
                       width: MediaQuery.of(context).size.width,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: borderColor,
-                          width: 1,
-                        ),
+                        border: Border.all(color: borderColor, width: 1),
                       ),
                       child: Column(
                         children: [
@@ -269,9 +260,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                             ),
                           ),
                           yamlContent == ""
-                              ? const SizedBox(
-                                  height: 20,
-                                )
+                              ? const SizedBox(height: 20)
                               : GestureDetector(
                                   onTap: () {
                                     setState(() {
@@ -294,9 +283,15 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                   },
                                   child: Container(
                                     margin: const EdgeInsets.only(
-                                        top: 0, left: 5, right: 5, bottom: 10),
+                                      top: 0,
+                                      left: 5,
+                                      right: 5,
+                                      bottom: 10,
+                                    ),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 10),
+                                      horizontal: 15,
+                                      vertical: 10,
+                                    ),
                                     width: MediaQuery.of(context).size.width,
                                     decoration: BoxDecoration(
                                       color: Colors.transparent,
@@ -332,9 +327,14 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                 )
                               : Container(
                                   margin: const EdgeInsets.only(
-                                      top: 8, left: 10, right: 10),
+                                    top: 8,
+                                    left: 10,
+                                    right: 10,
+                                  ),
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 15, vertical: 10),
+                                    horizontal: 15,
+                                    vertical: 10,
+                                  ),
                                   width: MediaQuery.of(context).size.width,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
@@ -344,9 +344,7 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                       width: 1,
                                     ),
                                   ),
-                                  child: SelectableText(
-                                    yamlContent,
-                                  ),
+                                  child: SelectableText(yamlContent),
                                 ),
                           yamlContent == ""
                               ? const SizedBox()
@@ -366,9 +364,10 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                               return;
                                             }
                                             _progressDialog.show(
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width /
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width /
                                                   2,
                                               backgroundColor:
                                                   Colors.transparent,
@@ -380,12 +379,14 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                             );
                                             Map<String, dynamic> yamlMap =
                                                 yamlToMap(
-                                                    loadYaml(yamlContent));
+                                                  loadYaml(yamlContent),
+                                                );
                                             log("map : $yamlMap");
 
                                             DeviceConfiguration dc =
                                                 DeviceConfiguration.fromJson(
-                                                    yamlMap);
+                                                  yamlMap,
+                                                );
 
                                             // validate
                                             dc.validate();
@@ -394,9 +395,9 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                             String res =
                                                 await FunctionDeviceConfiguration()
                                                     .setDeviceConfiguration(
-                                              bleProvider,
-                                              dc,
-                                            );
+                                                      bleProvider,
+                                                      dc,
+                                                    );
                                             _progressDialog.hide();
 
                                             Snackbar.show(
@@ -418,21 +419,29 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                         },
                                         child: Container(
                                           margin: const EdgeInsets.only(
-                                              top: 8, left: 5, right: 5),
+                                            top: 8,
+                                            left: 5,
+                                            right: 5,
+                                          ),
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 15, vertical: 10),
-                                          width:
-                                              MediaQuery.of(context).size.width,
+                                            horizontal: 15,
+                                            vertical: 10,
+                                          ),
+                                          width: MediaQuery.of(
+                                            context,
+                                          ).size.width,
                                           decoration: BoxDecoration(
                                             color: Colors.blueAccent,
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
                                           child: const Center(
                                             child: Text(
                                               "Implementasikan",
                                               style: TextStyle(
-                                                  color: Colors.white),
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -443,15 +452,22 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                         onTap: _pickFile,
                                         child: Container(
                                           margin: const EdgeInsets.only(
-                                              top: 8, left: 5, right: 5),
+                                            top: 8,
+                                            left: 5,
+                                            right: 5,
+                                          ),
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 15, vertical: 10),
-                                          width:
-                                              MediaQuery.of(context).size.width,
+                                            horizontal: 15,
+                                            vertical: 10,
+                                          ),
+                                          width: MediaQuery.of(
+                                            context,
+                                          ).size.width,
                                           decoration: BoxDecoration(
                                             color: Colors.deepOrange[400],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
                                           child: const Center(
                                             child: Text(
@@ -463,15 +479,15 @@ class _DeviceConfigurationScreenState extends State<DeviceConfigurationScreen> {
                                           ),
                                         ),
                                       ),
-                                    )
+                                    ),
                                   ],
-                                )
+                                ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
