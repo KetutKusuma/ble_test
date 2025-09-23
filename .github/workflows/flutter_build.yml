@@ -3,49 +3,38 @@ name: Flutter Build
 on:
   push:
     tags:
-      - 'v*.*.*'   # hanya jalan kalau push tag, contoh v1.0.0
+      - 'v*.*.*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout kode
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.3' # ganti sesuai versi yang kamu pakai
+          flutter-version: '3.35.3'
 
       - name: Clean Flutter project
         run: flutter clean
-      
+
       - name: Configure Git for Private Packages
         run: |
-          git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/Jobseeker-company/lib_flutter_crop_image.git".insteadOf "github.com/Jobseeker-company/lib_flutter_crop_image.git"
+          git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global --get-regexp url
 
-      # 3. Get dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # 4. Build Debug APK
       - name: Build Debug APK
         run: flutter build apk --debug
 
-      # 5. Build Release APK
       - name: Build Release APK
         run: flutter build apk --release
 
-      # (Opsional) Build iOS juga kalau perlu
-      # Catatan: iOS build butuh macOS runner (tidak bisa di Ubuntu)
-      # - name: Build iOS Release
-      #   runs-on: macos-latest
-      #   run: flutter build ios --release --no-codesign
-
-      # 6. Upload hasil build sebagai artifact
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
