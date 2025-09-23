@@ -63,6 +63,10 @@ dependencies:
   yaml_writer: ^2.1.0
   file_picker: ^10.3.3
   pointycastle: ^3.9.1
+  crop_image:
+    git:
+      url: https://${PACKAGE_TOKEN}@github.com/Jobseeker-company/lib_flutter_crop_image.git
+      ref: v1.0.0
 
 dev_dependencies:
   flutter_test:
