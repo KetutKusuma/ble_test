@@ -19,10 +19,13 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.3' # ganti sesuai versi yang kamu pakai
+
+      - name: Clean Flutter project
+        run: flutter clean
       
       - name: Configure Git for Private Packages
         run: |
-          git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/Jobseeker-company/lib_flutter_crop_image.git".insteadOf "github.com/Jobseeker-company/lib_flutter_crop_image.git"
 
       # 3. Get dependencies
       - name: Install dependencies
