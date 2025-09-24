@@ -21,10 +21,10 @@ jobs:
       - name: Clean Flutter project
         run: flutter clean
 
-      # - name: Configure Git for Private Packages
-      #   run: |
-      #     git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      #     git config --global --get-regexp url
+      - name: Configure Git for Private Packages
+        run: |
+          git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global --get-regexp url
 
       - name: Install dependencies
         run: flutter pub get
